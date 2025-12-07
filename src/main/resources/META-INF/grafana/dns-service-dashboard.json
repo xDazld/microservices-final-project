@@ -1,0 +1,180 @@
+{
+  "dashboard": {
+    "title": "DNS Filtering Service Dashboard",
+    "tags": [
+      "dns",
+      "security",
+      "monitoring"
+    ],
+    "timezone": "browser",
+    "panels": [
+      {
+        "title": "Total DNS Queries",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "dns_query_count_total",
+            "legendFormat": "Total Queries"
+          }
+        ],
+        "gridPos": {
+          "h": 4,
+          "w": 6,
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "title": "Blocked Queries",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "dns_filter_matches_total{type=\"BLOCK\"}",
+            "legendFormat": "Blocked"
+          }
+        ],
+        "gridPos": {
+          "h": 4,
+          "w": 6,
+          "x": 6,
+          "y": 0
+        }
+      },
+      {
+        "title": "Threats Detected",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "dns_security_threats_detected_total",
+            "legendFormat": "Threats"
+          }
+        ],
+        "gridPos": {
+          "h": 4,
+          "w": 6,
+          "x": 12,
+          "y": 0
+        }
+      },
+      {
+        "title": "Average Response Time",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "rate(dns_query_resolution_seconds_sum[5m]) / rate(dns_query_resolution_seconds_count[5m])",
+            "legendFormat": "Avg Response Time"
+          }
+        ],
+        "gridPos": {
+          "h": 4,
+          "w": 6,
+          "x": 18,
+          "y": 0
+        }
+      },
+      {
+        "title": "DNS Query Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(dns_query_count_total[5m])",
+            "legendFormat": "Queries/sec"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 4
+        }
+      },
+      {
+        "title": "Filter Actions",
+        "type": "piechart",
+        "targets": [
+          {
+            "expr": "dns_filter_matches_total",
+            "legendFormat": "{{type}}"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 4
+        }
+      },
+      {
+        "title": "Response Time Histogram",
+        "type": "heatmap",
+        "targets": [
+          {
+            "expr": "rate(dns_query_resolution_seconds_bucket[5m])",
+            "legendFormat": "{{le}}"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 24,
+          "x": 0,
+          "y": 12
+        }
+      },
+      {
+        "title": "Blocked Domains by Category",
+        "type": "bargauge",
+        "targets": [
+          {
+            "expr": "dns_filter_matches_total{type=\"BLOCK\"}",
+            "legendFormat": "{{category}}"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 20
+        }
+      },
+      {
+        "title": "Cache Hit Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "(sum(rate(dns_query_count_total{cached=\"true\"}[5m])) / sum(rate(dns_query_count_total[5m]))) * 100",
+            "legendFormat": "Cache Hit %"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 20
+        }
+      },
+      {
+        "title": "Recent DNS Query Logs",
+        "type": "table",
+        "targets": [
+          {
+            "expr": "dns_query_count_total",
+            "format": "table"
+          }
+        ],
+        "gridPos": {
+          "h": 10,
+          "w": 24,
+          "x": 0,
+          "y": 28
+        }
+      }
+    ],
+    "refresh": "10s",
+    "schemaVersion": 36,
+    "style": "dark",
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    }
+  }
+}
