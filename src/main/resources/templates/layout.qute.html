@@ -6,6 +6,28 @@
     <title>{#insert title}DNS Filtering Service{/insert}</title>
     <link rel="stylesheet" href="/css/styles.css">
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script>
+        // Configure HTMX to include JWT token in all requests
+        // This runs immediately, BEFORE any hx-trigger="load" elements are processed
+
+        // Add JWT token to HTMX requests
+        document.addEventListener('htmx:configRequest', function (event) {
+            const token = sessionStorage.getItem('jwt_token');
+            if (token) {
+                event.detail.headers['Authorization'] = 'Bearer ' + token;
+            }
+        });
+
+        // Handle 401 errors
+        document.addEventListener('htmx:responseError', function (event) {
+            if (event.detail.xhr.status === 401) {
+                if (!window.location.pathname.includes('/login')) {
+                    sessionStorage.setItem('redirect_after_login', window.location.pathname);
+                    window.location.href = '/ui/login';
+                }
+            }
+        });
+    </script>
 </head>
 <body>
 <header class="header">
@@ -20,6 +42,7 @@
             <a href="/ui/agent" class="{#if active == 'agent'}active{/if}">AI Agent</a>
             <a href="/ui/admin" class="{#if active == 'admin'}active{/if}">Admin</a>
             <a href="/ui/login" class="{#if active == 'login'}active{/if}" id="login-link">Login</a>
+            <a href="#" onclick="logout(); return false;" id="logout-link" style="display: none;">Logout</a>
         </nav>
     </div>
 </header>

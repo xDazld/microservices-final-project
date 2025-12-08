@@ -8,15 +8,99 @@ function initializeApp() {
     // Initialize HTMX event handlers
     initHtmxHandlers();
 
-    // Load initial data
-    loadDashboardStats();
+    // Update UI based on authentication status
+    updateAuthUI();
 
-    // Set up auto-refresh for stats
-    setInterval(loadDashboardStats, 30000); // Refresh every 30 seconds
+    // Don't load data if we're on the login page
+    const isLoginPage = window.location.pathname.includes('/login');
+
+    if (!isLoginPage) {
+        // Load initial data only if authenticated
+        if (isAuthenticated()) {
+            loadDashboardStats();
+            // Set up auto-refresh for stats
+            setInterval(loadDashboardStats, 30000); // Refresh every 30 seconds
+        } else {
+            // Not authenticated and not on login page - redirect to login
+            sessionStorage.setItem('redirect_after_login', window.location.pathname);
+            window.location.href = '/ui/login';
+        }
+    }
+}
+
+// Update UI based on authentication status
+function updateAuthUI() {
+    const loginLink = document.getElementById('login-link');
+    const logoutLink = document.getElementById('logout-link');
+
+    if (isAuthenticated()) {
+        if (loginLink) loginLink.style.display = 'none';
+        if (logoutLink) {
+            logoutLink.style.display = 'inline';
+            const username = sessionStorage.getItem('username') || 'User';
+            logoutLink.textContent = `Logout (${username})`;
+        }
+    } else {
+        if (loginLink) loginLink.style.display = 'inline';
+        if (logoutLink) logoutLink.style.display = 'none';
+    }
+}
+
+// Get JWT token from sessionStorage
+function getAuthToken() {
+    return sessionStorage.getItem('jwt_token');
+}
+
+// Check if user is authenticated
+function isAuthenticated() {
+    return getAuthToken() !== null;
+}
+
+// Logout function
+function logout() {
+    sessionStorage.removeItem('jwt_token');
+    sessionStorage.removeItem('username');
+    sessionStorage.removeItem('role');
+    window.location.href = '/ui/login';
+}
+
+// Helper function for authenticated fetch requests
+async function authenticatedFetch(url, options = {}) {
+    const token = getAuthToken();
+
+    // Add Authorization header if token exists
+    if (token) {
+        options.headers = {
+            ...options.headers,
+            'Authorization': 'Bearer ' + token
+        };
+    }
+
+    // Set default Content-Type if not provided and body exists
+    if (options.body && !options.headers['Content-Type']) {
+        options.headers['Content-Type'] = 'application/json';
+    }
+
+    const response = await fetch(url, options);
+
+    // Handle 401 Unauthorized
+    if (response.status === 401) {
+        // Don't redirect if already on login page
+        if (!window.location.pathname.includes('/login')) {
+            sessionStorage.setItem('redirect_after_login', window.location.pathname);
+            window.location.href = '/ui/login';
+            throw new Error('Unauthorized - redirecting to login');
+        }
+    }
+
+    return response;
 }
 
 function initHtmxHandlers() {
-    // Handle HTMX before request
+    // NOTE: JWT token injection and 401 handling are configured in layout.qute.html
+    // to ensure they run before any hx-trigger="load" elements are processed
+
+    // Handle HTMX before request - add loading state
     document.body.addEventListener('htmx:beforeRequest', function (event) {
         const target = event.target;
         if (target.classList.contains('btn')) {
@@ -24,22 +108,26 @@ function initHtmxHandlers() {
         }
     });
 
-    // Handle HTMX after request
+    // Handle HTMX after request - remove loading state
     document.body.addEventListener('htmx:afterRequest', function (event) {
         const target = event.target;
         target.classList.remove('loading');
     });
 
-    // Handle HTMX errors
+    // Handle HTMX errors (non-401 errors)
     document.body.addEventListener('htmx:responseError', function (event) {
-        showAlert('Error: ' + event.detail.xhr.statusText, 'danger');
+        // 401 errors are handled in layout.qute.html
+        if (event.detail.xhr.status !== 401) {
+            showAlert('Error: ' + event.detail.xhr.statusText, 'danger');
+        }
     });
 }
 
 // Dashboard Stats
 async function loadDashboardStats() {
     try {
-        const response = await fetch('/api/v1/admin/stats');
+        const response = await authenticatedFetch('/api/v1/admin/stats');
+
         if (response.ok) {
             const stats = await response.json();
             updateStatsDisplay(stats);
@@ -88,7 +176,7 @@ function openEditRuleModal(ruleId) {
         form.dataset.ruleId = ruleId;
 
         // Fetch current rule data
-        fetch(`/api/v1/filters/${ruleId}`)
+        authenticatedFetch(`/api/v1/filters/${ruleId}`)
             .then(res => res.json())
             .then(rule => {
                 document.getElementById('rule-name').value = rule.name || '';
@@ -130,7 +218,7 @@ async function saveRule(event) {
         const url = mode === 'edit' ? `/api/v1/filters/${ruleId}` : '/api/v1/filters';
         const method = mode === 'edit' ? 'PUT' : 'POST';
 
-        const response = await fetch(url, {
+        const response = await authenticatedFetch(url, {
             method: method,
             headers: {
                 'Content-Type': 'application/json'
@@ -158,7 +246,7 @@ async function deleteRule(ruleId, ruleName) {
     }
 
     try {
-        const response = await fetch(`/api/v1/filters/${ruleId}`, {
+        const response = await authenticatedFetch(`/api/v1/filters/${ruleId}`, {
             method: 'DELETE'
         });
 
@@ -177,7 +265,7 @@ async function deleteRule(ruleId, ruleName) {
 
 async function toggleRule(ruleId, enabled) {
     try {
-        const response = await fetch(`/api/v1/filters/${ruleId}/toggle`, {
+        const response = await authenticatedFetch(`/api/v1/filters/${ruleId}/toggle`, {
             method: 'PATCH'
         });
 
@@ -208,7 +296,7 @@ async function testDNSQuery(event) {
     resultDiv.innerHTML = '<div class="spinner"></div> Querying...';
 
     try {
-        const response = await fetch(`/api/v1/dns/query?domain=${encodeURIComponent(domain)}&type=${encodeURIComponent(recordType)}`);
+        const response = await authenticatedFetch(`/api/v1/dns/query?domain=${encodeURIComponent(domain)}&type=${encodeURIComponent(recordType)}`);
 
         if (response.ok) {
             const data = await response.json();
@@ -241,7 +329,7 @@ async function analyzeDomain(event) {
     resultDiv.innerHTML = '<div class="spinner"></div> Analyzing with AI...';
 
     try {
-        const response = await fetch('/api/v1/agent/analyze', {
+        const response = await authenticatedFetch('/api/v1/agent/analyze', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
