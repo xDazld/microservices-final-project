@@ -1,7 +1,4 @@
-version: '3.8'
-
 services:
-  # DNS Filtering Service
   dns-service:
     build:
       context: .
@@ -9,125 +6,43 @@ services:
     container_name: dns-filtering-service
     ports:
       - "8080:8080"
-    environment:
-      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
-      - QUARKUS_DATASOURCE_JDBC_URL=jdbc:mariadb://mariadb:3306/dnsservice
-      - QUARKUS_DATASOURCE_USERNAME=dnsuser
-      - QUARKUS_DATASOURCE_PASSWORD=dnspassword
-      - QUARKUS_OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
     depends_on:
       - mariadb
       - kafka
-      - otel-collector
-    networks:
-      - dns-network
-    restart: unless-stopped
+      - lgtm
+      - ollama
 
-  # MariaDB Database
-  mariadb:
-    image: mariadb:11
-    container_name: dns-mariadb
+  lgtm:
+    image: docker.io/grafana/otel-lgtm
+    container_name: lgtm
     environment:
-      - MYSQL_ROOT_PASSWORD=rootpassword
-      - MYSQL_DATABASE=dnsservice
-      - MYSQL_USER=dnsuser
-      - MYSQL_PASSWORD=dnspassword
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    ports:
+      - "4317:4317"
+
+  mariadb:
+    image: docker.io/library/mariadb
+    container_name: mariadb
+    environment:
+      - MYSQL_ROOT_PASSWORD=quarkus
+      - MYSQL_DATABASE=quarkus
+      - MYSQL_USER=quarkus
+      - MYSQL_PASSWORD=quarkus
     ports:
       - "3306:3306"
-    volumes:
-      - mariadb-data:/var/lib/mysql
-    networks:
-      - dns-network
-    restart: unless-stopped
 
-  # Zookeeper for Kafka
-  zookeeper:
-    image: confluentinc/cp-zookeeper:7.5.0
-    container_name: dns-zookeeper
+  ollama:
+    image: docker.io/ollama/ollama
+    container_name: ollama
     environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
+      - OLLAMA_HOST=0.0.0.0:11434
     ports:
-      - "2181:2181"
-    networks:
-      - dns-network
-    restart: unless-stopped
+      - "11434:11434"
 
-  # Kafka Message Broker
   kafka:
-    image: confluentinc/cp-kafka:7.5.0
-    container_name: dns-kafka
-    depends_on:
-      - zookeeper
+    image: docker.io/redpandadata/redpanda
+    container_name: kafka
     ports:
       - "9092:9092"
-      - "9093:9093"
-    environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:9093
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
-    networks:
-      - dns-network
-    restart: unless-stopped
-
-  # Prometheus for Metrics Collection
-  prometheus:
-    image: prom/prometheus:latest
-    container_name: dns-prometheus
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
-      - prometheus-data:/prometheus
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-    networks:
-      - dns-network
-    restart: unless-stopped
-
-  # Grafana for Visualization
-  grafana:
-    image: grafana/grafana:latest
-    container_name: dns-grafana
-    ports:
-      - "3000:3000"
-    environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin
-      - GF_USERS_ALLOW_SIGN_UP=false
-    volumes:
-      - grafana-data:/var/lib/grafana
-      - ./src/main/resources/META-INF/grafana:/etc/grafana/provisioning/dashboards
-    depends_on:
-      - prometheus
-    networks:
-      - dns-network
-    restart: unless-stopped
-
-  # OpenTelemetry Collector
-  otel-collector:
-    image: otel/opentelemetry-collector:latest
-    container_name: dns-otel-collector
-    command: [ "--config=/etc/otel-collector-config.yml" ]
-    volumes:
-      - ./otel-collector-config.yml:/etc/otel-collector-config.yml
-    ports:
-      - "4317:4317"   # OTLP gRPC
-      - "4318:4318"   # OTLP HTTP
-      - "8889:8889"   # Prometheus metrics
-    networks:
-      - dns-network
-    restart: unless-stopped
-
-networks:
-  dns-network:
-    driver: bridge
-
-volumes:
-  mariadb-data:
-  prometheus-data:
-  grafana-data:
+      - "8082:8082"
