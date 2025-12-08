@@ -29,7 +29,6 @@ resources:
   - ingress.yml
   - certificates.yml
   - daemonset.yml
-  - jobs.yml
 
 # Common labels applied to all resources
 commonLabels:
