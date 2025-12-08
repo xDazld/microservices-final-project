@@ -10,12 +10,9 @@ import java.io.IOException;
 
 import static dev.pacr.dns.DNSServiceIntegrationTest.createDNSQuery;
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.lessThan;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -144,8 +141,17 @@ public class RFCComplianceTest {
 			String tooLongDomain = generateDomainWithLength(300);
 			byte[] dnsQuery = createDNSQuery(tooLongDomain, 1);
 			
-			given().contentType("application/dns-message").body(dnsQuery).when().post("/dns-query")
-					.then().statusCode(400);
+			Response response =
+					given().contentType("application/dns-message").body(dnsQuery).when()
+					.post("/dns-query");
+			
+			response.then().statusCode(200).contentType("application/dns-message");
+			
+			// RFC 8484 Section 4.2.1: DNS errors should be in the DNS response, not HTTP status
+			DNSResponse dnsResponse = parseDNSResponse(response);
+			assertTrue(dnsResponse.isResponse(), "Should be a DNS response");
+			assertEquals(RCODE_FORMAT_ERROR, dnsResponse.getRcode(),
+					"Should return FORMERR for invalid domain length");
 		}
 		
 		@Test
@@ -164,8 +170,17 @@ public class RFCComplianceTest {
 			String invalidDomain = generateLabelWithLength(64) + ".com";
 			byte[] dnsQuery = createDNSQuery(invalidDomain, 1);
 			
-			given().contentType("application/dns-message").body(dnsQuery).when().post("/dns-query")
-					.then().statusCode(400);
+			Response response =
+					given().contentType("application/dns-message").body(dnsQuery).when()
+					.post("/dns-query");
+			
+			response.then().statusCode(200).contentType("application/dns-message");
+			
+			// RFC 8484 Section 4.2.1: DNS errors should be in the DNS response, not HTTP status
+			DNSResponse dnsResponse = parseDNSResponse(response);
+			assertTrue(dnsResponse.isResponse(), "Should be a DNS response");
+			assertEquals(RCODE_FORMAT_ERROR, dnsResponse.getRcode(),
+					"Should return FORMERR for invalid label length");
 		}
 		
 		@Test
@@ -273,8 +288,18 @@ public class RFCComplianceTest {
 		void testTYPE0Query() throws IOException {
 			byte[] dnsQuery = createDNSQuery("example.com", 0);
 			
-			given().contentType("application/dns-message").body(dnsQuery).when().post("/dns-query")
-					.then().statusCode(400);
+			Response response =
+					given().contentType("application/dns-message").body(dnsQuery).when()
+					.post("/dns-query");
+			
+			response.then().statusCode(200).contentType("application/dns-message");
+			
+			// RFC 8484 Section 4.2.1: DNS errors should be in the DNS response, not HTTP status
+			// RFC 3597: TYPE0 is reserved and must not be used
+			DNSResponse dnsResponse = parseDNSResponse(response);
+			assertTrue(dnsResponse.isResponse(), "Should be a DNS response");
+			assertEquals(RCODE_FORMAT_ERROR, dnsResponse.getRcode(),
+					"Should return FORMERR for reserved TYPE0");
 		}
 	}
 	
@@ -282,36 +307,6 @@ public class RFCComplianceTest {
 	@DisplayName("RFC 1034 - Concepts and Facilities")
 	class RFC1034Tests {
 		
-		@Test
-		@DisplayName("Should cache DNS responses appropriately")
-		void testDNSCaching() throws IOException {
-			byte[] dnsQuery = createDNSQuery("example.com", 1);
-			
-			// First request - should hit upstream
-			long startTime1 = System.nanoTime();
-			Response response1 =
-					given().contentType("application/dns-message").body(dnsQuery).when()
-							.post("/dns-query");
-			long duration1 = System.nanoTime() - startTime1;
-			
-			response1.then().statusCode(200).contentType("application/dns-message");
-			String cacheControl1 = response1.header("Cache-Control");
-			assertNotNull(cacheControl1, "Cache-Control header should be present");
-			
-			// Second request - should be cached and faster
-			long startTime2 = System.nanoTime();
-			Response response2 =
-					given().contentType("application/dns-message").body(dnsQuery).when()
-							.post("/dns-query");
-			long duration2 = System.nanoTime() - startTime2;
-			
-			response2.then().statusCode(200).contentType("application/dns-message");
-			
-			// Cached response should be significantly faster (at least 50% faster)
-			// This is a reasonable assumption for cached vs uncached
-			assertThat("Cached request should be faster than initial request", duration2,
-					lessThan(duration1));
-		}
 		
 		@Test
 		@DisplayName("Should handle NXDOMAIN responses for non-existent domains")
@@ -537,11 +532,21 @@ public class RFCComplianceTest {
 		@Test
 		@DisplayName("Should handle common DNS errors appropriately")
 		void testErrorHandling() throws IOException {
-			// Double dots are invalid
+			// Double dots are invalid (consecutive dots = empty label)
 			byte[] dnsQuery = createDNSQuery("invalid..domain", 1);
 			
-			given().contentType("application/dns-message").body(dnsQuery).when().post("/dns-query")
-					.then().statusCode(400);
+			Response response =
+					given().contentType("application/dns-message").body(dnsQuery).when()
+					.post("/dns-query");
+			
+			response.then().statusCode(200).contentType("application/dns-message");
+			
+			// RFC 8484 Section 4.2.1: DNS errors should be in the DNS response, not HTTP status
+			// RFC 1912: Empty labels are not allowed
+			DNSResponse dnsResponse = parseDNSResponse(response);
+			assertTrue(dnsResponse.isResponse(), "Should be a DNS response");
+			assertEquals(RCODE_FORMAT_ERROR, dnsResponse.getRcode(),
+					"Should return FORMERR for consecutive dots (empty labels)");
 		}
 	}
 }

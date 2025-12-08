@@ -75,6 +75,9 @@ public class DNSQueryResource {
 	 * According to RFC 8484 Section 4.1.1, the DNS query is encoded with base64url
 	 * and passed as the "dns" query parameter.
 	 *
+	 * RFC 8484 Section 4.1 recommends using DNS ID of 0 in requests for HTTP cache
+	 * friendliness, since HTTP correlates request and response.
+	 *
 	 * @param dnsParam base64url encoded DNS message
 	 * @return DNS response in wire format with application/dns-message media type
 	 */
@@ -165,8 +168,10 @@ public class DNSQueryResource {
 			
 			if (dnsMessage.length < MIN_DNS_MESSAGE_LENGTH) {
 				LOG.warn("DNS message too short");
-				return Response.status(Response.Status.BAD_REQUEST)
-						.entity("Invalid DNS message format").build();
+				// RFC 8484 Section 4.2.1: Return DNS error response with 2xx HTTP status
+				byte[] errorResponse = createDNSErrorResponse(0, 1); // FORMERR
+				return Response.ok(errorResponse, APPLICATION_DNS_MESSAGE)
+						.header("Cache-Control", "max-age=300").build();
 			}
 			
 			// Extract transaction ID
@@ -178,8 +183,10 @@ public class DNSQueryResource {
 			
 			if (qdCount < 1) {
 				LOG.warn("No questions in DNS message");
-				return Response.status(Response.Status.BAD_REQUEST)
-						.entity("Invalid DNS message: no questions").build();
+				// RFC 8484 Section 4.2.1: Return DNS error response with 2xx HTTP status
+				byte[] errorResponse = createDNSErrorResponse(transactionId, 1); // FORMERR
+				return Response.ok(errorResponse, APPLICATION_DNS_MESSAGE)
+						.header("Cache-Control", "max-age=300").build();
 			}
 			
 			// Extract domain name and query type from the first question
@@ -196,8 +203,10 @@ public class DNSQueryResource {
 					// RFC 1912: Zero-length label (empty label) detection
 					if (!hasLabels) {
 						LOG.warn("Domain name starts with empty label");
-						return Response.status(Response.Status.BAD_REQUEST)
-								.entity("Invalid domain name: empty label").build();
+						// RFC 8484 Section 4.2.1: Return DNS FORMERR with 2xx HTTP status
+						byte[] errorResponse = createDNSErrorResponse(transactionId, 1); // FORMERR
+						return Response.ok(errorResponse, APPLICATION_DNS_MESSAGE)
+								.header("Cache-Control", "max-age=300").build();
 					}
 					// This appears to be the end-of-domain marker
 					// But we need to check if there are more label-like bytes following
@@ -211,9 +220,11 @@ public class DNSQueryResource {
 							LOG.warnf(
 									"Invalid domain: empty label detected (e.g., consecutive " +
 											"dots)");
-							return Response.status(Response.Status.BAD_REQUEST)
-									.entity("Invalid domain name: empty labels not allowed")
-									.build();
+							// RFC 8484 Section 4.2.1: Return DNS FORMERR with 2xx HTTP status
+							byte[] errorResponse =
+									createDNSErrorResponse(transactionId, 1); // FORMERR
+							return Response.ok(errorResponse, APPLICATION_DNS_MESSAGE)
+									.header("Cache-Control", "max-age=300").build();
 						}
 					}
 					// This is the proper end-of-domain marker
@@ -230,8 +241,10 @@ public class DNSQueryResource {
 				// Validate label length (RFC 1035: labels must be 1-63 octets)
 				if (length < 0 || length > 63) {
 					LOG.warnf("Invalid label length: %d", length);
-					return Response.status(Response.Status.BAD_REQUEST)
-							.entity("Invalid label length").build();
+					// RFC 8484 Section 4.2.1: Return DNS FORMERR with 2xx HTTP status
+					byte[] errorResponse = createDNSErrorResponse(transactionId, 1); // FORMERR
+					return Response.ok(errorResponse, APPLICATION_DNS_MESSAGE)
+							.header("Cache-Control", "max-age=300").build();
 				}
 				
 				if (hasLabels) {
@@ -242,8 +255,10 @@ public class DNSQueryResource {
 				for (int i = 0; i < length; i++) {
 					if (offset >= dnsMessage.length) {
 						LOG.warn("Invalid domain name encoding in DNS message");
-						return Response.status(Response.Status.BAD_REQUEST)
-								.entity("Invalid DNS message format").build();
+						// RFC 8484 Section 4.2.1: Return DNS FORMERR with 2xx HTTP status
+						byte[] errorResponse = createDNSErrorResponse(transactionId, 1); // FORMERR
+						return Response.ok(errorResponse, APPLICATION_DNS_MESSAGE)
+								.header("Cache-Control", "max-age=300").build();
 					}
 					domain.append((char) dnsMessage[offset]);
 					offset++;
@@ -254,26 +269,45 @@ public class DNSQueryResource {
 			// Total domain length (including null terminator) must be <= 255 octets
 			if (domain.length() > 253) {  // 253 + null terminator = 254 octets max
 				LOG.warnf("Domain name exceeds maximum length of 255 characters: %s", domain);
-				return Response.status(Response.Status.BAD_REQUEST)
-						.entity("Domain name exceeds maximum length of 255 characters").build();
+				// RFC 8484 Section 4.2.1: Return DNS FORMERR with 2xx HTTP status
+				byte[] errorResponse = createDNSErrorResponse(transactionId, 1); // FORMERR
+				return Response.ok(errorResponse, APPLICATION_DNS_MESSAGE)
+						.header("Cache-Control", "max-age=300").build();
 			}
 			
-			// RFC 1035 validation: Check individual label length constraints
-			// Each label must be <= 63 octets (already validated during parsing above)
+			// RFC 1035 validation: Check individual label length constraints and character
+			// validity
+			// Each label must be <= 63 octets and contain only valid DNS characters
+			// Valid DNS characters: a-z, A-Z, 0-9, hyphen (but not at start or end)
 			String[] labels = domain.toString().split("\\.");
 			for (String label : labels) {
 				if (label.length() > 63) {
 					LOG.warnf("Domain label exceeds maximum length of 63 characters: %s", label);
-					return Response.status(Response.Status.BAD_REQUEST)
-							.entity("Domain label exceeds maximum length of 63 characters").build();
+					// RFC 8484 Section 4.2.1: Return DNS FORMERR with 2xx HTTP status
+					byte[] errorResponse = createDNSErrorResponse(transactionId, 1); // FORMERR
+					return Response.ok(errorResponse, APPLICATION_DNS_MESSAGE)
+							.header("Cache-Control", "max-age=300").build();
+				}
+				
+				// RFC 1035: Check label character validity
+				// Labels must contain only alphanumeric characters and hyphens
+				// Hyphens cannot be at the start or end of a label
+				if (!label.matches("^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$")) {
+					LOG.warnf("Domain label contains invalid characters or format: %s", label);
+					// RFC 8484 Section 4.2.1: Return DNS FORMERR with 2xx HTTP status
+					byte[] errorResponse = createDNSErrorResponse(transactionId, 1); // FORMERR
+					return Response.ok(errorResponse, APPLICATION_DNS_MESSAGE)
+							.header("Cache-Control", "max-age=300").build();
 				}
 			}
 			
 			// Extract query type (2 bytes after domain name)
 			if (offset + DNS_QUERYTYPE_LENGTH > dnsMessage.length) {
 				LOG.warn("Invalid DNS message: missing query type");
-				return Response.status(Response.Status.BAD_REQUEST)
-						.entity("Invalid DNS message format").build();
+				// RFC 8484 Section 4.2.1: Return DNS FORMERR with 2xx HTTP status
+				byte[] errorResponse = createDNSErrorResponse(transactionId, 1); // FORMERR
+				return Response.ok(errorResponse, APPLICATION_DNS_MESSAGE)
+						.header("Cache-Control", "max-age=300").build();
 			}
 			
 			int queryType =
@@ -282,8 +316,10 @@ public class DNSQueryResource {
 			// RFC 3597 Section 2: TYPE0 is reserved and must not be used
 			if (queryType == 0) {
 				LOG.warnf("Invalid query type 0 (TYPE0) - reserved per RFC 3597");
-				return Response.status(Response.Status.BAD_REQUEST)
-						.entity("Invalid query type: TYPE0 is reserved").build();
+				// RFC 8484 Section 4.2.1: Return DNS FORMERR with 2xx HTTP status
+				byte[] errorResponse = createDNSErrorResponse(transactionId, 1); // FORMERR
+				return Response.ok(errorResponse, APPLICATION_DNS_MESSAGE)
+						.header("Cache-Control", "max-age=300").build();
 			}
 			
 			String queryTypeStr = getQueryTypeString(queryType);
@@ -310,7 +346,57 @@ public class DNSQueryResource {
 			
 		} catch (RuntimeException e) {
 			LOG.errorf(e, "Error processing DNS message");
-			return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+			// RFC 8484 Section 4.2.1: Return DNS SERVFAIL (2xx HTTP) instead of HTTP 500
+			// Extract transaction ID if possible, otherwise use 0
+			int transactionId = 0;
+			try {
+				if (dnsMessage != null && dnsMessage.length >= 2) {
+					transactionId =
+							((dnsMessage[0] & BYTE_MASK) << 8) | (dnsMessage[1] & BYTE_MASK);
+				}
+			} catch (Exception ignored) {
+				// If we can't extract transaction ID, use 0
+			}
+			byte[] errorResponse = createDNSErrorResponse(transactionId, 2); // SERVFAIL
+			return Response.ok(errorResponse, APPLICATION_DNS_MESSAGE)
+					.header("Cache-Control", "max-age=300").build();
+		}
+	}
+	
+	/**
+	 * Create a DNS error response message per RFC 1035 and RFC 8484
+	 * <p>
+	 * RFC 8484 Section 4.2.1 requires returning DNS errors as 2xx HTTP status codes with valid DNS
+	 * error messages, not HTTP error status codes.
+	 *
+	 * @param transactionId The transaction ID from the request
+	 * @param rcode         The DNS RCODE (response code): 0=NOERROR, 1=FORMERR, 2=SERVFAIL,
+	 *                      3=NXDOMAIN
+	 * @return DNS error response in wire format
+	 */
+	private byte[] createDNSErrorResponse(int transactionId, int rcode) {
+		try {
+			java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+			java.io.DataOutputStream dos = new java.io.DataOutputStream(baos);
+			
+			// Transaction ID
+			dos.writeShort(transactionId);
+			
+			// Flags: Response bit (0x8000) + RCODE
+			int flags = 0x8000 | (rcode & 0x0F);
+			dos.writeShort(flags);
+			
+			// QDCOUNT, ANCOUNT, NSCOUNT, ARCOUNT all zero
+			dos.writeShort(0);
+			dos.writeShort(0);
+			dos.writeShort(0);
+			dos.writeShort(0);
+			
+			dos.flush();
+			return baos.toByteArray();
+		} catch (IOException e) {
+			LOG.errorf(e, "Error creating DNS error response");
+			return new byte[0];
 		}
 	}
 	
