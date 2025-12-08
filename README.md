@@ -31,8 +31,20 @@ with threat detection, content filtering, and AI-powered security analysis.
 
 # The application will be available at:
 # - Frontend UI: http://localhost:8080/ui
+# - Login Page: http://localhost:8080/ui/login
 # - Metrics: http://localhost:8080/metrics
 ```
+
+### Default Login Credentials
+
+For development and testing:
+
+| Username | Password | Role  | Access                          |
+|----------|----------|-------|---------------------------------|
+| `admin`  | `admin`  | admin | Full access to all features     |
+| `user`   | `user`   | user  | Read access, limited operations |
+
+**📖 See [LOGIN.md](LOGIN.md) for complete login system documentation.**
 
 ### Building
 

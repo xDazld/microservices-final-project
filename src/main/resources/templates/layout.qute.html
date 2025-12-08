@@ -1,34 +1,46 @@
 <!DOCTYPE html>
-</html>
-</body>
-{#insert scripts}{/insert}
-<script src="/js/app.js"></script>
-
-</footer>
-</div>
-<p>DNS Filtering Service &copy; 2025 | Microservices Final Project</p>
-<div class="container">
-    <footer>
-
-        </main>
-</div>
-{#insert content}{/insert}
-<div id="alerts-container"></div>
-<div class="container">
-    <main>
-
-        </header>
-</div>
-</nav>
-<a href="/ui/admin" class="{#if active == 'admin'}active{/if}">Admin</a>
-<a href="/ui/agent" class="{#if active == 'agent'}active{/if}">AI Agent</a>
-<a href="/ui/query" class="{#if active == 'query'}active{/if}">DNS Query</a>
-<a href="/ui/filters" class="{#if active == 'filters'}active{/if}">Filter Rules</a>
-<a href="/ui" class="{#if active == 'dashboard'}active{/if}">Dashboard</a>
-<nav class="nav-links">
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{#insert title}DNS Filtering Service{/insert}</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+</head>
+<body>
+<header class="header">
+    <div class="container header-content">
+        <div class="logo">
+            <h1>DNS<span>Shield</span></h1>
+        </div>
+        <nav class="nav-links">
+            <a href="/ui" class="{#if active == 'dashboard'}active{/if}">Dashboard</a>
+            <a href="/ui/filters" class="{#if active == 'filters'}active{/if}">Filter Rules</a>
+            <a href="/ui/query" class="{#if active == 'query'}active{/if}">DNS Query</a>
+            <a href="/ui/agent" class="{#if active == 'agent'}active{/if}">AI Agent</a>
+            <a href="/ui/admin" class="{#if active == 'admin'}active{/if}">Admin</a>
+            <a href="/ui/login" class="{#if active == 'login'}active{/if}" id="login-link">Login</a>
+        </nav>
     </div>
-    <h1>DNS<span>Shield</span></h1>
-    <div class="logo">
+</header>
+
+<main>
+    <div class="container">
+        <div id="alerts-container"></div>
+        {#insert content}{/insert}
+    </div>
+</main>
+
+<footer>
+    <div class="container">
+        <p>DNS Filtering Service &copy; 2025 | Microservices Final Project</p>
+    </div>
+</footer>
+
+<script src="/js/app.js"></script>
+{#insert scripts}{/insert}
+</body>
+</html>
         <div class="container header-content">
             <header class="header">
                 <body>

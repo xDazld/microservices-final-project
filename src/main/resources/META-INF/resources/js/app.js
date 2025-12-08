@@ -300,7 +300,7 @@ async function clearCache() {
     }
 
     try {
-        const response = await fetch('/api/v1/admin/cache/clear', {
+        const response = await authenticatedFetch('/api/v1/admin/cache/clear', {
             method: 'POST'
         });
 
@@ -312,7 +312,9 @@ async function clearCache() {
             showAlert('Error: ' + (error.error || 'Failed to clear cache'), 'danger');
         }
     } catch (error) {
-        showAlert('Error: ' + error.message, 'danger');
+        if (error.message !== 'Authentication required') {
+            showAlert('Error: ' + error.message, 'danger');
+        }
     }
 }
 

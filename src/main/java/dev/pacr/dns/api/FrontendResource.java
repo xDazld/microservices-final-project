@@ -47,6 +47,9 @@ public class FrontendResource {
 	Template admin;
 	
 	@Inject
+	Template login;
+	
+	@Inject
 	DNSResolver dnsResolver;
 	
 	@Inject
@@ -102,6 +105,15 @@ public class FrontendResource {
 	public TemplateInstance getAdmin() {
 		LOG.debug("Serving admin page");
 		return admin.data("active", "admin");
+	}
+	
+	@GET
+	@Path("/login")
+	@Produces(MediaType.TEXT_HTML)
+	@PermitAll
+	public TemplateInstance getLogin() {
+		LOG.debug("Serving login page");
+		return login.data("active", "login");
 	}
 	
 	// ============== HTMX Fragment Endpoints ==============
