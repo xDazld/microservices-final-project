@@ -1,7 +1,8 @@
 package dev.pacr.dns.api;
 
-import io.smallrye.jwt.build.Jwt;
+import dev.pacr.dns.config.JwtSigningService;
 import jakarta.annotation.security.PermitAll;
+import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
@@ -11,7 +12,6 @@ import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
-import java.time.Duration;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -27,6 +27,9 @@ import java.util.Set;
 public class AuthResource {
 	
 	private static final Logger LOG = Logger.getLogger(AuthResource.class);
+	
+	@Inject
+	JwtSigningService jwtSigningService;
 	
 	@ConfigProperty(name = "mp.jwt.verify.issuer", defaultValue = "https://dns-shield.local")
 	String issuer;
@@ -104,8 +107,7 @@ public class AuthResource {
 		Set<String> groups = new HashSet<>();
 		groups.add(userInfo.role);
 		
-		return Jwt.issuer(issuer).upn(userInfo.username).groups(groups)
-				.expiresIn(Duration.ofHours(1)).sign();
+		return jwtSigningService.generateToken(issuer, userInfo.username, groups);
 	}
 	
 	/**
