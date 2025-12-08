@@ -28,6 +28,30 @@ public class DNSQueryResource {
 	DNSOrchestrator orchestrator;
 	
 	/**
+	 * Validate domain name according to RFC 1035 Section 2.3.4
+	 *
+	 * @param domain the domain name to validate
+	 * @return error message if invalid, null if valid
+	 */
+	private String validateDomainName(String domain) {
+		// RFC 1035 Section 2.3.4: Domain names must not exceed 255 octets
+		if (domain.length() > 255) {
+			return "Domain name exceeds maximum length of 255 characters (RFC 1035 Section 2.3.4)";
+		}
+		
+		// RFC 1035 Section 2.3.4: Each label must not exceed 63 octets
+		String[] labels = domain.split("\\.");
+		for (String label : labels) {
+			if (label.length() > 63) {
+				return "Domain label '" + label.substring(0, Math.min(label.length(), 20)) +
+						"...' exceeds maximum length of 63 characters (RFC 1035 Section 2.3.4)";
+			}
+		}
+		
+		return null; // Valid
+	}
+	
+	/**
 	 * Resolve a DNS query
 	 */
 	@POST
@@ -38,6 +62,13 @@ public class DNSQueryResource {
 		if (request.domain == null || request.domain.isBlank()) {
 			return Response.status(Response.Status.BAD_REQUEST)
 					.entity(Map.of("error", "Domain is required")).build();
+		}
+		
+		// RFC 1035 Section 2.3.4: Domain name validation
+		String validationError = validateDomainName(request.domain);
+		if (validationError != null) {
+			return Response.status(Response.Status.BAD_REQUEST)
+					.entity(Map.of("error", validationError)).build();
 		}
 		
 		DNSQuery query =
