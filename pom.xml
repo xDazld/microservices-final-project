@@ -173,6 +173,10 @@
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-micrometer-opentelemetry</artifactId>
         </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-kind</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
