@@ -1,0 +1,106 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+metadata:
+  name: dns-filtering-app
+  namespace: dns-filtering
+
+# Namespace for all resources
+namespace: dns-filtering
+
+# Resources to include
+resources:
+  # Core infrastructure
+  - namespace.yml
+  - secrets.yml
+  - configmaps.yml
+  - rbac.yml
+  
+  # Service deployments
+  - mariadb.yml
+  - kafka.yml
+  - lgtm.yml
+  - ollama.yml
+  - dns-service.yml
+  
+  # Additional resources
+  - autoscaling-and-storage.yml
+  - network-policies.yml
+  - ingress.yml
+  - certificates.yml
+  - daemonset.yml
+  - jobs.yml
+
+# Common labels applied to all resources
+commonLabels:
+  app.kubernetes.io/project: dns-filtering
+  app.kubernetes.io/managed-by: kustomize
+
+# Common annotations applied to all resources
+commonAnnotations:
+  deployment.kubernetes.io/revision: "1.0"
+  project.kubernetes.io/version: "1.0-SNAPSHOT"
+
+# Replicas override for scaling
+replicas:
+  - name: final-project
+    count: 1
+  - name: mariadb
+    count: 1
+  - name: kafka
+    count: 1
+  - name: lgtm
+    count: 1
+  - name: ollama
+    count: 1
+
+# Images can be overridden at deployment time
+images:
+  - name: docker.io/dazld/final-project
+    newTag: 1.0-SNAPSHOT
+  - name: docker.io/library/mariadb
+    newTag: latest
+  - name: docker.io/redpandadata/redpanda
+    newTag: latest
+  - name: docker.io/grafana/otel-lgtm
+    newTag: latest
+  - name: docker.io/ollama/ollama
+    newTag: latest
+
+# Vars for templating
+vars:
+  - name: NAMESPACE
+    objref:
+      kind: Namespace
+      name: dns-filtering
+      apiVersion: v1
+    fieldref:
+      fieldpath: metadata.name
+  - name: DB_HOST
+    objref:
+      kind: Service
+      name: mariadb
+      apiVersion: v1
+    fieldref:
+      fieldpath: metadata.name
+  - name: KAFKA_HOST
+    objref:
+      kind: Service
+      name: kafka
+      apiVersion: v1
+    fieldref:
+      fieldpath: metadata.name
+  - name: LGTM_HOST
+    objref:
+      kind: Service
+      name: lgtm
+      apiVersion: v1
+    fieldref:
+      fieldpath: metadata.name
+  - name: OLLAMA_HOST
+    objref:
+      kind: Service
+      name: ollama
+      apiVersion: v1
+    fieldref:
+      fieldpath: metadata.name

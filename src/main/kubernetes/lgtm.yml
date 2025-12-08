@@ -1,0 +1,156 @@
+---
+# LGTM Deployment (Grafana + Loki + Tempo + Prometheus)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lgtm
+  namespace: dns-filtering
+  labels:
+    app.kubernetes.io/name: lgtm
+    app.kubernetes.io/component: observability
+    app.kubernetes.io/version: "latest"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: lgtm
+      app.kubernetes.io/component: observability
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: lgtm
+        app.kubernetes.io/component: observability
+      annotations:
+        description: "LGTM Stack (Grafana, Loki, Tempo, Prometheus)"
+    spec:
+      serviceAccountName: lgtm-account
+      containers:
+        - name: lgtm
+          image: docker.io/grafana/otel-lgtm:latest
+          imagePullPolicy: Always
+          ports:
+            - name: otlp
+              containerPort: 4317
+              protocol: TCP
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+            - name: tempo
+              containerPort: 3100
+              protocol: TCP
+            - name: prometheus
+              containerPort: 9090
+              protocol: TCP
+          env:
+            - name: GF_SECURITY_ADMIN_USER
+              valueFrom:
+                secretKeyRef:
+                  name: lgtm-credentials
+                  key: GF_SECURITY_ADMIN_USER
+            - name: GF_SECURITY_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: lgtm-credentials
+                  key: GF_SECURITY_ADMIN_PASSWORD
+            - name: GF_PATHS_PROVISIONING
+              valueFrom:
+                configMapKeyRef:
+                  name: lgtm-config
+                  key: GF_PATHS_PROVISIONING
+            - name: GF_USERS_ALLOW_SIGN_UP
+              valueFrom:
+                configMapKeyRef:
+                  name: lgtm-config
+                  key: GF_USERS_ALLOW_SIGN_UP
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 500m
+              memory: 512Mi
+            limits:
+              cpu: 2000m
+              memory: 2Gi
+          volumeMounts:
+            - name: lgtm-storage
+              mountPath: /var/lib/grafana
+      volumes:
+        - name: lgtm-storage
+          emptyDir: { }
+---
+# LGTM Service (ClusterIP)
+apiVersion: v1
+kind: Service
+metadata:
+  name: lgtm
+  namespace: dns-filtering
+  labels:
+    app.kubernetes.io/name: lgtm
+    app.kubernetes.io/component: observability
+  annotations:
+    description: "LGTM Observability Stack Service"
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: lgtm
+    app.kubernetes.io/component: observability
+  ports:
+    - name: otlp
+      protocol: TCP
+      port: 4317
+      targetPort: 4317
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 3000
+    - name: tempo
+      protocol: TCP
+      port: 3100
+      targetPort: 3100
+    - name: prometheus
+      protocol: TCP
+      port: 9090
+      targetPort: 9090
+  sessionAffinity: None
+---
+# LGTM Service (NodePort)
+apiVersion: v1
+kind: Service
+metadata:
+  name: lgtm-external
+  namespace: dns-filtering
+  labels:
+    app.kubernetes.io/name: lgtm
+    app.kubernetes.io/component: observability
+  annotations:
+    description: "LGTM External Access Service"
+spec:
+  type: NodePort
+  selector:
+    app.kubernetes.io/name: lgtm
+    app.kubernetes.io/component: observability
+  ports:
+    - name: http
+      protocol: TCP
+      port: 3000
+      targetPort: 3000
+      nodePort: 30300
+    - name: otlp
+      protocol: TCP
+      port: 4317
+      targetPort: 4317
+      nodePort: 30317

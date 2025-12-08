@@ -1,0 +1,270 @@
+---
+# ServiceAccount for DNS Service
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: dns-service-account
+  namespace: dns-filtering
+  labels:
+    app.kubernetes.io/name: final-project
+    app.kubernetes.io/component: api-service
+---
+# ServiceAccount for MariaDB
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: mariadb-account
+  namespace: dns-filtering
+  labels:
+    app.kubernetes.io/name: mariadb
+    app.kubernetes.io/component: database
+---
+# ServiceAccount for Kafka
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kafka-account
+  namespace: dns-filtering
+  labels:
+    app.kubernetes.io/name: kafka
+    app.kubernetes.io/component: messaging
+---
+# ServiceAccount for LGTM
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: lgtm-account
+  namespace: dns-filtering
+  labels:
+    app.kubernetes.io/name: lgtm
+    app.kubernetes.io/component: observability
+---
+# ServiceAccount for Ollama
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ollama-account
+  namespace: dns-filtering
+  labels:
+    app.kubernetes.io/name: ollama
+    app.kubernetes.io/component: ai-service
+---
+# Role for DNS Service (namespace-scoped)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: dns-service-role
+  namespace: dns-filtering
+  labels:
+    app.kubernetes.io/name: final-project
+    app.kubernetes.io/component: api-service
+rules:
+  # Allow reading ConfigMaps and Secrets for configuration
+  - apiGroups: [ "" ]
+    resources: [ "configmaps", "secrets" ]
+    verbs: [ "get", "list", "watch" ]
+  # Allow reading Pods for service discovery
+  - apiGroups: [ "" ]
+    resources: [ "pods", "services" ]
+    verbs: [ "get", "list", "watch" ]
+  # Allow creating events for logging
+  - apiGroups: [ "" ]
+    resources: [ "events" ]
+    verbs: [ "create", "patch" ]
+---
+# Role for MariaDB
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: mariadb-role
+  namespace: dns-filtering
+  labels:
+    app.kubernetes.io/name: mariadb
+    app.kubernetes.io/component: database
+rules:
+  - apiGroups: [ "" ]
+    resources: [ "secrets", "configmaps" ]
+    verbs: [ "get", "list" ]
+  - apiGroups: [ "" ]
+    resources: [ "events" ]
+    verbs: [ "create", "patch" ]
+---
+# Role for Kafka
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: kafka-role
+  namespace: dns-filtering
+  labels:
+    app.kubernetes.io/name: kafka
+    app.kubernetes.io/component: messaging
+rules:
+  - apiGroups: [ "" ]
+    resources: [ "configmaps" ]
+    verbs: [ "get", "list", "watch" ]
+  - apiGroups: [ "" ]
+    resources: [ "events" ]
+    verbs: [ "create", "patch" ]
+---
+# Role for LGTM
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: lgtm-role
+  namespace: dns-filtering
+  labels:
+    app.kubernetes.io/name: lgtm
+    app.kubernetes.io/component: observability
+rules:
+  - apiGroups: [ "" ]
+    resources: [ "configmaps", "secrets" ]
+    verbs: [ "get", "list", "watch" ]
+  - apiGroups: [ "" ]
+    resources: [ "events" ]
+    verbs: [ "create", "patch" ]
+---
+# Role for Ollama
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: ollama-role
+  namespace: dns-filtering
+  labels:
+    app.kubernetes.io/name: ollama
+    app.kubernetes.io/component: ai-service
+rules:
+  - apiGroups: [ "" ]
+    resources: [ "configmaps" ]
+    verbs: [ "get", "list" ]
+  - apiGroups: [ "" ]
+    resources: [ "events" ]
+    verbs: [ "create", "patch" ]
+---
+# RoleBinding for DNS Service
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: dns-service-rolebinding
+  namespace: dns-filtering
+  labels:
+    app.kubernetes.io/name: final-project
+    app.kubernetes.io/component: api-service
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: dns-service-role
+subjects:
+  - kind: ServiceAccount
+    name: dns-service-account
+    namespace: dns-filtering
+---
+# RoleBinding for MariaDB
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: mariadb-rolebinding
+  namespace: dns-filtering
+  labels:
+    app.kubernetes.io/name: mariadb
+    app.kubernetes.io/component: database
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: mariadb-role
+subjects:
+  - kind: ServiceAccount
+    name: mariadb-account
+    namespace: dns-filtering
+---
+# RoleBinding for Kafka
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: kafka-rolebinding
+  namespace: dns-filtering
+  labels:
+    app.kubernetes.io/name: kafka
+    app.kubernetes.io/component: messaging
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: kafka-role
+subjects:
+  - kind: ServiceAccount
+    name: kafka-account
+    namespace: dns-filtering
+---
+# RoleBinding for LGTM
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: lgtm-rolebinding
+  namespace: dns-filtering
+  labels:
+    app.kubernetes.io/name: lgtm
+    app.kubernetes.io/component: observability
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: lgtm-role
+subjects:
+  - kind: ServiceAccount
+    name: lgtm-account
+    namespace: dns-filtering
+---
+# RoleBinding for Ollama
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: ollama-rolebinding
+  namespace: dns-filtering
+  labels:
+    app.kubernetes.io/name: ollama
+    app.kubernetes.io/component: ai-service
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: ollama-role
+subjects:
+  - kind: ServiceAccount
+    name: ollama-account
+    namespace: dns-filtering
+---
+# ClusterRole for DNS Service (cross-namespace resource access)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: dns-service-clusterrole
+  labels:
+    app.kubernetes.io/name: final-project
+    app.kubernetes.io/component: api-service
+rules:
+  # Allow reading namespaces for discovery
+  - apiGroups: [ "" ]
+    resources: [ "namespaces" ]
+    verbs: [ "get", "list", "watch" ]
+  # Allow reading nodes for topology awareness
+  - apiGroups: [ "" ]
+    resources: [ "nodes" ]
+    verbs: [ "get", "list", "watch" ]
+  # Allow reading metrics
+  - apiGroups: [ "metrics.k8s.io" ]
+    resources: [ "pods", "nodes" ]
+    verbs: [ "get", "list" ]
+---
+# ClusterRoleBinding for DNS Service
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: dns-service-clusterrolebinding
+  labels:
+    app.kubernetes.io/name: final-project
+    app.kubernetes.io/component: api-service
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: dns-service-clusterrole
+subjects:
+  - kind: ServiceAccount
+    name: dns-service-account
+    namespace: dns-filtering

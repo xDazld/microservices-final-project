@@ -1,0 +1,40 @@
+---
+# CertificateSigningRequest for DNS Service
+apiVersion: certificates.k8s.io/v1
+kind: CertificateSigningRequest
+metadata:
+  name: dns-service-csr
+  namespace: dns-filtering
+  labels:
+    app.kubernetes.io/name: final-project
+    app.kubernetes.io/component: api-service
+spec:
+  request: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURSBSRVFVRVNULS0tLS0KTUlJQ3ZqQ0NBYVlDQVFBd2V6RUxNQWtHQTFVRUJoTUNRMGN4RVRBUEJnTlZCQWdNQ2tOaGJHbG1iM0p1YVdFdwpGQXdHQTFVRUJ3d0pSMjl2Wm5KNWIzVnVkREVWTUJNR0ExVUVDaE1NUjI5dmRXNTBZM1JwYjI0eEVUQVBCZ05WCkJBTVRDMlJsYm1GMGIzMHdnZ0VpTUEwR0NTcUdTTTNCREVRQkZRQURnZ0VQUERCMUZOVTBSVGFXNHZKREF5VW1jelkzYzBObDQwTVU1SFZUZMNSMTQ1TUhSMll6aEhjRU5EVTNGWGNuUlNSME4zZVhNM1JFRkdSbVpCUVRCRVVsbDBkVEJ1VVRFeVJGVjBXbUl4YWpsRk56QkVRM2RsZW1ObE9WRlFSR0ZvVW0xU2IxWkhWVEJrUTBSTk1tTkhlRXROU1V0VGJVWTBVa2RLZWsxRVNqQmFSRkJEVVhkS1RVMUhiR0l6VFhoUmEwMVdWekI1VVRCWVNraFJkbEJSUVhkS1ZGbDRWMWRXTWpWVVNYUkJWMGx5VDFkUmQweFhVSGRSYVUxM1dsZHdkMjlIVVhkUmFrVldWak5vTVdGR2NGTlVWMFI1VlhkV2VVMVdSbkpWUjBwaVRVMXplVTlIVlRWTlV6VkNVMnhMVVV0V2IzQkVVMGhEVWsweFVuTk5NR3hhVVRWRVQxVnVVSFZYVjJoMlVrUldSMUp1UVhSRE1sSlZWRmR3VVUxSFduUk5WbkJTVjFkNFVrNWFWMUpYVWpGaFYxSm5XVzB6TkV0SFZtRkNWMGRCUVQwPQotLS0tLUVORCBDRVJUSUZJQ0FURSBSRVFVRVNULS0tLS0K
+  signerName: kubernetes.io/self-signed-kubelet
+  expirationSeconds: 86400  # 24 hours
+  usages:
+    - digital signature
+    - key encipherment
+    - server auth
+---
+# ClusterRole for certificate management
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: certificate-manager-role
+  labels:
+    app.kubernetes.io/name: cert-manager
+    app.kubernetes.io/component: certificates
+rules:
+  - apiGroups: [ "certificates.k8s.io" ]
+    resources: [ "certificatesigningrequests" ]
+    verbs: [ "get", "list", "watch" ]
+  - apiGroups: [ "certificates.k8s.io" ]
+    resources: [ "certificatesigningrequests/approval" ]
+    verbs: [ "update" ]
+  - apiGroups: [ "cert-manager.io" ]
+    resources: [ "certificates" ]
+    verbs: [ "get", "list", "watch" ]
+  - apiGroups: [ "cert-manager.io" ]
+    resources: [ "issuers" ]
+    verbs: [ "get", "list", "watch" ]

@@ -1,0 +1,192 @@
+---
+# Allow traffic between DNS Service and MariaDB
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-dns-to-mariadb
+  namespace: dns-filtering
+  labels:
+    app.kubernetes.io/name: final-project
+    app.kubernetes.io/component: network-policy
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: mariadb
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: final-project
+      ports:
+        - protocol: TCP
+          port: 3306
+---
+# Allow traffic between DNS Service and Kafka
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-dns-to-kafka
+  namespace: dns-filtering
+  labels:
+    app.kubernetes.io/name: final-project
+    app.kubernetes.io/component: network-policy
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: kafka
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: final-project
+      ports:
+        - protocol: TCP
+          port: 9092
+---
+# Allow traffic between DNS Service and LGTM (OpenTelemetry)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-dns-to-lgtm
+  namespace: dns-filtering
+  labels:
+    app.kubernetes.io/name: final-project
+    app.kubernetes.io/component: network-policy
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: lgtm
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: final-project
+      ports:
+        - protocol: TCP
+          port: 4317
+---
+# Allow traffic between DNS Service and Ollama
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-dns-to-ollama
+  namespace: dns-filtering
+  labels:
+    app.kubernetes.io/name: final-project
+    app.kubernetes.io/component: network-policy
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: ollama
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: final-project
+      ports:
+        - protocol: TCP
+          port: 11434
+---
+# Allow external traffic to DNS Service
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-external-to-dns
+  namespace: dns-filtering
+  labels:
+    app.kubernetes.io/name: final-project
+    app.kubernetes.io/component: network-policy
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: final-project
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector: { }
+      ports:
+        - protocol: TCP
+          port: 8080
+    # Allow from outside the namespace (Ingress controller)
+    - ports:
+        - protocol: TCP
+          port: 8080
+---
+# Allow DNS Service to make external DNS queries
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-dns-egress-dns
+  namespace: dns-filtering
+  labels:
+    app.kubernetes.io/name: final-project
+    app.kubernetes.io/component: network-policy
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: final-project
+  policyTypes:
+    - Egress
+  egress:
+    # Allow DNS queries
+    - to:
+        - podSelector: { }
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # Allow to other services in namespace
+    - to:
+        - podSelector: { }
+      ports:
+        - protocol: TCP
+---
+# Deny all ingress by default (implicit deny)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+  namespace: dns-filtering
+  labels:
+    app.kubernetes.io/name: default-deny
+    app.kubernetes.io/component: network-policy
+spec:
+  podSelector: { }
+  policyTypes:
+    - Ingress
+---
+# Allow monitoring traffic to all pods
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-monitoring
+  namespace: dns-filtering
+  labels:
+    app.kubernetes.io/name: monitoring
+    app.kubernetes.io/component: network-policy
+spec:
+  podSelector: { }
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: lgtm
+      ports:
+        - protocol: TCP
+          port: 8080
+        - protocol: TCP
+          port: 9100
+        - protocol: TCP
+          port: 3100

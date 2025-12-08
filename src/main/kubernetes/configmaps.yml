@@ -1,0 +1,72 @@
+---
+# MariaDB Configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mariadb-config
+  namespace: dns-filtering
+  labels:
+    app.kubernetes.io/name: mariadb
+    app.kubernetes.io/component: database
+data:
+  MYSQL_DATABASE: "quarkus"
+  MYSQL_USER: "quarkus"
+---
+# Kafka Configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kafka-config
+  namespace: dns-filtering
+  labels:
+    app.kubernetes.io/name: kafka
+    app.kubernetes.io/component: messaging
+data:
+  # Kafka broker configuration
+  KAFKA_BROKER_ID: "1"
+  KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+  KAFKA_DEFAULT_REPLICATION_FACTOR: "1"
+---
+# LGTM Configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: lgtm-config
+  namespace: dns-filtering
+  labels:
+    app.kubernetes.io/name: lgtm
+    app.kubernetes.io/component: observability
+data:
+  GF_PATHS_PROVISIONING: "/etc/grafana/provisioning"
+  GF_USERS_ALLOW_SIGN_UP: "false"
+---
+# Ollama Configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ollama-config
+  namespace: dns-filtering
+  labels:
+    app.kubernetes.io/name: ollama
+    app.kubernetes.io/component: ai-service
+data:
+  OLLAMA_HOST: "0.0.0.0:11434"
+  OLLAMA_MODELS_PATH: "/root/.ollama"
+---
+# DNS Service Application Configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dns-service-config
+  namespace: dns-filtering
+  labels:
+    app.kubernetes.io/name: final-project
+    app.kubernetes.io/component: api-service
+data:
+  QUARKUS_DATASOURCE_JDBC_URL: "jdbc:mariadb://mariadb:3306/quarkus"
+  QUARKUS_DATASOURCE_USERNAME: "quarkus"
+  KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
+  QUARKUS_OPENTELEMETRY_ENABLED: "true"
+  QUARKUS_OTEL_EXPORTER_OTLP_ENDPOINT: "http://lgtm:4317"
+  QUARKUS_LOG_LEVEL: "INFO"
+  QUARKUS_HTTP_PORT: "8080"
