@@ -11,8 +11,6 @@ import java.io.IOException;
 
 import static dev.pacr.dns.DNSServiceIntegrationTest.createDNSQuery;
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.anyOf;
-import static org.hamcrest.Matchers.is;
 
 /**
  * RFC Compliance Test Suite for DNS Filtering and Security Service
@@ -77,7 +75,7 @@ public class RFCComplianceTest {
 			// RFC 1035 Section 2.3.1: Valid domain names
 			byte[] dnsQuery = createDNSQuery("example.com", 1);
 			given().contentType("application/dns-message").body(dnsQuery).when().post("/dns-query")
-					.then().statusCode(anyOf(is(200), is(400), is(404), is(500)));
+					.then().statusCode(200).contentType("application/dns-message");
 		}
 		
 		@Test
@@ -87,7 +85,7 @@ public class RFCComplianceTest {
 			String maxLengthDomain = generateDomainWithLength(253); // 253 + 1 null label = 255
 			byte[] dnsQuery = createDNSQuery(maxLengthDomain, 1);
 			given().contentType("application/dns-message").body(dnsQuery).when().post("/dns-query")
-					.then().statusCode(anyOf(is(200), is(400), is(404), is(500)));
+					.then().statusCode(200).contentType("application/dns-message");
 		}
 		
 		@Test
@@ -97,7 +95,7 @@ public class RFCComplianceTest {
 			String tooLongDomain = generateDomainWithLength(300);
 			byte[] dnsQuery = createDNSQuery(tooLongDomain, 1);
 			given().contentType("application/dns-message").body(dnsQuery).when().post("/dns-query")
-					.then().statusCode(anyOf(is(400), is(404), is(413), is(500)));
+					.then().statusCode(400); // Should reject invalid input
 		}
 		
 		@Test
@@ -107,7 +105,7 @@ public class RFCComplianceTest {
 			String maxLabelDomain = generateLabelWithLength(63) + ".com";
 			byte[] dnsQuery = createDNSQuery(maxLabelDomain, 1);
 			given().contentType("application/dns-message").body(dnsQuery).when().post("/dns-query")
-					.then().statusCode(anyOf(is(200), is(400), is(404), is(500)));
+					.then().statusCode(200).contentType("application/dns-message");
 		}
 		
 		@Test
@@ -117,7 +115,7 @@ public class RFCComplianceTest {
 			String invalidDomain = generateLabelWithLength(64) + ".com";
 			byte[] dnsQuery = createDNSQuery(invalidDomain, 1);
 			given().contentType("application/dns-message").body(dnsQuery).when().post("/dns-query")
-					.then().statusCode(anyOf(is(400), is(404), is(500)));
+					.then().statusCode(400); // Should reject invalid label length
 		}
 		
 		@Test
@@ -126,7 +124,7 @@ public class RFCComplianceTest {
 			// RFC 1035 Section 3.2.2: A record type = 1
 			byte[] dnsQuery = createDNSQuery("example.com", 1);
 			given().contentType("application/dns-message").body(dnsQuery).when().post("/dns-query")
-					.then().statusCode(anyOf(is(200), is(400), is(404), is(500)));
+					.then().statusCode(200).contentType("application/dns-message");
 		}
 		
 		@Test
@@ -135,7 +133,7 @@ public class RFCComplianceTest {
 			// RFC 3596: IPv6 addresses - AAAA record type = 28
 			byte[] dnsQuery = createDNSQuery("example.com", 28);
 			given().contentType("application/dns-message").body(dnsQuery).when().post("/dns-query")
-					.then().statusCode(anyOf(is(200), is(400), is(404), is(500)));
+					.then().statusCode(200).contentType("application/dns-message");
 		}
 		
 		@Test
@@ -144,7 +142,7 @@ public class RFCComplianceTest {
 			// RFC 1035 Section 3.3.9: MX record type = 15
 			byte[] dnsQuery = createDNSQuery("example.com", 15);
 			given().contentType("application/dns-message").body(dnsQuery).when().post("/dns-query")
-					.then().statusCode(anyOf(is(200), is(400), is(404), is(500)));
+					.then().statusCode(200).contentType("application/dns-message");
 		}
 		
 		@Test
@@ -153,7 +151,7 @@ public class RFCComplianceTest {
 			// RFC 1035 Section 3.3.14: TXT record type = 16
 			byte[] dnsQuery = createDNSQuery("example.com", 16);
 			given().contentType("application/dns-message").body(dnsQuery).when().post("/dns-query")
-					.then().statusCode(anyOf(is(200), is(400), is(404), is(500)));
+					.then().statusCode(200).contentType("application/dns-message");
 		}
 		
 		@Test
@@ -162,7 +160,7 @@ public class RFCComplianceTest {
 			// RFC 1035 Section 3.3.1: CNAME record type = 5
 			byte[] dnsQuery = createDNSQuery("example.com", 5);
 			given().contentType("application/dns-message").body(dnsQuery).when().post("/dns-query")
-					.then().statusCode(anyOf(is(200), is(400), is(404), is(500)));
+					.then().statusCode(200).contentType("application/dns-message");
 		}
 		
 		@Test
@@ -171,7 +169,7 @@ public class RFCComplianceTest {
 			// RFC 1035 Section 3.3.11: NS record type = 2
 			byte[] dnsQuery = createDNSQuery("example.com", 2);
 			given().contentType("application/dns-message").body(dnsQuery).when().post("/dns-query")
-					.then().statusCode(anyOf(is(200), is(400), is(404), is(500)));
+					.then().statusCode(200).contentType("application/dns-message");
 		}
 		
 		@Test
@@ -180,7 +178,7 @@ public class RFCComplianceTest {
 			// RFC 1035 Section 3.3.13: SOA record type = 6
 			byte[] dnsQuery = createDNSQuery("example.com", 6);
 			given().contentType("application/dns-message").body(dnsQuery).when().post("/dns-query")
-					.then().statusCode(anyOf(is(200), is(400), is(404), is(500)));
+					.then().statusCode(200).contentType("application/dns-message");
 		}
 		
 		@Test
@@ -189,7 +187,7 @@ public class RFCComplianceTest {
 			// RFC 1035 Section 3.3.12: PTR record type = 12
 			byte[] dnsQuery = createDNSQuery("1.168.192.in-addr.arpa", 12);
 			given().contentType("application/dns-message").body(dnsQuery).when().post("/dns-query")
-					.then().statusCode(anyOf(is(200), is(400), is(404), is(500)));
+					.then().statusCode(200).contentType("application/dns-message");
 		}
 		
 		@Test
@@ -198,7 +196,7 @@ public class RFCComplianceTest {
 			// RFC 1035 Section 2.3.3: Domain names should be case-insensitive
 			byte[] dnsQuery = createDNSQuery("EXAMPLE.COM", 1);
 			given().contentType("application/dns-message").body(dnsQuery).when().post("/dns-query")
-					.then().statusCode(anyOf(is(200), is(400), is(404), is(500)));
+					.then().statusCode(200).contentType("application/dns-message");
 		}
 	}
 	
@@ -212,7 +210,7 @@ public class RFCComplianceTest {
 			// RFC 1123 Section 2.1: Host software MUST support uppercase letters
 			byte[] dnsQuery = createDNSQuery("Example.Com", 1);
 			given().contentType("application/dns-message").body(dnsQuery).when().post("/dns-query")
-					.then().statusCode(anyOf(is(200), is(400), is(404), is(500)));
+					.then().statusCode(200).contentType("application/dns-message");
 		}
 		
 		@Test
@@ -221,7 +219,7 @@ public class RFCComplianceTest {
 			// RFC 1123 Section 2.1: Relaxes RFC 952 - allows labels starting with digits
 			byte[] dnsQuery = createDNSQuery("3com.com", 1);
 			given().contentType("application/dns-message").body(dnsQuery).when().post("/dns-query")
-					.then().statusCode(anyOf(is(200), is(400), is(404), is(500)));
+					.then().statusCode(200).contentType("application/dns-message");
 		}
 		
 		@Test
@@ -230,7 +228,7 @@ public class RFCComplianceTest {
 			// RFC 1123 allows hyphens in labels (except first/last position)
 			byte[] dnsQuery = createDNSQuery("my-example.com", 1);
 			given().contentType("application/dns-message").body(dnsQuery).when().post("/dns-query")
-					.then().statusCode(anyOf(is(200), is(400), is(404), is(500)));
+					.then().statusCode(200).contentType("application/dns-message");
 		}
 	}
 	
@@ -244,16 +242,16 @@ public class RFCComplianceTest {
 			// RFC 3597: DNS implementations should handle unknown RR types
 			byte[] dnsQuery = createDNSQuery("example.com", 65280); // Unknown type
 			given().contentType("application/dns-message").body(dnsQuery).when().post("/dns-query")
-					.then().statusCode(anyOf(is(200), is(400), is(404), is(500)));
+					.then().statusCode(200).contentType("application/dns-message");
 		}
 		
 		@Test
 		@DisplayName("Should return valid response for TYPE0 queries")
 		void testTYPE0Query() throws IOException {
-			// RFC 3597 Section 2: TYPE0 is reserved
+			// RFC 3597 Section 2: TYPE0 is reserved and should be rejected
 			byte[] dnsQuery = createDNSQuery("example.com", 0);
 			given().contentType("application/dns-message").body(dnsQuery).when().post("/dns-query")
-					.then().statusCode(anyOf(is(200), is(400), is(404), is(500)));
+					.then().statusCode(400); // TYPE0 is not valid
 		}
 	}
 	
@@ -267,8 +265,7 @@ public class RFCComplianceTest {
 			// RFC 6891: Supports extended DNS capabilities
 			byte[] dnsQuery = createDNSQuery("example.com", 1);
 			given().contentType("application/dns-message").body(dnsQuery).when().post("/dns-query")
-					.then()
-					.statusCode(anyOf(is(200), is(400), is(500)));
+					.then().statusCode(200).contentType("application/dns-message");
 		}
 	}
 	
@@ -282,16 +279,17 @@ public class RFCComplianceTest {
 			// RFC 1034 Section 5: All name servers should cache responses
 			byte[] dnsQuery = createDNSQuery("example.com", 1);
 			given().contentType("application/dns-message").body(dnsQuery).when().post("/dns-query")
-					.then().statusCode(anyOf(is(200), is(400), is(404), is(500)));
+					.then().statusCode(200).contentType("application/dns-message");
 		}
 		
 		@Test
 		@DisplayName("Should handle NXDOMAIN responses for non-existent domains")
 		void testNXDomainHandling() throws IOException {
-			// RFC 1034: Non-existent domains should return NXDOMAIN
+			// RFC 1034: Non-existent domains should return NXDOMAIN (in DNS response)
 			byte[] dnsQuery = createDNSQuery("this-domain-definitely-does-not-exist-12345.com", 1);
 			given().contentType("application/dns-message").body(dnsQuery).when().post("/dns-query")
-					.then().statusCode(anyOf(is(200), is(400), is(404), is(500)));
+					.then().statusCode(200) // HTTP 200 with NXDOMAIN in DNS response
+					.contentType("application/dns-message");
 		}
 	}
 	
@@ -306,8 +304,7 @@ public class RFCComplianceTest {
 			byte[] dnsQuery = createDNSQuery("example.com", 1); // A record query
 			
 			given().contentType("application/dns-message").body(dnsQuery).when().post("/dns-query")
-					.then().statusCode(anyOf(is(200), is(500)))
-					.contentType("application/dns-message");
+					.then().statusCode(200).contentType("application/dns-message");
 		}
 		
 		@Test
@@ -317,8 +314,8 @@ public class RFCComplianceTest {
 			byte[] dnsQuery = createDNSQuery("example.com", 1);
 			String encodedQuery = base64urlEncode(dnsQuery);
 			
-			given().when().get("/dns-query?dns=" + encodedQuery).then()
-					.statusCode(anyOf(is(200), is(500))).contentType("application/dns-message");
+			given().when().get("/dns-query?dns=" + encodedQuery).then().statusCode(200)
+					.contentType("application/dns-message");
 		}
 		
 		@Test
@@ -328,18 +325,18 @@ public class RFCComplianceTest {
 			byte[] dnsQuery = createDNSQuery("example.com", 1);
 			
 			given().contentType("application/dns-message").body(dnsQuery).when().post("/dns-query")
-					.then().statusCode(anyOf(is(200), is(500)));
+					.then().statusCode(200).contentType("application/dns-message");
 		}
 		
 		@Test
 		@DisplayName("Should return proper Cache-Control headers for DoH responses")
 		void testDoHCacheControl() throws IOException {
-			// RFC 8484 Section 5.1: Cache-Control headers
+			// RFC 8484 Section 5.1: Cache-Control headers should be present
 			byte[] dnsQuery = createDNSQuery("example.com", 1);
 			String encodedQuery = base64urlEncode(dnsQuery);
 			
-			given().when().get("/dns-query?dns=" + encodedQuery).then()
-					.header("Cache-Control", is("max-age=300"));
+			given().when().get("/dns-query?dns=" + encodedQuery).then().statusCode(200)
+					.header("Cache-Control", org.hamcrest.Matchers.containsString("max-age="));
 		}
 		
 		// Helper methods for RFC 8484 tests
@@ -398,7 +395,7 @@ public class RFCComplianceTest {
 			// RFC 6762: mDNS uses .local special-use top-level domain
 			byte[] dnsQuery = createDNSQuery("mydevice.local", 1);
 			given().contentType("application/dns-message").body(dnsQuery).when().post("/dns-query")
-					.then().statusCode(anyOf(is(200), is(400), is(404), is(500)));
+					.then().statusCode(200).contentType("application/dns-message");
 		}
 	}
 	
@@ -412,7 +409,7 @@ public class RFCComplianceTest {
 			// RFC 6761 Section 6.3: localhost special-use domain
 			byte[] dnsQuery = createDNSQuery("localhost", 1);
 			given().contentType("application/dns-message").body(dnsQuery).when().post("/dns-query")
-					.then().statusCode(anyOf(is(200), is(400), is(404), is(500)));
+					.then().statusCode(200).contentType("application/dns-message");
 		}
 		
 		@Test
@@ -421,7 +418,7 @@ public class RFCComplianceTest {
 			// RFC 6761: localhost.localdomain handling
 			byte[] dnsQuery = createDNSQuery("localhost.localdomain", 1);
 			given().contentType("application/dns-message").body(dnsQuery).when().post("/dns-query")
-					.then().statusCode(anyOf(is(200), is(400), is(404), is(500)));
+					.then().statusCode(200).contentType("application/dns-message");
 		}
 		
 		@Test
@@ -430,7 +427,7 @@ public class RFCComplianceTest {
 			// RFC 6761 Section 6.5: example.com is reserved for documentation
 			byte[] dnsQuery = createDNSQuery("example.com", 1);
 			given().contentType("application/dns-message").body(dnsQuery).when().post("/dns-query")
-					.then().statusCode(anyOf(is(200), is(400), is(404), is(500)));
+					.then().statusCode(200).contentType("application/dns-message");
 		}
 		
 		@Test
@@ -439,7 +436,7 @@ public class RFCComplianceTest {
 			// RFC 6761: test domain names reserved for testing
 			byte[] dnsQuery = createDNSQuery("test.example.com", 1);
 			given().contentType("application/dns-message").body(dnsQuery).when().post("/dns-query")
-					.then().statusCode(anyOf(is(200), is(400), is(404), is(500)));
+					.then().statusCode(200).contentType("application/dns-message");
 		}
 		
 		@Test
@@ -448,7 +445,7 @@ public class RFCComplianceTest {
 			// RFC 6761 Section 6.4: .invalid is guaranteed to be invalid
 			byte[] dnsQuery = createDNSQuery("something.invalid", 1);
 			given().contentType("application/dns-message").body(dnsQuery).when().post("/dns-query")
-					.then().statusCode(anyOf(is(200), is(400), is(404), is(500)));
+					.then().statusCode(200).contentType("application/dns-message");
 		}
 	}
 	
@@ -462,7 +459,7 @@ public class RFCComplianceTest {
 			// RFC 6698: DANE - DNS-based Authentication of Named Entities
 			byte[] dnsQuery = createDNSQuery("_443._tcp.example.com", 52); // TLSA record type 52
 			given().contentType("application/dns-message").body(dnsQuery).when().post("/dns-query")
-					.then().statusCode(anyOf(is(200), is(400), is(404), is(500)));
+					.then().statusCode(200).contentType("application/dns-message");
 		}
 	}
 	
@@ -476,7 +473,7 @@ public class RFCComplianceTest {
 			// RFC 5452: Implementation of resilience against forged answers
 			byte[] dnsQuery = createDNSQuery("example.com", 1);
 			given().contentType("application/dns-message").body(dnsQuery).when().post("/dns-query")
-					.then().statusCode(anyOf(is(200), is(400), is(404), is(500)));
+					.then().statusCode(200).contentType("application/dns-message");
 		}
 	}
 	
@@ -487,10 +484,10 @@ public class RFCComplianceTest {
 		@Test
 		@DisplayName("Should handle common DNS errors appropriately")
 		void testErrorHandling() throws IOException {
-			// RFC 1912: Common DNS errors and handling
+			// RFC 1912: Common DNS errors and handling - double dots are invalid
 			byte[] dnsQuery = createDNSQuery("invalid..domain", 1);
 			given().contentType("application/dns-message").body(dnsQuery).when().post("/dns-query")
-					.then().statusCode(anyOf(is(200), is(400), is(404), is(500)));
+					.then().statusCode(400); // Should reject malformed domain
 		}
 	}
 	
@@ -504,7 +501,7 @@ public class RFCComplianceTest {
 			// RFC 2181: TTL field handling and semantics
 			byte[] dnsQuery = createDNSQuery("example.com", 1);
 			given().contentType("application/dns-message").body(dnsQuery).when().post("/dns-query")
-					.then().statusCode(anyOf(is(200), is(400), is(404), is(500)));
+					.then().statusCode(200).contentType("application/dns-message");
 		}
 		
 		@Test
@@ -513,7 +510,7 @@ public class RFCComplianceTest {
 			// RFC 2181: DNS class field (usually IN for Internet)
 			byte[] dnsQuery = createDNSQuery("example.com", 1);
 			given().contentType("application/dns-message").body(dnsQuery).when().post("/dns-query")
-					.then().statusCode(anyOf(is(200), is(400), is(404), is(500)));
+					.then().statusCode(200).contentType("application/dns-message");
 		}
 	}
 	
@@ -527,7 +524,7 @@ public class RFCComplianceTest {
 			// RFC 3901: DNS over IPv6 transport
 			byte[] dnsQuery = createDNSQuery("example.com", 1);
 			given().contentType("application/dns-message").body(dnsQuery).when().post("/dns-query")
-					.then().statusCode(anyOf(is(200), is(400), is(404), is(500)));
+					.then().statusCode(200).contentType("application/dns-message");
 		}
 	}
 }

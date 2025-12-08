@@ -185,6 +185,7 @@ public class DNSQueryResource {
 			// Extract domain name and query type from the first question
 			int offset = DNS_HEADER_LENGTH;
 			StringBuilder domain = new StringBuilder();
+			boolean hasLabels = false; // Track if we've parsed at least one label
 			
 			// Parse domain name (DNS wire format uses length-prefixed labels)
 			while (offset < dnsMessage.length) {
@@ -192,7 +193,30 @@ public class DNSQueryResource {
 				offset++;
 				
 				if (length == 0) {
-					// End of domain name
+					// RFC 1912: Zero-length label (empty label) detection
+					if (!hasLabels) {
+						LOG.warn("Domain name starts with empty label");
+						return Response.status(Response.Status.BAD_REQUEST)
+								.entity("Invalid domain name: empty label").build();
+					}
+					// This appears to be the end-of-domain marker
+					// But we need to check if there are more label-like bytes following
+					// which would indicate an empty label in the middle (e.g., "invalid..domain")
+					if (offset < dnsMessage.length - DNS_QUERYTYPE_LENGTH - 2) {
+						// Check if the next byte looks like a valid label length (1-63)
+						byte nextByte = dnsMessage[offset];
+						if (nextByte > 0 && nextByte <= 63 &&
+								(nextByte & DNS_COMPRESSION_MASK) != DNS_COMPRESSION_MASK) {
+							// This looks like another label following a zero byte - invalid!
+							LOG.warnf(
+									"Invalid domain: empty label detected (e.g., consecutive " +
+											"dots)");
+							return Response.status(Response.Status.BAD_REQUEST)
+									.entity("Invalid domain name: empty labels not allowed")
+									.build();
+						}
+					}
+					// This is the proper end-of-domain marker
 					break;
 				}
 				
@@ -203,9 +227,17 @@ public class DNSQueryResource {
 					break;
 				}
 				
-				if (!domain.isEmpty()) {
+				// Validate label length (RFC 1035: labels must be 1-63 octets)
+				if (length < 0 || length > 63) {
+					LOG.warnf("Invalid label length: %d", length);
+					return Response.status(Response.Status.BAD_REQUEST)
+							.entity("Invalid label length").build();
+				}
+				
+				if (hasLabels) {
 					domain.append('.');
 				}
+				hasLabels = true;
 				
 				for (int i = 0; i < length; i++) {
 					if (offset >= dnsMessage.length) {
@@ -227,7 +259,7 @@ public class DNSQueryResource {
 			}
 			
 			// RFC 1035 validation: Check individual label length constraints
-			// Each label must be <= 63 octets
+			// Each label must be <= 63 octets (already validated during parsing above)
 			String[] labels = domain.toString().split("\\.");
 			for (String label : labels) {
 				if (label.length() > 63) {
@@ -246,6 +278,14 @@ public class DNSQueryResource {
 			
 			int queryType =
 					((dnsMessage[offset] & BYTE_MASK) << 8) | (dnsMessage[offset + 1] & BYTE_MASK);
+			
+			// RFC 3597 Section 2: TYPE0 is reserved and must not be used
+			if (queryType == 0) {
+				LOG.warnf("Invalid query type 0 (TYPE0) - reserved per RFC 3597");
+				return Response.status(Response.Status.BAD_REQUEST)
+						.entity("Invalid query type: TYPE0 is reserved").build();
+			}
+			
 			String queryTypeStr = getQueryTypeString(queryType);
 			
 			LOG.infof("Parsed DNS query: domain=%s, type=%s (0x%04x)", domain.toString(),
