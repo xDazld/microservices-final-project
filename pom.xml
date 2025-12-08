@@ -167,7 +167,7 @@
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-keycloak-authorization</artifactId>
+            <artifactId>quarkus-observability-devservices-lgtm</artifactId>
         </dependency>
     </dependencies>
 
