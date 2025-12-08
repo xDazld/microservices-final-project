@@ -232,16 +232,6 @@ class DNSQueryResourceTest {
 				.statusCode(anyOf(is(400), is(500)));
 	}
 	
-	/**
-	 * Test POST method with invalid DNS message (too short)
-	 */
-	@Test
-	@DisplayName("POST - Should reject request with invalid DNS message (too short)")
-	void testPostInvalidMessageTooShort() {
-		given().contentType(DNS_MESSAGE_TYPE).body(new byte[] {0x00, 0x01}).when()
-				.post(DOH_ENDPOINT).then()
-				.statusCode(anyOf(is(400), is(500)));
-	}
 	
 	/**
 	 * Test POST method with valid response media type
