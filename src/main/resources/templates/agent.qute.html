@@ -1,0 +1,125 @@
+{#include layout.qute.html}
+    {#title}AI Agent - DNS Filtering Service{/title}
+
+    {#content}
+        <h1 style="margin-bottom: 30px; color: var(--primary-color);">AI Security Agent</h1>
+
+        <div class="dashboard-grid">
+            <!-- Domain Analysis -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>🤖 Domain Threat Analysis</h2>
+                </div>
+                <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                    Use AI-powered analysis to evaluate the security risk of a domain.
+                </p>
+                <form onsubmit="analyzeDomain(event)">
+                    <div class="form-group">
+                        <label for="analyze-domain">Domain to Analyze</label>
+                        <input type="text" id="analyze-domain" class="form-control"
+                               placeholder="suspicious-site.com" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">
+                        <span>Analyze with AI</span>
+                        <span class="htmx-indicator spinner"></span>
+                    </button>
+                </form>
+                <div id="analysis-result" class="query-result"
+                     style="margin-top: 20px; min-height: 200px;">
+                    Enter a domain name to analyze its security risk using AI.
+                </div>
+            </div>
+
+            <!-- Agent Capabilities -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>⚡ Agent Capabilities</h2>
+                </div>
+                <div style="display: grid; gap: 20px;">
+                    <div style="background: var(--darker-bg); padding: 20px; border-radius: 8px;">
+                        <h4 style="color: var(--primary-color); margin-bottom: 10px;">🔍 Threat
+                            Analysis</h4>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem;">
+                            Analyze domains for potential security threats including malware,
+                            phishing,
+                            and suspicious patterns using AI-powered intelligence.
+                        </p>
+                    </div>
+                    <div style="background: var(--darker-bg); padding: 20px; border-radius: 8px;">
+                        <h4 style="color: var(--primary-color); margin-bottom: 10px;">📋 Filter
+                            Recommendations</h4>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem;">
+                            Get AI-generated recommendations for filter rules based on observed
+                            traffic patterns and threat intelligence.
+                        </p>
+                    </div>
+                    <div style="background: var(--darker-bg); padding: 20px; border-radius: 8px;">
+                        <h4 style="color: var(--primary-color); margin-bottom: 10px;">🔗 Event
+                            Correlation</h4>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem;">
+                            Correlate security events to identify attack patterns and
+                            coordinated threat campaigns.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Batch Analysis -->
+        <div class="card" style="margin-top: 30px;">
+            <div class="card-header">
+                <h2>📊 Batch Domain Analysis</h2>
+            </div>
+            <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                Analyze multiple domains at once and get filter recommendations.
+            </p>
+            <form id="batch-form">
+                <div class="form-group">
+                    <label for="batch-domains">Domains (one per line)</label>
+                    <textarea id="batch-domains" class="form-control" rows="5"
+                              placeholder="domain1.com&#10;domain2.com&#10;domain3.com"></textarea>
+                </div>
+                <button type="button" class="btn btn-primary" onclick="batchAnalyze()">
+                    Analyze All
+                </button>
+            </form>
+            <div id="batch-result" style="margin-top: 20px;"></div>
+        </div>
+
+    {/content}
+
+    {#scripts}
+        <script>
+            async function batchAnalyze() {
+                const textarea = document.getElementById('batch-domains');
+                const domains = textarea.value.split('\n').filter(d => d.trim());
+
+                if (domains.length === 0) {
+                    showAlert('Please enter at least one domain', 'warning');
+                    return;
+                }
+
+                const resultDiv = document.getElementById('batch-result');
+                resultDiv.innerHTML = '<div class="spinner"></div> Analyzing domains...';
+
+                try {
+                    const response = await fetch('/api/v1/agent/recommend-filters', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({domains: domains})
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        resultDiv.innerHTML = '<div class="query-result">' + JSON.stringify(data, null, 2) + '</div>';
+                    } else {
+                        resultDiv.innerHTML = '<span style="color: var(--danger-color)">Analysis failed</span>';
+                    }
+                } catch (error) {
+                    resultDiv.innerHTML = '<span style="color: var(--danger-color)">Error: ' + error.message + '</span>';
+                }
+            }
+        </script>
+    {/scripts}
+{/include}
+

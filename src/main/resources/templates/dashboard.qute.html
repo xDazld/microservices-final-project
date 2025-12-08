@@ -1,0 +1,133 @@
+{#include layout.qute.html}
+    {#title}Dashboard - DNS Filtering Service{/title}
+
+    {#content}
+        <h1 style="margin-bottom: 30px; color: var(--primary-color);">Dashboard</h1>
+
+        <!-- Stats Cards -->
+        <div class="dashboard-grid">
+            <div class="card stat-card">
+                <div class="stat-value" id="total-queries"
+                     hx-get="/ui/stats/queries"
+                     hx-trigger="load, every 30s"
+                     hx-swap="innerHTML">
+                    --
+                </div>
+                <div class="stat-label">Total DNS Queries</div>
+            </div>
+
+            <div class="card stat-card">
+                <div class="stat-value" id="cache-hits"
+                     hx-get="/ui/stats/cache-hits"
+                     hx-trigger="load, every 30s"
+                     hx-swap="innerHTML">
+                    --
+                </div>
+                <div class="stat-label">Cache Hits</div>
+            </div>
+
+            <div class="card stat-card">
+                <div class="stat-value" id="blocked-queries"
+                     hx-get="/ui/stats/blocked"
+                     hx-trigger="load, every 30s"
+                     hx-swap="innerHTML">
+                    --
+                </div>
+                <div class="stat-label">Filter Checks</div>
+            </div>
+
+            <div class="card stat-card">
+                <div class="stat-value" id="threats-detected"
+                     hx-get="/ui/stats/threats"
+                     hx-trigger="load, every 30s"
+                     hx-swap="innerHTML">
+                    --
+                </div>
+                <div class="stat-label">Threats Detected</div>
+            </div>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="dashboard-grid">
+            <!-- Recent Activity -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>🔍 Quick DNS Lookup</h2>
+                </div>
+                <form onsubmit="testDNSQuery(event)">
+                    <div class="form-group">
+                        <label for="test-domain">Domain Name</label>
+                        <input type="text" id="test-domain" class="form-control"
+                               placeholder="example.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="record-type">Record Type</label>
+                        <select id="record-type" class="form-control">
+                            <option value="A">A (IPv4)</option>
+                            <option value="AAAA">AAAA (IPv6)</option>
+                            <option value="MX">MX (Mail)</option>
+                            <option value="TXT">TXT</option>
+                            <option value="CNAME">CNAME</option>
+                            <option value="NS">NS</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        Lookup
+                    </button>
+                </form>
+                <div id="query-result" class="query-result"
+                     style="margin-top: 20px; min-height: 100px;">
+                    Enter a domain to lookup
+                </div>
+            </div>
+
+            <!-- Cache Stats -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>📊 Cache Statistics</h2>
+                    <button class="btn btn-sm btn-secondary" onclick="clearCache()">Clear Cache
+                    </button>
+                </div>
+                <div id="cache-stats"
+                     hx-get="/ui/stats/cache"
+                     hx-trigger="load, every 30s"
+                     hx-swap="innerHTML">
+                    <div class="spinner"></div>
+                    Loading...
+                </div>
+            </div>
+
+            <!-- Security Overview -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>🛡️ Security Overview</h2>
+                </div>
+                <div id="security-stats"
+                     hx-get="/ui/stats/security"
+                     hx-trigger="load, every 30s"
+                     hx-swap="innerHTML">
+                    <div class="spinner"></div>
+                    Loading...
+                </div>
+            </div>
+
+            <!-- Active Filter Rules Summary -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>📋 Active Filters</h2>
+                    <a href="/ui/filters" class="btn btn-sm btn-primary">Manage</a>
+                </div>
+                <div id="filter-summary"
+                     hx-get="/ui/stats/filters"
+                     hx-trigger="load, every 60s"
+                     hx-swap="innerHTML">
+                    <div class="spinner"></div>
+                    Loading...
+                </div>
+            </div>
+        </div>
+    {/content}
+
+    {#scripts}{/scripts}
+{/include}
+

@@ -1,0 +1,131 @@
+{#include layout.qute.html}
+    {#title}Admin - DNS Filtering Service{/title}
+
+    {#content}
+        <h1 style="margin-bottom: 30px; color: var(--primary-color);">Administration</h1>
+
+        <div class="dashboard-grid">
+            <!-- Cache Management -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>💾 Cache Management</h2>
+                </div>
+                <div id="cache-details"
+                     hx-get="/ui/stats/cache"
+                     hx-trigger="load, every 30s"
+                     hx-swap="innerHTML">
+                    <div class="spinner"></div>
+                    Loading...
+                </div>
+                <div style="margin-top: 20px; display: flex; gap: 10px;">
+                    <button class="btn btn-danger" onclick="clearCache()">
+                        Clear Expired Cache
+                    </button>
+                </div>
+            </div>
+
+            <!-- Security Stats -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>🛡️ Security Statistics</h2>
+                </div>
+                <div id="security-details"
+                     hx-get="/ui/stats/security"
+                     hx-trigger="load, every 30s"
+                     hx-swap="innerHTML">
+                    <div class="spinner"></div>
+                    Loading...
+                </div>
+            </div>
+
+            <!-- System Info -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>ℹ️ System Information</h2>
+                </div>
+                <div id="system-info"
+                     hx-get="/ui/stats/system"
+                     hx-trigger="load"
+                     hx-swap="innerHTML">
+                    <div class="spinner"></div>
+                    Loading...
+                </div>
+            </div>
+
+            <!-- Metrics Overview -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>📈 Metrics</h2>
+                    <a href="/metrics" target="_blank" class="btn btn-sm btn-secondary">
+                        View Prometheus
+                    </a>
+                </div>
+                <div style="display: grid; gap: 15px;">
+                    <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border-color);">
+                        <span style="color: var(--text-secondary);">DNS Queries</span>
+                        <span id="metric-queries"
+                              hx-get="/ui/stats/queries"
+                              hx-trigger="load, every 10s"
+                              hx-swap="innerHTML">--</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border-color);">
+                        <span style="color: var(--text-secondary);">Filter Checks</span>
+                        <span id="metric-filters"
+                              hx-get="/ui/stats/blocked"
+                              hx-trigger="load, every 10s"
+                              hx-swap="innerHTML">--</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 10px 0;">
+                        <span style="color: var(--text-secondary);">Cache Hit Rate</span>
+                        <span id="metric-cache-rate"
+                              hx-get="/ui/stats/cache-rate"
+                              hx-trigger="load, every 10s"
+                              hx-swap="innerHTML">--</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Danger Zone -->
+        <div class="card" style="margin-top: 30px; border-color: var(--danger-color);">
+            <div class="card-header">
+                <h2 style="color: var(--danger-color);">⚠️ Danger Zone</h2>
+            </div>
+            <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                These actions are destructive and cannot be undone. Use with caution.
+            </p>
+            <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                <button class="btn btn-danger"
+                        onclick="if(confirm('Clear ALL cache entries?')) clearAllCache()">
+                    Clear All Cache
+                </button>
+                <button class="btn btn-danger"
+                        onclick="if(confirm('Reset all statistics?')) resetStats()">
+                    Reset Statistics
+                </button>
+            </div>
+        </div>
+
+    {/content}
+
+    {#scripts}
+        <script>
+            async function clearAllCache() {
+                try {
+                    const response = await fetch('/api/v1/admin/cache/clear', {method: 'POST'});
+                    if (response.ok) {
+                        showAlert('All cache cleared!', 'success');
+                        htmx.trigger('#cache-details', 'load');
+                    }
+                } catch (e) {
+                    showAlert('Failed to clear cache', 'danger');
+                }
+            }
+
+            async function resetStats() {
+                showAlert('Statistics reset functionality not yet implemented', 'warning');
+            }
+        </script>
+    {/scripts}
+{/include}
+

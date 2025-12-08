@@ -1,0 +1,128 @@
+{#include layout.qute.html}
+    {#title}DNS Query - DNS Filtering Service{/title}
+
+    {#content}
+        <h1 style="margin-bottom: 30px; color: var(--primary-color);">DNS Query Tool</h1>
+
+        <div class="query-section">
+            <!-- Query Form -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>🔍 DNS Lookup</h2>
+                </div>
+                <form onsubmit="testDNSQuery(event)">
+                    <div class="form-group">
+                        <label for="test-domain">Domain Name</label>
+                        <input type="text" id="test-domain" class="form-control"
+                               placeholder="example.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="record-type">Record Type</label>
+                        <select id="record-type" class="form-control">
+                            <option value="A">A (IPv4 Address)</option>
+                            <option value="AAAA">AAAA (IPv6 Address)</option>
+                            <option value="MX">MX (Mail Exchange)</option>
+                            <option value="TXT">TXT (Text Record)</option>
+                            <option value="CNAME">CNAME (Canonical Name)</option>
+                            <option value="NS">NS (Name Server)</option>
+                            <option value="SOA">SOA (Start of Authority)</option>
+                            <option value="PTR">PTR (Pointer)</option>
+                            <option value="SRV">SRV (Service)</option>
+                            <option value="CAA">CAA (Certificate Authority)</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">
+                        Execute Query
+                    </button>
+                </form>
+
+                <div style="margin-top: 30px;">
+                    <h4 style="color: var(--text-secondary); margin-bottom: 15px;">Common
+                        Lookups</h4>
+                    <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                        <button class="btn btn-sm btn-secondary"
+                                onclick="document.getElementById('test-domain').value='google.com'; testDNSQuery(event)">
+                            google.com
+                        </button>
+                        <button class="btn btn-sm btn-secondary"
+                                onclick="document.getElementById('test-domain').value='cloudflare.com'; testDNSQuery(event)">
+                            cloudflare.com
+                        </button>
+                        <button class="btn btn-sm btn-secondary"
+                                onclick="document.getElementById('test-domain').value='github.com'; testDNSQuery(event)">
+                            github.com
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Query Result -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>📋 Query Result</h2>
+                </div>
+                <div id="query-result" class="query-result" style="min-height: 300px;">
+                    Enter a domain name and click "Execute Query" to see the DNS response.
+                </div>
+            </div>
+        </div>
+
+        <!-- DNS Info -->
+        <div class="card" style="margin-top: 30px;">
+            <div class="card-header">
+                <h2>📚 DNS Record Types Reference</h2>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>Name</th>
+                        <th>Description</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td><span class="badge badge-info">A</span></td>
+                        <td>Address Record</td>
+                        <td>Maps a domain name to an IPv4 address</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-info">AAAA</span></td>
+                        <td>IPv6 Address Record</td>
+                        <td>Maps a domain name to an IPv6 address</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-info">MX</span></td>
+                        <td>Mail Exchange</td>
+                        <td>Specifies mail servers responsible for accepting email</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-info">CNAME</span></td>
+                        <td>Canonical Name</td>
+                        <td>Alias of one domain name to another</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-info">TXT</span></td>
+                        <td>Text Record</td>
+                        <td>Human-readable text or machine data (SPF, DKIM, etc.)</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-info">NS</span></td>
+                        <td>Name Server</td>
+                        <td>Delegates a DNS zone to authoritative name servers</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-info">SOA</span></td>
+                        <td>Start of Authority</td>
+                        <td>Contains administrative information about a DNS zone</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {/content}
+
+    {#scripts}{/scripts}
+{/include}
+
