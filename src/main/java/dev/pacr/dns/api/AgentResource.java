@@ -7,6 +7,7 @@ import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -31,7 +32,26 @@ public class AgentResource {
 	DNSIntelligenceAgent agent;
 	
 	/**
-	 * Analyze a domain using AI-powered threat intelligence
+	 * Analyze a domain using AI-powered threat intelligence (GET with path parameter)
+	 */
+	@GET
+	@Path("/analyze/{domain}")
+	@RolesAllowed({"admin", "user"})
+	public Response analyzeDomainByPath(@PathParam("domain") String domain) {
+		if (domain == null || domain.isBlank()) {
+			return Response.status(Response.Status.BAD_REQUEST)
+					.entity(Map.of("error", "Domain is required")).build();
+		}
+		
+		LOG.infof("AI Agent analyzing domain: %s", domain);
+		
+		DNSIntelligenceAgent.ThreatAnalysisResult result = agent.analyzeDomainWithAI(domain);
+		
+		return Response.ok(result).build();
+	}
+	
+	/**
+	 * Analyze a domain using AI-powered threat intelligence (POST with body)
 	 */
 	@POST
 	@Path("/analyze")
