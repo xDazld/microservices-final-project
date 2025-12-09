@@ -12,13 +12,14 @@
                     <div class="form-group">
                         <label for="username">Username</label>
                         <input type="text" id="username" class="form-control"
-                               placeholder="admin" required autofocus>
+                               placeholder="admin" required autofocus autocomplete="username">
                     </div>
 
                     <div class="form-group">
                         <label for="password">Password</label>
                         <input type="password" id="password" class="form-control"
-                               placeholder="Enter password" required>
+                               placeholder="Enter password" required
+                               autocomplete="current-password">
                     </div>
 
                     <div id="login-error"
@@ -41,7 +42,7 @@
 
     {#scripts}
         <script>
-            async function handleLogin(event) {
+            async function handleLogin(event) \{
                 event.preventDefault();
 
                 const username = document.getElementById('username').value;
@@ -55,16 +56,27 @@
                 spinner.style.display = 'inline-block';
                 errorDiv.style.display = 'none';
 
-                try {
+                try \{
+                    const body = JSON.stringify(\{
+                        username, password
+                    :
+                        password
+                    }
+                )
+
                     const response = await fetch('/api/v1/auth/login', \{
                         'POST',
                         headers: \{
                             'Content-Type': 'application/json'
-                        \},
-                        JSON.stringify(\{"username": username, "password": password\})
-                    \})
+                        }
+                    ,
+                        body
+                    }
+                )
 
-                    if (response.ok) {
+
+                    if (response.ok) \
+                    {
                         const data = await response.json();
 
                         // Store token in sessionStorage
@@ -77,15 +89,19 @@
                         sessionStorage.removeItem('redirect_after_login');
 
                         window.location.href = redirectUrl;
-                    } else {
+                    }
+                else \{
                         const error = await response.json();
                         errorDiv.textContent = error.error || 'Login failed. Please check your credentials.';
                         errorDiv.style.display = 'block';
                     }
-                } catch (error) {
+                }
+            catch
+                (error) \{
                     errorDiv.textContent = 'Network error. Please try again.';
                     errorDiv.style.display = 'block';
-                } finally {
+                }
+            finally \{
                     // Reset loading state
                     buttonText.style.display = 'inline';
                     spinner.style.display = 'none';
