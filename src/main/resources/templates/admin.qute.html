@@ -112,7 +112,10 @@
         <script>
             async function clearAllCache() {
                 try {
-                    const response = await fetch('/api/v1/admin/cache/clear', {method: 'POST'});
+                    const response = await authenticatedFetch('/api/v1/admin/cache/clear', \{method: 'POST'\
+                }
+            )
+
                     if (response.ok) {
                         showAlert('All cache cleared!', 'success');
                         htmx.trigger('#cache-details', 'load');
