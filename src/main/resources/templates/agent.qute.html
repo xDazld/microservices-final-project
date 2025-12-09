@@ -103,12 +103,12 @@
                 resultDiv.innerHTML = '<div class="spinner"></div> Analyzing domains...';
 
                 try {
-                    const payload = JSON.stringify(\{ domains \})
-                    const response = await authenticatedFetch('/api/v1/agent/recommend-filters', \{
-                        'POST',
-                        headers: \{'Content-Type': 'application/json'\},
-                        payload
-                    \})
+                    const payload = JSON.stringify({domains: domains});
+                    const response = await authenticatedFetch('/api/v1/agent/recommend-filters', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: payload
+                    });
 
                     if (response.ok) {
                         const data = await response.json();
