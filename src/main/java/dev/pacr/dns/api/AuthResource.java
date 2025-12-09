@@ -12,9 +12,9 @@ import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Authentication Resource
@@ -72,7 +72,7 @@ public class AuthResource {
 							"expiresIn", 3600 // 1 hour
 					)).build();
 			
-		} catch (Exception e) {
+		} catch (RuntimeException e) {
 			LOG.errorf(e, "Error generating token for user: %s", request.username);
 			return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
 					.entity(Map.of("error", "Failed to generate authentication token")).build();
@@ -104,7 +104,7 @@ public class AuthResource {
 	 * Generate JWT token for authenticated user
 	 */
 	private String generateToken(UserInfo userInfo) {
-		Set<String> groups = new HashSet<>();
+		Collection<String> groups = new HashSet<>();
 		groups.add(userInfo.role);
 		
 		return jwtSigningService.generateToken(issuer, userInfo.username, groups);

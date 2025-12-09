@@ -61,7 +61,7 @@ public class DNSFilterService {
 	 * Apply filtering rules to a domain
 	 */
 	@Counted(value = "dns.filter.checks", description = "Number of filter checks performed")
-	public FilterResult applyFilters(String domain) {
+	public FilterResult applyFilters(CharSequence domain) {
 		LOG.debugf("Applying filters to domain: %s", domain);
 		
 		// Get all enabled rules sorted by priority (descending)
@@ -94,7 +94,7 @@ public class DNSFilterService {
 	/**
 	 * Check if domain matches a pattern
 	 */
-	private boolean matchesPattern(String domain, String pattern) {
+	private boolean matchesPattern(CharSequence domain, String pattern) {
 		// Convert wildcard pattern to regex if not already cached
 		Pattern compiledPattern = compiledPatterns.computeIfAbsent(pattern, p -> {
 			String regex = p.replace(".", "\\.").replace("*", ".*");

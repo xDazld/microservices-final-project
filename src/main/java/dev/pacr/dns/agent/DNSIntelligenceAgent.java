@@ -72,7 +72,7 @@ public class DNSIntelligenceAgent {
 			recommendation.recommendations = assistant.recommendFilters(prompt);
 			recommendation.confidence = 0.75;
 			
-		} catch (Exception e) {
+		} catch (RuntimeException e) {
 			LOG.errorf(e, "Failed to generate filter recommendations");
 			recommendation.recommendations = "Error generating recommendations";
 		}
@@ -103,7 +103,7 @@ public class DNSIntelligenceAgent {
 			analysis.attackType = extractAttackType(pattern);
 			analysis.confidence = 0.80;
 			
-		} catch (Exception e) {
+		} catch (RuntimeException e) {
 			LOG.errorf(e, "Failed to correlate security events");
 			analysis.patterns = "Analysis failed";
 		}
@@ -191,7 +191,7 @@ public class DNSIntelligenceAgent {
 		SecurityService securityService;
 		
 		@Tool("Check if a domain matches existing filter rules")
-		public String checkFilterMatch(String domain) {
+		public String checkFilterMatch(CharSequence domain) {
 			boolean isBlocked = filterService.applyFilters(domain).isBlocked();
 			return isBlocked ? "Domain is currently blocked" : "Domain is allowed";
 		}

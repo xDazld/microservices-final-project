@@ -235,7 +235,7 @@ public class FrontendResource {
 		long blocked =
 				rules.stream().filter(r -> r.getType() == FilterRule.RuleType.BLOCK).count();
 		
-		String html = "<div style='display: grid; gap: 15px;'>" +
+		return "<div style='display: grid; gap: 15px;'>" +
 				"<div style='display: flex; justify-content: space-between;'>" +
 				"<span style='color: var(--text-secondary);'>Total Rules</span>" +
 				"<span style='font-weight: bold;'>" + rules.size() + "</span>" + "</div>" +
@@ -247,8 +247,6 @@ public class FrontendResource {
 				"<span style='color: var(--text-secondary);'>Block Rules</span>" +
 				"<span style='font-weight: bold; color: var(--danger-color);'>" + blocked +
 				"</span>" + "</div>" + "</div>";
-		
-		return html;
 	}
 	
 	@GET
@@ -261,7 +259,7 @@ public class FrontendResource {
 		long usedMemory = (runtime.totalMemory() - runtime.freeMemory()) / (1024 * 1024);
 		int processors = runtime.availableProcessors();
 		
-		String html = "<div style='display: grid; gap: 15px;'>" +
+		return "<div style='display: grid; gap: 15px;'>" +
 				"<div style='display: flex; justify-content: space-between;'>" +
 				"<span style='color: var(--text-secondary);'>Java Version</span>" +
 				"<span style='font-weight: bold;'>" + System.getProperty("java.version") +
@@ -277,7 +275,6 @@ public class FrontendResource {
 				"<span style='color: var(--text-secondary);'>OS</span>" +
 				"<span style='font-weight: bold;'>" + System.getProperty("os.name") + "</span>" +
 				"</div>" + "</div>";
-		return html;
 	}
 	
 	@GET
@@ -356,7 +353,7 @@ public class FrontendResource {
 		return String.format("%.0f", num);
 	}
 	
-	private String formatLabel(String key) {
+	private String formatLabel(CharSequence key) {
 		// Convert camelCase to Title Case with spaces
 		StringBuilder result = new StringBuilder();
 		for (int i = 0; i < key.length(); i++) {

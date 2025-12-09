@@ -71,7 +71,7 @@ public class DNSResolver {
 			LOG.warnf("Domain not found: %s", query.getDomain());
 			response.setResolvedAddresses(new ArrayList<>());
 			response.setStatus("NXDOMAIN");
-		} catch (Exception e) {
+		} catch (RuntimeException e) {
 			LOG.errorf(e, "Error resolving domain: %s", query.getDomain());
 			response.setResolvedAddresses(new ArrayList<>());
 			response.setStatus("ERROR");

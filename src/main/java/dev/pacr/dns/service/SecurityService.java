@@ -48,7 +48,7 @@ public class SecurityService {
 	/**
 	 * Check if a domain or its resolved IPs are known threats
 	 */
-	public boolean checkForThreats(String domain, List<String> resolvedAddresses) {
+	public boolean checkForThreats(String domain, Iterable<String> resolvedAddresses) {
 		// Check domain against malicious domains
 		if (isDomainMalicious(domain)) {
 			LOG.warnf("Malicious domain detected: %s", domain);

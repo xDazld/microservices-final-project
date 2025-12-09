@@ -62,7 +62,7 @@ public class DNSJsonResource {
 			
 			return Response.ok(response).build();
 			
-		} catch (Exception e) {
+		} catch (RuntimeException e) {
 			LOG.errorf(e, "Error processing DNS query for domain: %s", domain);
 			return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
 					.entity(Map.of("error", "Failed to process DNS query", "message",
@@ -100,7 +100,7 @@ public class DNSJsonResource {
 			
 			return Response.ok(response).build();
 			
-		} catch (Exception e) {
+		} catch (RuntimeException e) {
 			LOG.errorf(e, "Error processing DNS query for domain: %s", request.domain);
 			return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
 					.entity(Map.of("error", "Failed to process DNS query", "message",
@@ -140,7 +140,7 @@ public class DNSJsonResource {
 			
 			return Response.ok(Map.of("results", responses)).build();
 			
-		} catch (Exception e) {
+		} catch (RuntimeException e) {
 			LOG.errorf(e, "Error processing batch DNS query");
 			return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
 					.entity(Map.of("error", "Failed to process batch DNS query", "message",

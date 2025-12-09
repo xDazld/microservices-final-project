@@ -79,11 +79,11 @@ public class JwtSigningService {
 					.encodeToString(payload.toString().getBytes(StandardCharsets.UTF_8));
 			
 			// Create signature input
-			String signatureInput = encodedHeader + '.' + encodedPayload;
 			
 			// Sign
 			Signature signature = Signature.getInstance("SHA256withRSA");
 			signature.initSign(privateKey);
+			String signatureInput = encodedHeader + '.' + encodedPayload;
 			signature.update(signatureInput.getBytes(StandardCharsets.UTF_8));
 			byte[] signatureBytes = signature.sign();
 			

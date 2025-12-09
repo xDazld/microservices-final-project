@@ -1,5 +1,6 @@
 package dev.pacr.dns.messaging;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.pacr.dns.agent.DNSIntelligenceAgent;
@@ -73,6 +74,8 @@ public class DNSEventConsumer {
 				registry.counter("dns.security.dga_detected").increment();
 			}
 			
+		} catch (JsonProcessingException e) {
+			throw new RuntimeException(e);
 		} catch (Exception e) {
 			LOG.errorf(e, "Error processing query log: %s", payload);
 			registry.counter("dns.events.processing_errors", "type", "query_log").increment();
@@ -117,6 +120,8 @@ public class DNSEventConsumer {
 					LOG.infof("Unknown alert type: %s", alertType);
 			}
 			
+		} catch (JsonProcessingException e) {
+			throw new RuntimeException(e);
 		} catch (Exception e) {
 			LOG.errorf(e, "Error processing security alert: %s", payload);
 			registry.counter("dns.events.processing_errors", "type", "security_alert").increment();
@@ -155,6 +160,8 @@ public class DNSEventConsumer {
 			
 			registry.counter("dns.threat_intel.updates_processed").increment();
 			
+		} catch (JsonProcessingException e) {
+			throw new RuntimeException(e);
 		} catch (Exception e) {
 			LOG.errorf(e, "Error processing threat intelligence: %s", payload);
 		}
@@ -218,8 +225,8 @@ public class DNSEventConsumer {
 			// Count consonant clusters
 			int consonantClusters = 0;
 			for (int i = 0; i < domainPart.length() - 2; i++) {
-				if (!isVowel(domainPart.charAt(i)) && !isVowel(domainPart.charAt(i + 1)) &&
-						!isVowel(domainPart.charAt(i + 2))) {
+				if (isVowel(domainPart.charAt(i)) && isVowel(domainPart.charAt(i + 1)) &&
+						isVowel(domainPart.charAt(i + 2))) {
 					consonantClusters++;
 				}
 			}
@@ -232,7 +239,7 @@ public class DNSEventConsumer {
 	}
 	
 	private boolean isVowel(char c) {
-		return "aeiou".indexOf(Character.toLowerCase(c)) >= 0;
+		return "aeiou".indexOf(Character.toLowerCase(c)) < 0;
 	}
 }
 

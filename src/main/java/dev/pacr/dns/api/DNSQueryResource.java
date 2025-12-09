@@ -13,6 +13,7 @@ import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.Response;
 import org.jboss.logging.Logger;
 
+import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Base64;
 
@@ -214,8 +215,7 @@ public class DNSQueryResource {
 					if (offset < dnsMessage.length - DNS_QUERYTYPE_LENGTH - 2) {
 						// Check if the next byte looks like a valid label length (1-63)
 						byte nextByte = dnsMessage[offset];
-						if (nextByte > 0 && nextByte <= 63 &&
-								(nextByte & DNS_COMPRESSION_MASK) != DNS_COMPRESSION_MASK) {
+						if (nextByte > 0 && nextByte <= 63) {
 							// This looks like another label following a zero byte - invalid!
 							LOG.warnf(
 									"Invalid domain: empty label detected (e.g., consecutive " +
@@ -354,7 +354,7 @@ public class DNSQueryResource {
 					transactionId =
 							((dnsMessage[0] & BYTE_MASK) << 8) | (dnsMessage[1] & BYTE_MASK);
 				}
-			} catch (Exception ignored) {
+			} catch (RuntimeException ignored) {
 				// If we can't extract transaction ID, use 0
 			}
 			byte[] errorResponse = createDNSErrorResponse(transactionId, 2); // SERVFAIL
@@ -477,7 +477,7 @@ public class DNSQueryResource {
 	 * @param domain Domain name to encode
 	 * @throws IOException if writing to the stream fails
 	 */
-	private void writeDomainName(java.io.DataOutputStream dos, String domain) throws IOException {
+	private void writeDomainName(DataOutput dos, String domain) throws IOException {
 		String[] labels = domain.split("\\.");
 		for (String label : labels) {
 			dos.writeByte(label.length());

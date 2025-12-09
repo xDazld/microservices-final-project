@@ -1,5 +1,6 @@
 package dev.pacr.dns.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import dev.pacr.dns.model.DNSQuery;
@@ -48,6 +49,8 @@ public class DNSLoggingService {
 			
 			LOG.debugf("Logged DNS query: %s (%s)", query.getDomain(), response.getStatus());
 			
+		} catch (JsonProcessingException e) {
+			throw new RuntimeException(e);
 		} catch (Exception e) {
 			LOG.errorf(e, "Failed to log DNS query: %s", query.getDomain());
 		}
@@ -100,6 +103,8 @@ public class DNSLoggingService {
 			
 			LOG.warnf("Security alert logged: %s - %s", alertType, domain);
 			
+		} catch (JsonProcessingException e) {
+			throw new RuntimeException(e);
 		} catch (Exception e) {
 			LOG.errorf(e, "Failed to log security alert for domain: %s", domain);
 		}
@@ -109,10 +114,10 @@ public class DNSLoggingService {
 	 * Inner class for security alerts
 	 */
 	private static class SecurityAlert {
-		public String domain;
-		public String alertType;
-		public String description;
-		public String timestamp;
+		public final String domain;
+		public final String alertType;
+		public final String description;
+		public final String timestamp;
 		
 		public SecurityAlert(String domain, String alertType, String description) {
 			this.domain = domain;
