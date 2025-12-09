@@ -1,12 +1,10 @@
 package dev.pacr.dns.agent;
 
 import dev.langchain4j.agent.tool.Tool;
-import dev.langchain4j.memory.chat.MessageWindowChatMemory;
-import dev.langchain4j.service.AiServices;
 import dev.langchain4j.service.SystemMessage;
 import dev.pacr.dns.service.DNSFilterService;
 import dev.pacr.dns.service.SecurityService;
-import jakarta.annotation.PostConstruct;
+import io.quarkiverse.langchain4j.RegisterAiService;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
@@ -28,26 +26,8 @@ public class DNSIntelligenceAgent {
 	@Inject
 	SecurityService securityService;
 	
-	private DNSAssistant assistant;
-	
-	@PostConstruct
-	public void init() {
-		LOG.info("Initializing DNS Intelligence Agent");
-		
-		// Note: In production, configure with actual LLM provider
-		// For now, this provides the structure for agent-based services
-		try {
-			assistant = AiServices.builder(DNSAssistant.class)
-					.chatMemory(MessageWindowChatMemory.withMaxMessages(10))
-					.tools(new DNSAnalysisTools()).build();
-			
-			LOG.info("DNS Intelligence Agent initialized successfully");
-		} catch (Exception e) {
-			LOG.warn("Could not initialize AI services (LLM provider not configured): " +
-					e.getMessage());
-			// Agent will operate in degraded mode with rule-based analysis
-		}
-	}
+	@Inject
+	DNSAssistant assistant;
 	
 	/**
 	 * Analyze a domain using AI-powered threat intelligence
@@ -161,6 +141,7 @@ public class DNSIntelligenceAgent {
 	/**
 	 * AI Assistant interface for DNS analysis
 	 */
+	@RegisterAiService(tools = DNSAnalysisTools.class)
 	public interface DNSAssistant {
 		
 		@SystemMessage("You are a DNS security expert. Analyze domains for threats, " +
@@ -200,7 +181,14 @@ public class DNSIntelligenceAgent {
 	/**
 	 * Tools available to the AI agent
 	 */
-	public class DNSAnalysisTools {
+	@ApplicationScoped
+	public static class DNSAnalysisTools {
+		
+		@Inject
+		DNSFilterService filterService;
+		
+		@Inject
+		SecurityService securityService;
 		
 		@Tool("Check if a domain matches existing filter rules")
 		public String checkFilterMatch(String domain) {
