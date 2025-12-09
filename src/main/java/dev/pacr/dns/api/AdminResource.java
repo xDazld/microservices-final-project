@@ -50,19 +50,55 @@ public class AdminResource {
 		Map<String, Object> stats = new HashMap<>();
 		
 		// DNS cache statistics
-		stats.put("cache", dnsResolver.getCacheStats());
+		stats.put("cache", sanitizeStats(dnsResolver.getCacheStats()));
 		
 		// Security statistics
-		stats.put("security", securityService.getThreatStats());
+		stats.put("security", sanitizeStats(securityService.getThreatStats()));
 		
 		// Get metrics from Micrometer
 		Double queryCount = meterRegistry.counter("dns.query.count").count();
-		stats.put("totalQueries", queryCount);
+		stats.put("totalQueries", sanitizeNumber(queryCount));
 		
 		Double filterChecks = meterRegistry.counter("dns.filter.checks").count();
-		stats.put("filterChecks", filterChecks);
+		stats.put("filterChecks", sanitizeNumber(filterChecks));
 		
 		return Response.ok(stats).build();
+	}
+	
+	/**
+	 * Sanitize numeric values to prevent JSON serialization errors Replaces NaN and Infinite
+	 * values
+	 * with 0
+	 */
+	private Object sanitizeNumber(Object value) {
+		if (value instanceof Double d) {
+			if (d.isNaN() || d.isInfinite()) {
+				return 0.0;
+			}
+		} else if (value instanceof Float f) {
+			if (f.isNaN() || f.isInfinite()) {
+				return 0.0f;
+			}
+		}
+		return value;
+	}
+	
+	/**
+	 * Sanitize a map of statistics to prevent JSON serialization errors
+	 */
+	private Map<String, Object> sanitizeStats(Map<String, Object> stats) {
+		Map<String, Object> sanitized = new HashMap<>();
+		for (Map.Entry<String, Object> entry : stats.entrySet()) {
+			Object value = entry.getValue();
+			if (value instanceof Map) {
+				@SuppressWarnings("unchecked") Map<String, Object> nestedMap =
+						(Map<String, Object>) value;
+				sanitized.put(entry.getKey(), sanitizeStats(nestedMap));
+			} else {
+				sanitized.put(entry.getKey(), sanitizeNumber(value));
+			}
+		}
+		return sanitized;
 	}
 	
 	/**
@@ -74,7 +110,7 @@ public class AdminResource {
 	public Response getCacheStats() {
 		LOG.debug("Fetching cache statistics");
 		
-		Map<String, Object> stats = dnsResolver.getCacheStats();
+		Map<String, Object> stats = sanitizeStats(dnsResolver.getCacheStats());
 		
 		return Response.ok(stats).build();
 	}
@@ -102,7 +138,7 @@ public class AdminResource {
 	public Response getSecurityStats() {
 		LOG.debug("Fetching security statistics");
 		
-		Map<String, Object> stats = securityService.getThreatStats();
+		Map<String, Object> stats = sanitizeStats(securityService.getThreatStats());
 		
 		return Response.ok(stats).build();
 	}
