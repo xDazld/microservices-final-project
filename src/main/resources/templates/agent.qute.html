@@ -90,6 +90,33 @@
 
     {#scripts}
         <script>
+            async function analyzeDomain(event) {
+                event.preventDefault();
+                const domainInput = document.getElementById('analyze-domain');
+                const domain = domainInput.value.trim();
+                const resultDiv = document.getElementById('analysis-result');
+
+                if (!domain) {
+                    showAlert('Please enter a domain name', 'warning');
+                    return;
+                }
+
+                resultDiv.innerHTML = '<div class="spinner"></div> Analyzing domain...';
+
+                try {
+                    const response = await authenticatedFetch('/api/v1/agent/analyze/' + encodeURIComponent(domain));
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        resultDiv.innerHTML = '<div class="query-result"><pre>' + JSON.stringify(data, null, 2) + '</pre></div>';
+                    } else {
+                        resultDiv.innerHTML = '<span style="color: var(--danger-color)">Analysis failed</span>';
+                    }
+                } catch (error) {
+                    resultDiv.innerHTML = '<span style="color: var(--danger-color)">Error: ' + error.message + '</span>';
+                }
+            }
+
             async function batchAnalyze() {
                 const textarea = document.getElementById('batch-domains');
                 const domains = textarea.value.split('\n').filter(d => d.trim());
@@ -103,16 +130,21 @@
                 resultDiv.innerHTML = '<div class="spinner"></div> Analyzing domains...';
 
                 try {
-                    const payload = JSON.stringify({domains: domains});
-                    const response = await authenticatedFetch('/api/v1/agent/recommend-filters', {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: payload
-                    });
+                    const payloadObj = Object.create(null);
+                    payloadObj.domains = domains;
+                    const payload = JSON.stringify(payloadObj);
+
+                    const fetchOptions = Object.create(null);
+                    fetchOptions.method = 'POST';
+                    fetchOptions.headers = Object.create(null);
+                    fetchOptions.headers['Content-Type'] = 'application/json';
+                    fetchOptions.body = payload;
+
+                    const response = await authenticatedFetch('/api/v1/agent/recommend-filters', fetchOptions);
 
                     if (response.ok) {
                         const data = await response.json();
-                        resultDiv.innerHTML = '<div class="query-result">' + JSON.stringify(data, null, 2) + '</div>';
+                        resultDiv.innerHTML = '<div class="query-result"><pre>' + JSON.stringify(data, null, 2) + '</pre></div>';
                     } else {
                         resultDiv.innerHTML = '<span style="color: var(--danger-color)">Analysis failed</span>';
                     }
