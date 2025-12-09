@@ -58,10 +58,6 @@ public class DNSIntelligenceAgent {
 		ThreatAnalysisResult result = new ThreatAnalysisResult();
 		result.domain = domain;
 		
-		// Rule-based analysis (fallback when AI is not available)
-		if (assistant == null) {
-			return performRuleBasedAnalysis(domain);
-		}
 		
 		try {
 			String analysis = assistant.analyzeThreat(domain);
@@ -69,9 +65,9 @@ public class DNSIntelligenceAgent {
 			result.confidence = 0.85;
 			result.threatLevel = determineThreatLevel(analysis);
 			
-		} catch (Exception e) {
+		} catch (RuntimeException e) {
 			LOG.errorf(e, "AI analysis failed for domain: %s", domain);
-			return performRuleBasedAnalysis(domain);
+			throw e;
 		}
 		
 		return result;
@@ -133,44 +129,6 @@ public class DNSIntelligenceAgent {
 		}
 		
 		return analysis;
-	}
-	
-	/**
-	 * Fallback rule-based analysis when AI is not available
-	 */
-	private ThreatAnalysisResult performRuleBasedAnalysis(String domain) {
-		ThreatAnalysisResult result = new ThreatAnalysisResult();
-		result.domain = domain;
-		result.aiAnalysis = "Rule-based analysis (AI not available)";
-		
-		// Check domain characteristics
-		boolean hasNumbers = domain.matches(".*\\d{5,}.*");
-		boolean hasRandomChars = domain.matches(".*[a-z]{15,}.*");
-		boolean isNewTLD = domain.matches(".+\\.(xyz|top|club|online)$");
-		
-		int suspicionScore = 0;
-		if (hasNumbers) {
-			suspicionScore += 30;
-		}
-		if (hasRandomChars) {
-			suspicionScore += 25;
-		}
-		if (isNewTLD) {
-			suspicionScore += 20;
-		}
-		
-		if (suspicionScore >= 50) {
-			result.threatLevel = "HIGH";
-			result.confidence = 0.70;
-		} else if (suspicionScore >= 30) {
-			result.threatLevel = "MEDIUM";
-			result.confidence = 0.60;
-		} else {
-			result.threatLevel = "LOW";
-			result.confidence = 0.50;
-		}
-		
-		return result;
 	}
 	
 	private String determineThreatLevel(String analysis) {
