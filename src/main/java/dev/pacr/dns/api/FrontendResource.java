@@ -92,7 +92,7 @@ public class FrontendResource {
 	@GET
 	@Path("/agent")
 	@Produces(MediaType.TEXT_HTML)
-	@RolesAllowed({"admin", "user"})
+	@PermitAll
 	public TemplateInstance getAgent() {
 		LOG.debug("Serving agent page");
 		return agent.data("active", "agent");
@@ -101,7 +101,7 @@ public class FrontendResource {
 	@GET
 	@Path("/admin")
 	@Produces(MediaType.TEXT_HTML)
-	@RolesAllowed("admin")
+	@PermitAll
 	public TemplateInstance getAdmin() {
 		LOG.debug("Serving admin page");
 		return admin.data("active", "admin");
