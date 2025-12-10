@@ -21,7 +21,7 @@ resources:
   - lgtm.yml
   - ollama.yml
   - dns-service.yml
-  
+
   # Additional resources
   - autoscaling-and-storage.yml
   - network-policies.yml
@@ -29,10 +29,6 @@ resources:
   - certificates.yml
   - daemonset.yml
 
-# Common labels applied to all resources
-commonLabels:
-  app.kubernetes.io/project: dns-filtering
-  app.kubernetes.io/managed-by: kustomize
 
 # Common annotations applied to all resources
 commonAnnotations:
@@ -61,33 +57,3 @@ images:
   - name: docker.io/ollama/ollama
     newTag: latest
 
-# Vars for templating
-vars:
-  - name: NAMESPACE
-    objref:
-      kind: Namespace
-      name: dns-filtering
-      apiVersion: v1
-    fieldref:
-      fieldpath: metadata.name
-  - name: DB_HOST
-    objref:
-      kind: Service
-      name: mariadb
-      apiVersion: v1
-    fieldref:
-      fieldpath: metadata.name
-  - name: LGTM_HOST
-    objref:
-      kind: Service
-      name: lgtm
-      apiVersion: v1
-    fieldref:
-      fieldpath: metadata.name
-  - name: OLLAMA_HOST
-    objref:
-      kind: Service
-      name: ollama
-      apiVersion: v1
-    fieldref:
-      fieldpath: metadata.name
