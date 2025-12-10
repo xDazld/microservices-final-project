@@ -57,8 +57,16 @@ public class RFC5358AccessControlService {
 	 * Access Control List (ACL) to service only the intended clients."
 	 */
 	public void initialize() {
+		// Clear and reinitialize
+		allowedNetworks.clear();
+		allowedHosts.clear();
+		deniedHosts.clear();
+		
+		// Reset recursion to enabled (default from config)
+		recursionEnabled = true;
+		
 		// Add configured allowed networks
-		if (configuredAllowedNetworks != null) {
+		if (configuredAllowedNetworks != null && !configuredAllowedNetworks.isEmpty()) {
 			allowedNetworks.addAll(configuredAllowedNetworks);
 			LOG.infof("RFC 5358: Initialized with %d allowed networks: %s", allowedNetworks.size(),
 					allowedNetworks);
@@ -74,7 +82,6 @@ public class RFC5358AccessControlService {
 			// IPv6 private ranges
 			allowedNetworks.add("::1/128");          // IPv6 loopback
 			allowedNetworks.add("fc00::/7");         // IPv6 Unique Local Address
-			allowedNetworks.add("fe80::/10");        // IPv6 Link-Local
 			
 			LOG.info("RFC 5358: Using default private network ACL");
 		}
@@ -310,4 +317,3 @@ public class RFC5358AccessControlService {
 			}
 		}
 }
-
