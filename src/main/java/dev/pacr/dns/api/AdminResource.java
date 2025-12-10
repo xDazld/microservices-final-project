@@ -1,6 +1,7 @@
 package dev.pacr.dns.api;
 
 import dev.pacr.dns.service.DNSResolver;
+import dev.pacr.dns.service.EndpointStatisticsService;
 import dev.pacr.dns.service.RFC5358AccessControlService;
 import dev.pacr.dns.service.SecurityService;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -13,6 +14,7 @@ import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.jboss.logging.Logger;
@@ -41,6 +43,9 @@ public class AdminResource {
 	
 	@Inject
 	MeterRegistry meterRegistry;
+	
+	@Inject
+	EndpointStatisticsService endpointStatisticsService;
 	
 	/**
 	 * Get overall statistics
@@ -388,6 +393,123 @@ public class AdminResource {
 		
 		return Response.ok(Map.of("message", "Recursion setting updated", "enabled", enabled))
 				.build();
+	}
+	
+	/**
+	 * Get endpoint usage statistics - All endpoints
+	 * <p>
+	 * Returns comprehensive statistics for all accessed endpoints including: - Total requests per
+	 * endpoint - Success/failure rates - Average, min, max response times - Request/response byte
+	 * counts - HTTP status code distribution
+	 */
+	@GET
+	@Path("/endpoints/statistics")
+	@RolesAllowed({"admin", "user"})
+	public Response getEndpointStatistics() {
+		LOG.debug("Fetching endpoint usage statistics");
+		return Response.ok(endpointStatisticsService.getAllStatistics()).build();
+	}
+	
+	/**
+	 * Get endpoint usage statistics - Specific endpoint
+	 * <p>
+	 * Returns detailed statistics for a specific endpoint.
+	 *
+	 * @param method HTTP method (GET, POST, etc.)
+	 * @param path   API endpoint path
+	 * @return Endpoint statistics or 404 if endpoint has not been accessed
+	 */
+	@GET
+	@Path("/endpoints/statistics/{method}/{path: .*}")
+	@RolesAllowed({"admin", "user"})
+	public Response getEndpointStatisticsByPath(@PathParam("method") String method,
+												@PathParam("path") String path) {
+		LOG.debugf("Fetching statistics for endpoint: %s %s", method, path);
+		
+		Map<String, Object> stats =
+				endpointStatisticsService.getEndpointStatistics(method.toUpperCase(), '/' + path);
+		
+		if (stats == null) {
+			return Response.status(Response.Status.NOT_FOUND)
+					.entity(Map.of("error", "No statistics available for this endpoint")).build();
+		}
+		
+		return Response.ok(stats).build();
+	}
+	
+	/**
+	 * Get endpoint usage statistics - By path pattern
+	 * <p>
+	 * Returns statistics for all endpoints matching a pattern (e.g., "/api/v1/admin*"). Useful for
+	 * grouped statistics.
+	 *
+	 * @param pattern Path pattern to match (e.g., "/api/v1/dns")
+	 * @return List of matching endpoint statistics
+	 */
+	@GET
+	@Path("/endpoints/statistics-by-pattern")
+	@RolesAllowed({"admin", "user"})
+	public Response getEndpointStatisticsByPattern(@QueryParam("pattern") String pattern) {
+		if (pattern == null || pattern.isBlank()) {
+			return Response.status(Response.Status.BAD_REQUEST)
+					.entity(Map.of("error", "Pattern query parameter is required")).build();
+		}
+		
+		LOG.debugf("Fetching statistics for endpoints matching pattern: %s", pattern);
+		return Response.ok(endpointStatisticsService.getStatisticsByPattern(pattern)).build();
+	}
+	
+	/**
+	 * Get endpoint count - Total number of unique endpoints accessed
+	 *
+	 * @return Total count of unique endpoints that have been accessed
+	 */
+	@GET
+	@Path("/endpoints/count")
+	@RolesAllowed({"admin", "user"})
+	public Response getEndpointCount() {
+		LOG.debug("Fetching total endpoint count");
+		
+		Map<String, Object> response = new HashMap<>();
+		response.put("totalUniqueEndpointsAccessed", endpointStatisticsService.getEndpointCount());
+		
+		return Response.ok(response).build();
+	}
+	
+	/**
+	 * Reset all endpoint statistics
+	 * <p>
+	 * Admin operation to reset all recorded endpoint statistics. Useful after testing or
+	 * maintenance.
+	 */
+	@POST
+	@Path("/endpoints/statistics/reset")
+	@RolesAllowed("admin")
+	public Response resetAllStatistics() {
+		LOG.warn("Resetting all endpoint statistics");
+		endpointStatisticsService.resetStatistics();
+		
+		return Response.ok(Map.of("message", "All endpoint statistics have been reset")).build();
+	}
+	
+	/**
+	 * Reset statistics for a specific endpoint
+	 * <p>
+	 * Admin operation to reset statistics for a specific endpoint.
+	 *
+	 * @param method HTTP method
+	 * @param path   API endpoint path
+	 */
+	@POST
+	@Path("/endpoints/statistics/reset/{method}/{path: .*}")
+	@RolesAllowed("admin")
+	public Response resetEndpointStatistics(@PathParam("method") String method,
+											@PathParam("path") String path) {
+		LOG.warnf("Resetting statistics for endpoint: %s %s", method, path);
+		endpointStatisticsService.resetEndpointStatistics(method.toUpperCase(), '/' + path);
+		
+		return Response.ok(Map.of("message", "Endpoint statistics have been reset", "endpoint",
+				method + " /" + path)).build();
 	}
 }
 
