@@ -3,6 +3,8 @@ package dev.pacr.dns.api;
 import dev.pacr.dns.model.rfc8427.DnsMessage;
 import dev.pacr.dns.model.rfc8427.DnsMessageConverter;
 import dev.pacr.dns.service.DNSOrchestrator;
+import dev.pacr.dns.service.RFC5358AccessControlService;
+import io.vertx.core.http.HttpServerRequest;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
@@ -10,6 +12,7 @@ import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.Response;
 import org.jboss.logging.Logger;
 
@@ -18,14 +21,17 @@ import java.io.IOException;
 import java.util.Base64;
 
 /**
- * DNS over HTTP (DoH) endpoint compliant with RFC 8484
+ * DNS over HTTP (DoH) endpoint compliant with RFC 8484 and RFC 5358
  *
  * This endpoint provides DNS resolution over HTTP with support for:
  * - GET requests with base64url encoded DNS messages
  * - POST requests with DNS wire format binary messages
  * - Media type: application/dns-message
+ * - RFC 5358 access control to prevent use as reflector in DDoS attacks
  *
- * @see <a href="https://tools.ietf.org/html/rfc8484">RFC 8484</a>
+ * @see <a href="https://tools.ietf.org/html/rfc8484">RFC 8484 - DNS Queries over HTTPS (DoH)</a>
+ * @see
+ * <a href="https://tools.ietf.org/html/rfc5358">RFC 5358 - Preventing Use of Recursive Nameservers in Reflector Attacks</a>
  */
 @Path("/dns-query")
 public class DNSQueryResource {
@@ -51,6 +57,8 @@ public class DNSQueryResource {
 	private static final int FLAG_RESPONSE = 0x8400;
 	private static final int FLAG_RESPONSE_NXDOMAIN = 0x8403;
 	private static final int FLAG_RESPONSE_SERVFAIL = 0x8402;
+	private static final int FLAG_RESPONSE_REFUSED = 0x8405;
+			// RFC 5358: REFUSED for unauthorized clients
 	
 	// DNS query type codes
 	private static final int QTYPE_A = 1;
@@ -70,6 +78,12 @@ public class DNSQueryResource {
 	@Inject
 	DNSOrchestrator orchestrator;
 	
+	@Inject
+	RFC5358AccessControlService accessControl;
+	
+	@Context
+	HttpServerRequest request;
+	
 	/**
 	 * Handle GET requests with base64url encoded DNS messages
 	 *
@@ -79,13 +93,25 @@ public class DNSQueryResource {
 	 * RFC 8484 Section 4.1 recommends using DNS ID of 0 in requests for HTTP cache
 	 * friendliness, since HTTP correlates request and response.
 	 *
+	 * RFC 5358: Access control is enforced to prevent use as reflector in amplification attacks.
+	 *
 	 * @param dnsParam base64url encoded DNS message
 	 * @return DNS response in wire format with application/dns-message media type
 	 */
 	@GET
 	@Produces(APPLICATION_DNS_MESSAGE)
 	public Response getQuery(@QueryParam("dns") String dnsParam) {
-		LOG.infof("Received DoH GET request with dns parameter");
+		String clientIp = getClientIpAddress();
+		LOG.infof("Received DoH GET request from %s", clientIp);
+		
+		// RFC 5358 Section 4: IP address based authorization
+		if (!accessControl.isAuthorized(clientIp)) {
+			LOG.warnf("RFC 5358: Unauthorized DNS query from %s - REFUSED", clientIp);
+			// Return DNS REFUSED response per RFC 5358
+			byte[] refusedResponse = createDNSErrorResponse(0, 5); // REFUSED
+			return Response.ok(refusedResponse, APPLICATION_DNS_MESSAGE)
+					.header("Cache-Control", "no-cache").build();
+		}
 		
 		if (dnsParam == null || dnsParam.isEmpty()) {
 			LOG.warn("Missing dns query parameter in GET request");
@@ -98,7 +124,7 @@ public class DNSQueryResource {
 			byte[] dnsMessage = base64urlDecode(dnsParam);
 			
 			// Process the DNS message
-			return processDNSMessage(dnsMessage);
+			return processDNSMessage(dnsMessage, clientIp);
 		} catch (IllegalArgumentException e) {
 			LOG.warnf("Invalid base64url encoding in dns parameter: %s", e.getMessage());
 			return Response.status(Response.Status.BAD_REQUEST).entity("Invalid base64url " +
@@ -113,6 +139,8 @@ public class DNSQueryResource {
 	 * According to RFC 8484 Section 4.1, the DNS query is sent as the message body
 	 * with Content-Type: application/dns-message.
 	 *
+	 * RFC 5358: Access control is enforced to prevent use as reflector in amplification attacks.
+	 *
 	 * @param dnsMessage DNS query in wire format (binary)
 	 * @return DNS response in wire format with application/dns-message media type
 	 */
@@ -120,10 +148,22 @@ public class DNSQueryResource {
 	@Consumes(APPLICATION_DNS_MESSAGE)
 	@Produces(APPLICATION_DNS_MESSAGE)
 	public Response postQuery(byte[] dnsMessage) {
+		String clientIp = getClientIpAddress();
+		
 		if (dnsMessage != null) {
-			LOG.infof("Received DoH POST request with %d byte DNS message", dnsMessage.length);
+			LOG.infof("Received DoH POST request from %s with %d byte DNS message", clientIp,
+					dnsMessage.length);
 		} else {
-			LOG.warn("Received DoH POST request with null DNS message");
+			LOG.warnf("Received DoH POST request from %s with null DNS message", clientIp);
+		}
+		
+		// RFC 5358 Section 4: IP address based authorization
+		if (!accessControl.isAuthorized(clientIp)) {
+			LOG.warnf("RFC 5358: Unauthorized DNS query from %s - REFUSED", clientIp);
+			// Return DNS REFUSED response per RFC 5358
+			byte[] refusedResponse = createDNSErrorResponse(0, 5); // REFUSED
+			return Response.ok(refusedResponse, APPLICATION_DNS_MESSAGE)
+					.header("Cache-Control", "no-cache").build();
 		}
 		
 		if (dnsMessage == null || dnsMessage.length == 0) {
@@ -134,12 +174,35 @@ public class DNSQueryResource {
 		
 		try {
 			// Process the DNS message
-			return processDNSMessage(dnsMessage);
+			return processDNSMessage(dnsMessage, clientIp);
 		} catch (RuntimeException e) {
 			LOG.errorf(e, "Error processing DoH POST request");
 			return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
 					.entity("Error processing DNS query").build();
 		}
+	}
+	
+	/**
+	 * Extract client IP address from HTTP request.
+	 * <p>
+	 * RFC 5358 Section 4: Use the IP source address of DNS queries for ACL filtering. Handles
+	 * X-Forwarded-For header for proxied requests.
+	 */
+	private String getClientIpAddress() {
+		// Check X-Forwarded-For header first (for proxied requests)
+		String xForwardedFor = request.getHeader("X-Forwarded-For");
+		if (xForwardedFor != null && !xForwardedFor.isEmpty()) {
+			// Take the first IP in the chain (original client)
+			String[] ips = xForwardedFor.split(",");
+			String clientIp = ips[0].trim();
+			LOG.debugf("Client IP from X-Forwarded-For: %s", clientIp);
+			return clientIp;
+		}
+		
+		// Fall back to remote address
+		String remoteAddr = request.remoteAddress().host();
+		LOG.debugf("Client IP from remote address: %s", remoteAddr);
+		return remoteAddr;
 	}
 	
 	/**
@@ -153,9 +216,10 @@ public class DNSQueryResource {
 	 * NXDOMAIN, etc).
 	 *
 	 * @param dnsMessage DNS query in wire format (binary)
+	 * @param clientIp IP address of the client (for logging and monitoring)
 	 * @return HTTP response with DNS wire format message
 	 */
-	private Response processDNSMessage(byte[] dnsMessage) {
+	private Response processDNSMessage(byte[] dnsMessage, String clientIp) {
 		try {
 			// Parse DNS wire format message to extract domain
 			// RFC 1035: DNS message structure

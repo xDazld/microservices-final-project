@@ -1,6 +1,7 @@
 package dev.pacr.dns.api;
 
 import dev.pacr.dns.service.DNSResolver;
+import dev.pacr.dns.service.RFC5358AccessControlService;
 import dev.pacr.dns.service.SecurityService;
 import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.annotation.security.RolesAllowed;
@@ -34,6 +35,9 @@ public class AdminResource {
 	
 	@Inject
 	SecurityService securityService;
+	
+	@Inject
+	RFC5358AccessControlService rfc5358AccessControl;
 	
 	@Inject
 	MeterRegistry meterRegistry;
@@ -222,4 +226,168 @@ public class AdminResource {
 		return Response.ok(Map.of("status", "UP", "timestamp", java.time.Instant.now().toString()))
 				.build();
 	}
+	
+	/**
+	 * RFC 5358: Get access control status and compliance information
+	 */
+	@GET
+	@Path("/rfc5358/status")
+	@RolesAllowed({"admin", "user"})
+	public Response getRFC5358Status() {
+		LOG.debug("Fetching RFC 5358 compliance status");
+		
+		RFC5358AccessControlService.RFC5358Status status =
+				rfc5358AccessControl.getComplianceStatus();
+		
+		Map<String, Object> response = new HashMap<>();
+		response.put("recursionEnabled", status.recursionEnabled());
+		response.put("defaultDeny", status.defaultDeny());
+		response.put("allowedNetworkCount", status.allowedNetworkCount());
+		response.put("allowedHostCount", status.allowedHostCount());
+		response.put("deniedHostCount", status.deniedHostCount());
+		response.put("compliant", status.isCompliant());
+		response.put("recommendation", status.isCompliant() ? "RFC 5358 compliant configuration" :
+				"Consider enabling default-deny or configuring ACLs for RFC 5358 compliance");
+		
+		return Response.ok(response).build();
+	}
+	
+	/**
+	 * RFC 5358: Get allowed networks
+	 */
+	@GET
+	@Path("/rfc5358/allowed-networks")
+	@RolesAllowed({"admin", "user"})
+	public Response getAllowedNetworks() {
+		LOG.debug("Fetching allowed networks");
+		
+		var networks = rfc5358AccessControl.getAllowedNetworks();
+		
+		return Response.ok(Map.of("networks", networks, "count", networks.size())).build();
+	}
+	
+	/**
+	 * RFC 5358: Add an allowed network
+	 */
+	@POST
+	@Path("/rfc5358/allowed-networks")
+	@RolesAllowed("admin")
+	public Response addAllowedNetwork(Map<String, String> request) {
+		String network = request.get("network");
+		
+		if (network == null || network.isBlank()) {
+			return Response.status(Response.Status.BAD_REQUEST)
+					.entity(Map.of("error", "Network CIDR is required")).build();
+		}
+		
+		LOG.infof("RFC 5358: Adding allowed network: %s", network);
+		rfc5358AccessControl.allowNetwork(network);
+		
+		return Response.ok(Map.of("message", "Network added to allowed list", "network", network))
+				.build();
+	}
+	
+	/**
+	 * RFC 5358: Remove an allowed network
+	 */
+	@DELETE
+	@Path("/rfc5358/allowed-networks/{network}")
+	@RolesAllowed("admin")
+	public Response removeAllowedNetwork(@PathParam("network") String network) {
+		LOG.infof("RFC 5358: Removing allowed network: %s", network);
+		rfc5358AccessControl.denyNetwork(network);
+		
+		return Response.ok(
+				Map.of("message", "Network removed from allowed list", "network", network)).build();
+	}
+	
+	/**
+	 * RFC 5358: Get allowed hosts
+	 */
+	@GET
+	@Path("/rfc5358/allowed-hosts")
+	@RolesAllowed({"admin", "user"})
+	public Response getAllowedHosts() {
+		LOG.debug("Fetching allowed hosts");
+		
+		var hosts = rfc5358AccessControl.getAllowedHosts();
+		
+		return Response.ok(Map.of("hosts", hosts, "count", hosts.size())).build();
+	}
+	
+	/**
+	 * RFC 5358: Add an allowed host
+	 */
+	@POST
+	@Path("/rfc5358/allowed-hosts")
+	@RolesAllowed("admin")
+	public Response addAllowedHost(Map<String, String> request) {
+		String host = request.get("host");
+		
+		if (host == null || host.isBlank()) {
+			return Response.status(Response.Status.BAD_REQUEST)
+					.entity(Map.of("error", "Host IP address is required")).build();
+		}
+		
+		LOG.infof("RFC 5358: Adding allowed host: %s", host);
+		rfc5358AccessControl.allowHost(host);
+		
+		return Response.ok(Map.of("message", "Host added to allowed list", "host", host)).build();
+	}
+	
+	/**
+	 * RFC 5358: Get denied hosts
+	 */
+	@GET
+	@Path("/rfc5358/denied-hosts")
+	@RolesAllowed({"admin", "user"})
+	public Response getDeniedHosts() {
+		LOG.debug("Fetching denied hosts");
+		
+		var hosts = rfc5358AccessControl.getDeniedHosts();
+		
+		return Response.ok(Map.of("hosts", hosts, "count", hosts.size())).build();
+	}
+	
+	/**
+	 * RFC 5358: Add a denied host
+	 */
+	@POST
+	@Path("/rfc5358/denied-hosts")
+	@RolesAllowed("admin")
+	public Response addDeniedHost(Map<String, String> request) {
+		String host = request.get("host");
+		
+		if (host == null || host.isBlank()) {
+			return Response.status(Response.Status.BAD_REQUEST)
+					.entity(Map.of("error", "Host IP address is required")).build();
+		}
+		
+		LOG.infof("RFC 5358: Adding denied host: %s", host);
+		rfc5358AccessControl.denyHost(host);
+		
+		return Response.ok(Map.of("message", "Host added to denied list", "host", host)).build();
+	}
+	
+	/**
+	 * RFC 5358: Enable or disable recursion globally
+	 */
+	@POST
+	@Path("/rfc5358/recursion")
+	@RolesAllowed("admin")
+	public Response setRecursion(Map<String, Boolean> request) {
+		Boolean enabled = request.get("enabled");
+		
+		if (enabled == null) {
+			return Response.status(Response.Status.BAD_REQUEST)
+					.entity(Map.of("error", "enabled field is required (true/false)")).build();
+		}
+		
+		LOG.infof("RFC 5358: Setting recursion enabled=%s", enabled);
+		rfc5358AccessControl.setRecursionEnabled(enabled);
+		
+		return Response.ok(Map.of("message", "Recursion setting updated", "enabled", enabled))
+				.build();
+	}
 }
+

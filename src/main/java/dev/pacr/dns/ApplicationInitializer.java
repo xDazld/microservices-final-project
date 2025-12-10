@@ -1,6 +1,7 @@
 package dev.pacr.dns;
 
 import dev.pacr.dns.service.DNSFilterService;
+import dev.pacr.dns.service.RFC5358AccessControlService;
 import dev.pacr.dns.service.SecurityService;
 import io.quarkus.runtime.StartupEvent;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -22,6 +23,9 @@ public class ApplicationInitializer {
 	@Inject
 	SecurityService securityService;
 	
+	@Inject
+	RFC5358AccessControlService rfc5358AccessControl;
+	
 	/**
 	 * Initialize the application on startup
 	 */
@@ -29,6 +33,18 @@ public class ApplicationInitializer {
 		LOG.info("=================================================");
 		LOG.info("DNS Filtering and Security Service Starting...");
 		LOG.info("=================================================");
+		
+		// Initialize RFC 5358 access control
+		LOG.info("Initializing RFC 5358 access control (preventing amplification attacks)...");
+		rfc5358AccessControl.initialize();
+		RFC5358AccessControlService.RFC5358Status status =
+				rfc5358AccessControl.getComplianceStatus();
+		LOG.infof("RFC 5358 Status: %s", status);
+		if (!status.isCompliant()) {
+			LOG.warn(
+					"WARNING: RFC 5358 compliance may not be fully enforced. Consider enabling " +
+							"default-deny policy.");
+		}
 		
 		// Initialize default filtering rules
 		LOG.info("Initializing default filtering rules...");

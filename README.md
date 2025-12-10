@@ -6,6 +6,7 @@ with threat detection, content filtering, and AI-powered security analysis.
 ## Features
 
 - **DNS over HTTP (DoH)** - RFC 8484 compliant DNS resolution
+- **RFC 5358 Compliant** - Protection against DNS amplification attacks
 - **RFC 8767 Compliant** - Serve-stale for improved DNS resiliency
 - **RFC 9520 Compliant** - Negative caching of DNS resolution failures
 - **Content Filtering** - Block ads, tracking, malware, phishing, and custom domains
@@ -15,6 +16,30 @@ with threat detection, content filtering, and AI-powered security analysis.
 - **Event Streaming** - Kafka integration for security events
 - **Container Ready** - Docker and Kubernetes deployment support
 - **Secure by Default** - JWT authentication with role-based access control
+
+## RFC 5358 Compliance
+
+This implementation is **fully compliant** with RFC 5358 (BCP 140) "Preventing Use of Recursive
+Nameservers in Reflector Attacks":
+
+✅ **IP-based Access Control** - ACLs filter queries by source IP address  
+✅ **Network CIDR filtering** - Support for IPv4 and IPv6 network ranges  
+✅ **Explicit allow/deny lists** - Per-host access control  
+✅ **Default-deny policy** - Configurable to block external networks  
+✅ **Recursion control** - Can disable recursion for authoritative-only mode
+
+### Why RFC 5358 Matters
+
+RFC 5358 prevents DNS amplification attacks where open recursive nameservers are abused as
+reflectors in DDoS attacks. Our implementation:
+
+- **Prevents amplification abuse** by restricting recursive queries to trusted networks
+- **Protects infrastructure** from being weaponized in attacks
+- **Reduces attack surface** with configurable access controls
+- **Monitors blocked queries** with comprehensive metrics
+
+**📖 See [docs/RFC5358-COMPLIANCE.md](docs/RFC5358-COMPLIANCE.md) for complete compliance
+documentation.**
 
 ## RFC 8767 Compliance
 
