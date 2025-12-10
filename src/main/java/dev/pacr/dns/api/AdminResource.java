@@ -65,10 +65,20 @@ public class AdminResource {
 		stats.put("security", sanitizeStats(securityService.getThreatStats()));
 		
 		// Get metrics from Micrometer
-		Double queryCount = meterRegistry.counter("dns.query.count").count();
+		double queryCount = 0;
+		try {
+			queryCount = meterRegistry.counter("dns.query.count").count();
+		} catch (Exception e) {
+			LOG.warnf("Error retrieving query count metric: %s", e.getMessage());
+		}
 		stats.put("totalQueries", sanitizeNumber(queryCount));
 		
-		Double filterChecks = meterRegistry.counter("dns.filter.checks").count();
+		double filterChecks = 0;
+		try {
+			filterChecks = meterRegistry.counter("dns.filter.checks").count();
+		} catch (Exception e) {
+			LOG.warnf("Error retrieving filter checks metric: %s", e.getMessage());
+		}
 		stats.put("filterChecks", sanitizeNumber(filterChecks));
 		
 		return Response.ok(stats).build();

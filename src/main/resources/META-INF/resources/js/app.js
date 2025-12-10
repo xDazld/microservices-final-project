@@ -17,9 +17,8 @@ function initializeApp() {
     if (!isLoginPage) {
         // Load initial data only if authenticated
         if (isAuthenticated()) {
-            loadDashboardStats();
-            // Set up auto-refresh for stats
-            setInterval(loadDashboardStats, 30000); // Refresh every 30 seconds
+            // HTMX handles all dashboard stats loading via hx-trigger="load"
+            // No need to manually call loadDashboardStats() as it conflicts with HTMX
         } else {
             // Not authenticated and not on login page - redirect to login
             sessionStorage.setItem('redirect_after_login', window.location.pathname);
@@ -145,9 +144,20 @@ function updateStatsDisplay(stats) {
     const threatsEl = document.getElementById('threats-detected');
 
     if (totalQueriesEl) totalQueriesEl.textContent = formatNumber(stats.totalQueries || 0);
-    if (cacheHitsEl && stats.cache) cacheHitsEl.textContent = formatNumber(stats.cache.hits || 0);
+
+    // Cache hits comes from positive cache active count
+    if (cacheHitsEl && stats.cache && stats.cache.positiveCache) {
+        cacheHitsEl.textContent = formatNumber(stats.cache.positiveCache.active || 0);
+    }
+
     if (blockedEl) blockedEl.textContent = formatNumber(stats.filterChecks || 0);
-    if (threatsEl && stats.security) threatsEl.textContent = formatNumber(stats.security.threatsDetected || 0);
+
+    // Threats is the sum of malicious domains and IPs
+    if (threatsEl && stats.security) {
+        const domains = stats.security.maliciousDomains || 0;
+        const ips = stats.security.maliciousIPs || 0;
+        threatsEl.textContent = formatNumber(domains + ips);
+    }
 }
 
 // Filter Rules Management

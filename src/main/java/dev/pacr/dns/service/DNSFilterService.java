@@ -64,6 +64,9 @@ public class DNSFilterService {
 	public FilterResult applyFilters(CharSequence domain) {
 		LOG.debugf("Applying filters to domain: %s", domain);
 		
+		// Explicitly increment counter (in case @Counted annotation doesn't work)
+		registry.counter("dns.filter.checks").increment();
+		
 		// Get all enabled rules sorted by priority (descending)
 		List<FilterRule> enabledRules = rules.values().stream().filter(FilterRule::isEnabled)
 				.sorted((r1, r2) -> Integer.compare(r2.getPriority(), r1.getPriority())).toList();

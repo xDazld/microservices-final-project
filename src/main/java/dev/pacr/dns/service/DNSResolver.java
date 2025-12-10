@@ -86,6 +86,9 @@ public class DNSResolver {
 	public DnsMessage resolve(DnsMessage query) {
 		LOG.infof("Resolving DNS query: %s (type: %d)", query.getQname(), query.getQtype());
 		
+		// Explicitly increment counter (in case @Counted annotation doesn't work)
+		registry.counter("dns.query.count").increment();
+		
 		long startTime = System.currentTimeMillis();
 		String cacheKey = getCacheKey(query);
 		

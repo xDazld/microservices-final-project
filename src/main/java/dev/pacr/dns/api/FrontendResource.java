@@ -62,7 +62,6 @@ public class FrontendResource {
 	MeterRegistry meterRegistry;
 	
 	// ============== Page Routes ==============
-	
 	@GET
 	@Produces(MediaType.TEXT_HTML)
 	@PermitAll
@@ -123,8 +122,16 @@ public class FrontendResource {
 	@Produces(MediaType.TEXT_HTML)
 	@PermitAll
 	public String getQueryCount() {
-		double count = meterRegistry.counter("dns.query.count").count();
-		return formatNumber(count);
+		double count = 0;
+		try {
+			// Get counter directly - this will create it if it doesn't exist
+			count = meterRegistry.counter("dns.query.count").count();
+		} catch (Exception e) {
+			LOG.warnf("Error retrieving query count metric: %s", e.getMessage());
+		}
+		String result = formatNumber(count);
+		LOG.debugf("Query count endpoint returning: %s (raw: %f)", result, count);
+		return result;
 	}
 	
 	@GET
@@ -133,8 +140,17 @@ public class FrontendResource {
 	@PermitAll
 	public String getCacheHits() {
 		Map<String, Object> stats = dnsResolver.getCacheStats();
-		Object hits = stats.get("hits");
-		return hits != null ? formatNumber(((Number) hits).doubleValue()) : "0";
+		LOG.debugf("Cache stats structure: %s", stats);
+		Map<String, Object> positiveCache = (Map<String, Object>) stats.get("positiveCache");
+		if (positiveCache != null) {
+			LOG.debugf("Positive cache stats: %s", positiveCache);
+			Object active = positiveCache.get("active");
+			String result = active != null ? formatNumber(((Number) active).doubleValue()) : "0";
+			LOG.debugf("Cache hits returning: %s (active: %s)", result, active);
+			return result;
+		}
+		LOG.debugf("Positive cache is null!");
+		return "0";
 	}
 	
 	@GET
@@ -142,8 +158,16 @@ public class FrontendResource {
 	@Produces(MediaType.TEXT_HTML)
 	@PermitAll
 	public String getBlockedCount() {
-		double count = meterRegistry.counter("dns.filter.checks").count();
-		return formatNumber(count);
+		double count = 0;
+		try {
+			// Get counter directly - this will create it if it doesn't exist
+			count = meterRegistry.counter("dns.filter.checks").count();
+		} catch (Exception e) {
+			LOG.warnf("Error retrieving blocked count metric: %s", e.getMessage());
+		}
+		String result = formatNumber(count);
+		LOG.debugf("Blocked count endpoint returning: %s (raw: %f)", result, count);
+		return result;
 	}
 	
 	@GET
@@ -152,8 +176,22 @@ public class FrontendResource {
 	@PermitAll
 	public String getThreatsCount() {
 		Map<String, Object> stats = securityService.getThreatStats();
-		Object detected = stats.get("threatsDetected");
-		return detected != null ? formatNumber(((Number) detected).doubleValue()) : "0";
+		LOG.debugf("Threat stats: %s", stats);
+		Object domains = stats.get("maliciousDomains");
+		Object ips = stats.get("maliciousIPs");
+		
+		double total = 0;
+		if (domains != null) {
+			total += ((Number) domains).doubleValue();
+		}
+		if (ips != null) {
+			total += ((Number) ips).doubleValue();
+		}
+		String result = formatNumber(total);
+		LOG.debugf("Threats count returning: %s (domains: %s, ips: %s, total: %f)", result,
+				domains,
+				ips, total);
+		return result;
 	}
 	
 	@GET
@@ -186,16 +224,19 @@ public class FrontendResource {
 	@PermitAll
 	public String getCacheRate() {
 		Map<String, Object> stats = dnsResolver.getCacheStats();
-		Object hits = stats.get("hits");
-		Object misses = stats.get("misses");
+		Map<String, Object> positiveCache = (Map<String, Object>) stats.get("positiveCache");
 		
-		if (hits != null && misses != null) {
-			double h = ((Number) hits).doubleValue();
-			double m = ((Number) misses).doubleValue();
-			double total = h + m;
-			if (total > 0) {
-				double rate = (h / total) * 100;
-				return String.format("%.1f%%", rate);
+		if (positiveCache != null) {
+			Object active = positiveCache.get("active");
+			Object total = positiveCache.get("total");
+			
+			if (active != null && total != null) {
+				double a = ((Number) active).doubleValue();
+				double t = ((Number) total).doubleValue();
+				if (t > 0) {
+					double rate = (a / t) * 100;
+					return String.format("%.1f%%", rate);
+				}
 			}
 		}
 		return "N/A";
@@ -344,6 +385,10 @@ public class FrontendResource {
 	// ============== Helper Methods ==============
 	
 	private String formatNumber(double num) {
+		// Handle NaN and Infinite values
+		if (Double.isNaN(num) || Double.isInfinite(num)) {
+			return "0";
+		}
 		if (num >= 1_000_000) {
 			return String.format("%.1fM", num / 1_000_000);
 		}
