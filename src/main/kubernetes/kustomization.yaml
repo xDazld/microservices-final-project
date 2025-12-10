@@ -15,7 +15,7 @@ resources:
   - secrets.yml
   - configmaps.yml
   - rbac.yml
-  
+
   # Service deployments
   - mariadb.yml
   - lgtm.yml
@@ -28,7 +28,6 @@ resources:
   - ingress.yml
   - certificates.yml
   - daemonset.yml
-
 
 # Common annotations applied to all resources
 commonAnnotations:
@@ -48,7 +47,7 @@ replicas:
 
 # Images can be overridden at deployment time
 images:
-  - name: docker.io/dazld/final-project
+  - name: docker.io/xdazld/final-project
     newTag: 1.0-SNAPSHOT
   - name: docker.io/library/mariadb
     newTag: latest
@@ -56,4 +55,3 @@ images:
     newTag: latest
   - name: docker.io/ollama/ollama
     newTag: latest
-
