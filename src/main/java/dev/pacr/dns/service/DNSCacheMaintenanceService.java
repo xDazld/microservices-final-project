@@ -1,14 +1,10 @@
 package dev.pacr.dns.service;
 
 import io.quarkus.runtime.Startup;
-import jakarta.annotation.PostConstruct;
+import io.quarkus.scheduler.Scheduled;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
-
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Scheduled maintenance tasks for DNS caching per RFC 9520.
@@ -22,11 +18,10 @@ import java.util.concurrent.TimeUnit;
 @ApplicationScoped
 public class DNSCacheMaintenanceService {
 	
-	private static final Logger LOG = Logger.getLogger(DNSCacheMaintenanceService.class);
 	/**
-	 * Scheduled executor for maintenance tasks
+	 * Logger instance for this service
 	 */
-	private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+	private static final Logger LOG = Logger.getLogger(DNSCacheMaintenanceService.class);
 	/**
 	 * DNS resolver service
 	 */
@@ -34,25 +29,12 @@ public class DNSCacheMaintenanceService {
 	DNSResolver dnsResolver;
 	
 	/**
-	 * Initialize scheduled tasks on startup.
-	 */
-	@PostConstruct
-	public void init() {
-		// Schedule cache cleanup every 60 seconds
-		scheduler.scheduleAtFixedRate(this::cleanupExpiredEntries, 60, 60, TimeUnit.SECONDS);
-		
-		// Schedule statistics logging every 5 minutes
-		scheduler.scheduleAtFixedRate(this::logCacheStatistics, 300, 300, TimeUnit.SECONDS);
-		
-		LOG.info("DNS cache maintenance service initialized");
-	}
-	
-	/**
-	 * Periodically clear expired cache entries.
+	 * Periodically clear expired cache entries every 60 seconds.
 	 * <p>
 	 * RFC 9520 Section 3.2 recommends cleaning up expired entries to maintain cache efficiency and
 	 * prevent memory bloat.
 	 */
+	@Scheduled(every = "60s")
 	void cleanupExpiredEntries() {
 		LOG.debug("Running scheduled cache cleanup");
 		
@@ -64,11 +46,12 @@ public class DNSCacheMaintenanceService {
 	}
 	
 	/**
-	 * Periodically log cache statistics for monitoring.
+	 * Periodically log cache statistics for monitoring every 5 minutes.
 	 * <p>
 	 * Helps operators monitor cache performance and detect potential issues per RFC 9520
 	 * operational guidance.
 	 */
+	@Scheduled(every = "5m")
 	void logCacheStatistics() {
 		try {
 			var stats = dnsResolver.getCacheStats();
