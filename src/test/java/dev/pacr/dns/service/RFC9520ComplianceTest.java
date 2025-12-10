@@ -118,7 +118,7 @@ class RFC9520ComplianceTest {
 		
 		Map<String, Object> stats = negativeCacheService.getCacheStats();
 		assertNotNull(stats);
-		assertTrue((Integer) stats.get("active") > 0, "Should have active cache entries");
+		assertTrue((Long) stats.get("active") > 0, "Should have active cache entries");
 	}
 	
 	/**
@@ -161,7 +161,7 @@ class RFC9520ComplianceTest {
 		}
 		
 		Map<String, Object> stats = negativeCacheService.getCacheStats();
-		int totalEntries = (Integer) stats.get("total");
+		long totalEntries = (Long) stats.get("total");
 		
 		// Should not exceed max capacity significantly (allows for eviction strategy)
 		assertTrue(totalEntries <= maxEntries * 1.1,
@@ -242,7 +242,7 @@ class RFC9520ComplianceTest {
 		assertTrue(stats.containsKey("maxCapacity"));
 		assertTrue(stats.containsKey("byType"));
 		
-		assertTrue((Integer) stats.get("total") >= 2, "Should have at least 2 cached entries");
+		assertTrue((Long) stats.get("total") >= 2, "Should have at least 2 cached entries");
 	}
 	
 	/**

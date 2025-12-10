@@ -168,14 +168,15 @@ public class NegativeCacheService {
 	 */
 	public Map<String, Object> getCacheStats() {
 		long expired = failureCache.values().stream().filter(FailureCacheEntry::isExpired).count();
+		long total = failureCache.size();
+		long active = total - expired;
 		
 		Map<String, Long> typeBreakdown = new ConcurrentHashMap<>();
 		failureCache.values().stream().filter(entry -> !entry.isExpired())
 				.forEach(entry -> typeBreakdown.merge(entry.failureType.name(), 1L, Long::sum));
 		
-		return Map.of("total", failureCache.size(), "expired", expired, "active",
-				failureCache.size() - expired, "maxCapacity", MAX_CACHE_ENTRIES, "byType",
-				typeBreakdown);
+		return Map.of("total", total, "expired", expired, "active", active, "maxCapacity",
+				(long) MAX_CACHE_ENTRIES, "byType", typeBreakdown);
 	}
 	
 	/**
