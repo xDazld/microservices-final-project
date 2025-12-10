@@ -47,7 +47,7 @@ replicas:
 
 # Images can be overridden at deployment time
 images:
-  - name: docker.io/xdazld/final-project
+  - name: ghcr.io/xdazld/microservices-final-project
     newTag: 1.0-SNAPSHOT
   - name: docker.io/library/mariadb
     newTag: latest
