@@ -143,7 +143,7 @@ spec:
       targetPort: 8080
   sessionAffinity: None
 ---
-# DNS Service - NodePort Service (for external access)
+# DNS Service - LoadBalancer Service (for external access)
 apiVersion: v1
 kind: Service
 metadata:
@@ -156,7 +156,7 @@ metadata:
   annotations:
     description: "DNS Service External Access"
 spec:
-  type: NodePort
+  type: LoadBalancer
   selector:
     app.kubernetes.io/name: final-project
     app.kubernetes.io/version: 1.0-SNAPSHOT
@@ -165,4 +165,3 @@ spec:
       protocol: TCP
       port: 8080
       targetPort: 8080
-      nodePort: 30080
