@@ -1,153 +1,174 @@
 package dev.pacr.dns.model;
 
+import dev.pacr.dns.model.rfc8427.DnsMessage;
+import dev.pacr.dns.model.rfc8427.DnsMessageConverter;
 import org.junit.jupiter.api.Test;
 
-import java.time.Instant;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Unit tests for DNS Query model
+ * Unit tests for RFC 8427 compliant DNS Message model
  */
-class DNSQueryTest {
+class DnsMessageTest {
 	
 	@Test
-	void testCreateDNSQueryWithDefaults() {
-		DNSQuery query = new DNSQuery();
+	void testCreateDnsMessageQuery() {
+		DnsMessage message = DnsMessageConverter.createQuery("example.com", 1, 1);
 		
-		assertNotNull(query.getId());
-		assertNotNull(query.getTimestamp());
-		assertTrue(query.getId().length() > 0);
+		assertNotNull(message);
+		assertNotNull(message.getId());
+		assertEquals("example.com", message.getQname());
+		assertEquals(1, message.getQtype()); // A record
+		assertEquals(1, message.getQclass()); // IN class
+		assertEquals(0, message.getQr()); // Query
+		assertEquals(1, message.getQdcount());
 	}
 	
 	@Test
-	void testCreateDNSQueryWithParameters() {
-		String domain = "example.com";
-		String queryType = "A";
-		String clientIp = "192.168.1.1";
-		String protocol = "UDP";
+	void testCreateDnsMessageResponse() {
+		DnsMessage message = DnsMessageConverter.createResponse("example.com", 1, 1, 0,
+				java.util.List.of("93.184.216.34"), 300L);
 		
-		DNSQuery query = new DNSQuery(domain, queryType, clientIp, protocol);
-		
-		assertEquals(domain, query.getDomain());
-		assertEquals(queryType, query.getQueryType());
-		assertEquals(clientIp, query.getClientIp());
-		assertEquals(protocol, query.getProtocol());
-		assertNotNull(query.getId());
-		assertNotNull(query.getTimestamp());
+		assertNotNull(message);
+		assertEquals("example.com", message.getQname());
+		assertEquals(1, message.getQr()); // Response
+		assertEquals(0, message.getRcode()); // NOERROR
+		assertNotNull(message.getAnswerRRs());
+		assertEquals(1, message.getAnswerRRs().size());
+		assertEquals(1, message.getAncount());
 	}
 	
 	@Test
-	void testDNSQueryGettersSetters() {
-		DNSQuery query = new DNSQuery();
+	void testDnsMessageGettersSetters() {
+		DnsMessage message = new DnsMessage();
 		
-		query.setDomain("test.com");
-		query.setQueryType("AAAA");
-		query.setClientIp("10.0.0.1");
-		query.setProtocol("TCP");
+		message.setId(12345);
+		message.setQname("test.com");
+		message.setQtype(28); // AAAA
+		message.setQclass(1); // IN
+		message.setQr(0); // Query
+		message.setOpcode(0); // Standard query
+		message.setRd(1); // Recursion desired
 		
-		assertEquals("test.com", query.getDomain());
-		assertEquals("AAAA", query.getQueryType());
-		assertEquals("10.0.0.1", query.getClientIp());
-		assertEquals("TCP", query.getProtocol());
+		assertEquals(12345, message.getId());
+		assertEquals("test.com", message.getQname());
+		assertEquals(28, message.getQtype());
+		assertEquals(1, message.getQclass());
+		assertEquals(0, message.getQr());
+		assertEquals(0, message.getOpcode());
+		assertEquals(1, message.getRd());
 	}
 	
 	@Test
-	void testDNSQueryIdUniqueness() {
-		DNSQuery query1 = new DNSQuery();
-		DNSQuery query2 = new DNSQuery();
+	void testDnsMessageNullValues() {
+		DnsMessage message = new DnsMessage();
 		
-		assertNotEquals(query1.getId(), query2.getId());
+		message.setQname(null);
+		message.setQtype(null);
+		message.setQclass(null);
+		
+		assertNull(message.getQname());
+		assertNull(message.getQtype());
+		assertNull(message.getQclass());
 	}
 	
 	@Test
-	void testDNSQueryTimestamp() {
-		DNSQuery query = new DNSQuery();
-		Instant timestamp = query.getTimestamp();
+	void testDnsMessageConverterTypeConversion() {
+		assertEquals(1, DnsMessageConverter.getQtypeCode("A"));
+		assertEquals(28, DnsMessageConverter.getQtypeCode("AAAA"));
+		assertEquals(5, DnsMessageConverter.getQtypeCode("CNAME"));
+		assertEquals(15, DnsMessageConverter.getQtypeCode("MX"));
+		assertEquals(16, DnsMessageConverter.getQtypeCode("TXT"));
+		assertEquals(2, DnsMessageConverter.getQtypeCode("NS"));
 		
-		assertNotNull(timestamp);
-		assertTrue(timestamp.isBefore(Instant.now().plusSeconds(1)));
-		assertTrue(timestamp.isAfter(Instant.now().minusSeconds(1)));
+		assertEquals("A", DnsMessageConverter.getQtypeString(1));
+		assertEquals("AAAA", DnsMessageConverter.getQtypeString(28));
+		assertEquals("CNAME", DnsMessageConverter.getQtypeString(5));
+		assertEquals("MX", DnsMessageConverter.getQtypeString(15));
+		assertEquals("TXT", DnsMessageConverter.getQtypeString(16));
+		assertEquals("NS", DnsMessageConverter.getQtypeString(2));
 	}
 	
 	@Test
-	void testDNSQueryToString() {
-		DNSQuery query = new DNSQuery("example.com", "A", "192.168.1.1", "UDP");
-		String toString = query.toString();
-		
-		assertNotNull(toString);
-		assertTrue(toString.contains("example.com"));
-		assertTrue(toString.contains("A"));
-	}
-	
-	@Test
-	void testSetId() {
-		DNSQuery query = new DNSQuery();
-		String customId = "custom-id-123";
-		
-		query.setId(customId);
-		assertEquals(customId, query.getId());
-	}
-	
-	@Test
-	void testSetTimestamp() {
-		DNSQuery query = new DNSQuery();
-		Instant customTime = Instant.ofEpochSecond(0);
-		
-		query.setTimestamp(customTime);
-		assertEquals(customTime, query.getTimestamp());
-	}
-	
-	@Test
-	void testDNSQueryWithAllFieldsSet() {
-		DNSQuery query = new DNSQuery("google.com", "AAAA", "192.168.0.1", "DoH");
-		query.setId("query-123");
-		query.setTimestamp(Instant.now());
-		
-		assertEquals("query-123", query.getId());
-		assertEquals("google.com", query.getDomain());
-		assertEquals("AAAA", query.getQueryType());
-		assertEquals("192.168.0.1", query.getClientIp());
-		assertEquals("DoH", query.getProtocol());
-	}
-	
-	@Test
-	void testDNSQueryNullValues() {
-		DNSQuery query = new DNSQuery();
-		
-		query.setDomain(null);
-		query.setQueryType(null);
-		query.setClientIp(null);
-		query.setProtocol(null);
-		
-		assertNull(query.getDomain());
-		assertNull(query.getQueryType());
-		assertNull(query.getClientIp());
-		assertNull(query.getProtocol());
-	}
-	
-	@Test
-	void testDNSQueryDifferentProtocols() {
-		String[] protocols = {"UDP", "TCP", "DoH", "DoT"};
-		
-		for (String protocol : protocols) {
-			DNSQuery query = new DNSQuery("test.com", "A", "192.168.1.1", protocol);
-			assertEquals(protocol, query.getProtocol());
-		}
-	}
-	
-	@Test
-	void testDNSQueryDifferentRecordTypes() {
+	void testDnsMessageDifferentRecordTypes() {
 		String[] recordTypes = {"A", "AAAA", "CNAME", "MX", "TXT", "NS"};
 		
 		for (String type : recordTypes) {
-			DNSQuery query = new DNSQuery("test.com", type, "192.168.1.1", "UDP");
-			assertEquals(type, query.getQueryType());
+			int qtypeCode = DnsMessageConverter.getQtypeCode(type);
+			DnsMessage message = DnsMessageConverter.createQuery("test.com", qtypeCode, 1);
+			assertEquals(qtypeCode, message.getQtype());
+			assertEquals("test.com", message.getQname());
 		}
+	}
+	
+	@Test
+	void testDnsMessageRcodes() {
+		// Test different response codes
+		DnsMessage noerror = DnsMessageConverter.createResponse("example.com", 1, 1, 0,
+				java.util.List.of("1.2.3.4"), 300L);
+		assertEquals(0, noerror.getRcode()); // NOERROR
+		
+		DnsMessage nxdomain =
+				DnsMessageConverter.createResponse("nonexistent.com", 1, 1, 3, java.util.List.of(),
+						300L);
+		assertEquals(3, nxdomain.getRcode()); // NXDOMAIN
+	}
+	
+	@Test
+	void testDnsMessageFlags() {
+		DnsMessage message = new DnsMessage();
+		
+		// Test all DNS flags
+		message.setQr(1); // Response
+		message.setAa(1); // Authoritative Answer
+		message.setTc(0); // Not Truncated
+		message.setRd(1); // Recursion Desired
+		message.setRa(1); // Recursion Available
+		message.setAd(0); // Not Authenticated
+		message.setCd(0); // Checking Disabled
+		
+		assertEquals(1, message.getQr());
+		assertEquals(1, message.getAa());
+		assertEquals(0, message.getTc());
+		assertEquals(1, message.getRd());
+		assertEquals(1, message.getRa());
+		assertEquals(0, message.getAd());
+		assertEquals(0, message.getCd());
+	}
+	
+	@Test
+	void testDnsMessageSectionCounts() {
+		DnsMessage message = new DnsMessage();
+		
+		message.setQdcount(1);
+		message.setAncount(2);
+		message.setNscount(3);
+		message.setArcount(4);
+		
+		assertEquals(1, message.getQdcount());
+		assertEquals(2, message.getAncount());
+		assertEquals(3, message.getNscount());
+		assertEquals(4, message.getArcount());
+	}
+	
+	@Test
+	void testRfc8427FieldNaming() {
+		// Verify RFC 8427 compliant field naming (uppercase where specified)
+		DnsMessage message = new DnsMessage();
+		
+		// These methods use RFC 8427 naming convention
+		message.setId(1);
+		message.setQname("example.com");
+		message.setQtype(1);
+		message.setQclass(1);
+		
+		// Verify the fields are accessible
+		assertNotNull(message.getId());
+		assertNotNull(message.getQname());
+		assertNotNull(message.getQtype());
+		assertNotNull(message.getQclass());
 	}
 }
 
