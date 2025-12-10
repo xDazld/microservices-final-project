@@ -39,7 +39,7 @@ spec:
       serviceAccountName: dns-service-account
       containers:
         - name: final-project
-          image: docker.io/dazld/final-project:1.0-SNAPSHOT
+          image: docker.io/xdazld/final-project:1.0-SNAPSHOT
           imagePullPolicy: Always
           ports:
             - name: http
