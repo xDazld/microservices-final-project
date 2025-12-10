@@ -7,6 +7,8 @@ import jakarta.inject.Inject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.Map;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -80,9 +82,16 @@ class DNSResolverTest {
 	void testGetCacheStats() {
 		var stats = dnsResolver.getCacheStats();
 		assertNotNull(stats);
-		assertTrue(stats.containsKey("total"));
-		assertTrue(stats.containsKey("expired"));
-		assertTrue(stats.containsKey("active"));
+		assertTrue(stats.containsKey("positiveCache"));
+		assertTrue(stats.containsKey("negativeCache"));
+		
+		// Check positiveCache structure
+		@SuppressWarnings("unchecked") var positiveCache =
+				(Map<String, Object>) stats.get("positiveCache");
+		assertNotNull(positiveCache);
+		assertTrue(positiveCache.containsKey("total"));
+		assertTrue(positiveCache.containsKey("expired"));
+		assertTrue(positiveCache.containsKey("active"));
 	}
 	
 	@Test
