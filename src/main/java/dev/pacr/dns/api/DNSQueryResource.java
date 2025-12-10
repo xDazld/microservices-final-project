@@ -1,7 +1,7 @@
 package dev.pacr.dns.api;
 
-import dev.pacr.dns.model.DNSQuery;
-import dev.pacr.dns.model.DNSResponse;
+import dev.pacr.dns.model.rfc8427.DnsMessage;
+import dev.pacr.dns.model.rfc8427.DnsMessageConverter;
 import dev.pacr.dns.service.DNSOrchestrator;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
@@ -327,11 +327,12 @@ public class DNSQueryResource {
 			LOG.infof("Parsed DNS query: domain=%s, type=%s (0x%04x)", domain.toString(),
 					queryTypeStr, queryType);
 			
-			// Create DNS query
-			DNSQuery query = new DNSQuery(domain.toString(), queryTypeStr, "unknown", "DoH");
+			// Create RFC 8427 compliant DNS query
+			DnsMessage query =
+					DnsMessageConverter.createQuery(domain.toString(), queryType, 1); // IN class
 			
 			// Process the query through the orchestrator
-			DNSResponse response = orchestrator.processQuery(query);
+			DnsMessage response = orchestrator.processQuery(query);
 			
 			// Create a DNS wire format response
 			// For RFC 8484 compliance, we return a binary DNS message
@@ -409,11 +410,11 @@ public class DNSQueryResource {
 	 * @param transactionId The transaction ID from the request
 	 * @param domain The domain name
 	 * @param queryType The query type
-	 * @param response The DNS response
+	 * @param response The RFC 8427 compliant DNS response
 	 * @return DNS response in wire format
 	 */
 	private byte[] createDNSResponseMessage(int transactionId, String domain, int queryType,
-											DNSResponse response) {
+											DnsMessage response) {
 		// This is a minimal DNS response header
 		// In production, use a proper DNS library like dnsjava
 		// For now, we'll create a response that indicates the status
@@ -427,12 +428,13 @@ public class DNSQueryResource {
 			dos.writeShort(transactionId);
 			
 			// Flags: Response flag with appropriate codes
-			// or 1000 0101 0000 0011 (response, recursion available, NXDOMAIN)
 			int flags = FLAG_RESPONSE; // Response, recursion available
-			if ("BLOCKED".equals(response.getStatus())) {
-				flags = FLAG_RESPONSE_NXDOMAIN; // NXDOMAIN response
-			} else if (!"ALLOWED".equals(response.getStatus())) {
-				flags = FLAG_RESPONSE_SERVFAIL; // SERVFAIL response
+			if (response.getRcode() != null) {
+				int rcode = response.getRcode();
+				flags = 0x8000 | (rcode & 0x0F); // Set QR bit and RCODE
+				if (rcode == 0) {
+					flags |= 0x0400; // Set RA (Recursion Available)
+				}
 			}
 			dos.writeShort(flags);
 			
@@ -440,9 +442,8 @@ public class DNSQueryResource {
 			dos.writeShort(1);
 			
 			// ANCOUNT
-			int answerCount = ("ALLOWED".equals(response.getStatus()) &&
-					response.getResolvedAddresses() != null) ?
-					response.getResolvedAddresses().size() : 0;
+			int answerCount =
+					(response.getAnswerRRs() != null) ? response.getAnswerRRs().size() : 0;
 			dos.writeShort(answerCount);
 			
 			// NSCOUNT

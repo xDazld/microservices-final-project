@@ -1,7 +1,7 @@
 package dev.pacr.dns.api;
 
-import dev.pacr.dns.model.DNSQuery;
-import dev.pacr.dns.model.DNSResponse;
+import dev.pacr.dns.model.rfc8427.DnsMessage;
+import dev.pacr.dns.model.rfc8427.DnsMessageConverter;
 import dev.pacr.dns.service.DNSOrchestrator;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
@@ -37,7 +37,7 @@ public class DNSJsonResource {
 	 *
 	 * @param domain The domain name to query
 	 * @param type   The DNS record type (A, AAAA, MX, TXT, CNAME, NS, etc.)
-	 * @return JSON response with DNS resolution results
+	 * @return JSON response with DNS resolution results in RFC 8427 format
 	 */
 	@GET
 	@Path("/query")
@@ -54,11 +54,12 @@ public class DNSJsonResource {
 		LOG.infof("JSON DNS query: domain=%s, type=%s", domain, queryType);
 		
 		try {
-			// Create DNS query
-			DNSQuery query = new DNSQuery(domain, queryType, "frontend", "JSON-API");
+			// Create RFC 8427 compliant DNS query
+			int qtypeCode = DnsMessageConverter.getQtypeCode(queryType);
+			DnsMessage query = DnsMessageConverter.createQuery(domain, qtypeCode, 1); // IN class
 			
 			// Process through orchestrator
-			DNSResponse response = orchestrator.processQuery(query);
+			DnsMessage response = orchestrator.processQuery(query);
 			
 			return Response.ok(response).build();
 			
@@ -74,7 +75,7 @@ public class DNSJsonResource {
 	 * Perform a DNS query using POST with JSON body
 	 *
 	 * @param request The DNS query request
-	 * @return JSON response with DNS resolution results
+	 * @return JSON response with DNS resolution results in RFC 8427 format
 	 */
 	@POST
 	@Path("/query")
@@ -92,11 +93,12 @@ public class DNSJsonResource {
 		LOG.infof("JSON DNS query (POST): domain=%s, type=%s", request.domain, queryType);
 		
 		try {
-			// Create DNS query
-			DNSQuery query = new DNSQuery(request.domain, queryType, "frontend", "JSON-API");
+			// Create RFC 8427 compliant DNS query
+			int qtypeCode = DnsMessageConverter.getQtypeCode(queryType);
+			DnsMessage query = DnsMessageConverter.createQuery(request.domain, qtypeCode, 1);
 			
 			// Process through orchestrator
-			DNSResponse response = orchestrator.processQuery(query);
+			DnsMessage response = orchestrator.processQuery(query);
 			
 			return Response.ok(response).build();
 			
@@ -112,7 +114,7 @@ public class DNSJsonResource {
 	 * Batch DNS query for multiple domains
 	 *
 	 * @param request The batch query request containing multiple domains
-	 * @return JSON response with all DNS resolution results
+	 * @return JSON response with all DNS resolution results in RFC 8427 format
 	 */
 	@POST
 	@Path("/batch")
@@ -130,11 +132,12 @@ public class DNSJsonResource {
 		LOG.infof("Batch DNS query for %d domains", request.domains.length);
 		
 		try {
-			DNSResponse[] responses = new DNSResponse[request.domains.length];
+			DnsMessage[] responses = new DnsMessage[request.domains.length];
+			int qtypeCode = DnsMessageConverter.getQtypeCode(queryType);
 			
 			for (int i = 0; i < request.domains.length; i++) {
-				DNSQuery query =
-						new DNSQuery(request.domains[i], queryType, "frontend", "JSON-API-BATCH");
+				DnsMessage query =
+						DnsMessageConverter.createQuery(request.domains[i], qtypeCode, 1);
 				responses[i] = orchestrator.processQuery(query);
 			}
 			

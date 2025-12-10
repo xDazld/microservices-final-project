@@ -1,7 +1,7 @@
 package dev.pacr.dns.service;
 
-import dev.pacr.dns.model.DNSQuery;
-import dev.pacr.dns.model.DNSResponse;
+import dev.pacr.dns.model.rfc8427.DnsMessage;
+import dev.pacr.dns.model.rfc8427.DnsMessageConverter;
 import io.micrometer.core.annotation.Counted;
 import io.micrometer.core.annotation.Timed;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -11,7 +11,6 @@ import org.jboss.logging.Logger;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -37,48 +36,43 @@ public class DNSResolver {
 	 */
 	@Timed(value = "dns.query.resolution", description = "Time taken to resolve DNS query")
 	@Counted(value = "dns.query.count", description = "Number of DNS queries processed")
-	public DNSResponse resolve(DNSQuery query) {
-		Instant startTime = Instant.now();
-		LOG.infof("Resolving DNS query: %s (type: %s) from %s", query.getDomain(),
-				query.getQueryType(), query.getClientIp());
+	public DnsMessage resolve(DnsMessage query) {
+		LOG.infof("Resolving DNS query: %s (type: %d)", query.getQname(), query.getQtype());
 		
 		// Check cache first
 		CachedResponse cachedResponse = cache.get(getCacheKey(query));
 		if (cachedResponse != null && !cachedResponse.isExpired()) {
-			LOG.debugf("Cache hit for domain: %s", query.getDomain());
-			DNSResponse response = cachedResponse.response;
-			response.setCached(true);
-			response.setResponseTimeMs(Duration.between(startTime, Instant.now()).toMillis());
-			return response;
+			LOG.debugf("Cache hit for domain: %s", query.getQname());
+			return cachedResponse.response;
 		}
 		
 		// Perform actual DNS resolution
-		DNSResponse response = new DNSResponse();
-		response.setQueryId(query.getId());
-		response.setDomain(query.getDomain());
+		DnsMessage response;
+		String qtypeStr = DnsMessageConverter.getQtypeString(query.getQtype());
 		
 		try {
-			List<String> addresses = performLookup(query.getDomain(), query.getQueryType());
-			response.setResolvedAddresses(addresses);
-			response.setStatus("ALLOWED");
+			List<String> addresses = performLookup(query.getQname(), qtypeStr);
+			response = DnsMessageConverter.createResponse(query.getQname(), query.getQtype(),
+					query.getQclass(), 0, // NOERROR
+					addresses, 300L // TTL 5 minutes
+			);
 			
 			// Cache the response
 			cache.put(getCacheKey(query), new CachedResponse(response));
 			
-			LOG.infof("Successfully resolved %s to %s", query.getDomain(), addresses);
+			LOG.infof("Successfully resolved %s to %s", query.getQname(), addresses);
 			
 		} catch (UnknownHostException e) {
-			LOG.warnf("Domain not found: %s", query.getDomain());
-			response.setResolvedAddresses(new ArrayList<>());
-			response.setStatus("NXDOMAIN");
+			LOG.warnf("Domain not found: %s", query.getQname());
+			response = DnsMessageConverter.createResponse(query.getQname(), query.getQtype(),
+					query.getQclass(), 3, // NXDOMAIN
+					new ArrayList<>(), 300L);
 		} catch (RuntimeException e) {
-			LOG.errorf(e, "Error resolving domain: %s", query.getDomain());
-			response.setResolvedAddresses(new ArrayList<>());
-			response.setStatus("ERROR");
+			LOG.errorf(e, "Error resolving domain: %s", query.getQname());
+			response = DnsMessageConverter.createResponse(query.getQname(), query.getQtype(),
+					query.getQclass(), 2, // SERVFAIL
+					new ArrayList<>(), 0L);
 		}
-		
-		response.setResponseTimeMs(Duration.between(startTime, Instant.now()).toMillis());
-		response.setCached(false);
 		
 		return response;
 	}
@@ -107,8 +101,8 @@ public class DNSResolver {
 	/**
 	 * Generate cache key for a query
 	 */
-	private String getCacheKey(DNSQuery query) {
-		return query.getDomain() + ':' + query.getQueryType();
+	private String getCacheKey(DnsMessage query) {
+		return query.getQname() + ':' + query.getQtype();
 	}
 	
 	/**
@@ -131,20 +125,17 @@ public class DNSResolver {
 	 * Internal class for cached responses
 	 */
 	private static class CachedResponse {
-		final DNSResponse response;
+		final DnsMessage response;
 		final Instant cachedAt;
 		
-		CachedResponse(DNSResponse response) {
-			this.response = new DNSResponse();
-			this.response.setQueryId(response.getQueryId());
-			this.response.setDomain(response.getDomain());
-			this.response.setResolvedAddresses(new ArrayList<>(response.getResolvedAddresses()));
-			this.response.setStatus(response.getStatus());
+		CachedResponse(DnsMessage response) {
+			this.response = response;
 			this.cachedAt = Instant.now();
 		}
 		
 		boolean isExpired() {
-			return Duration.between(cachedAt, Instant.now()).getSeconds() > CACHE_TTL_SECONDS;
+			return java.time.Duration.between(cachedAt, Instant.now()).getSeconds() >
+					CACHE_TTL_SECONDS;
 		}
 	}
 }
