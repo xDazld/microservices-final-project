@@ -6,6 +6,7 @@ with threat detection, content filtering, and AI-powered security analysis.
 ## Features
 
 - **DNS over HTTP (DoH)** - RFC 8484 compliant DNS resolution
+- **RFC 9520 Compliant** - Negative caching of DNS resolution failures
 - **Content Filtering** - Block ads, tracking, malware, phishing, and custom domains
 - **AI Security Agent** - Intelligent threat analysis powered by LLM
 - **Real-time Statistics** - Comprehensive metrics and monitoring
@@ -13,6 +14,30 @@ with threat detection, content filtering, and AI-powered security analysis.
 - **Event Streaming** - Kafka integration for security events
 - **Container Ready** - Docker and Kubernetes deployment support
 - **Secure by Default** - JWT authentication with role-based access control
+
+## RFC 9520 Compliance
+
+This implementation is **fully compliant** with RFC 9520 "Negative Caching of DNS Resolution
+Failures":
+
+✅ **Mandatory negative caching** for all resolution failures  
+✅ **Retry limits** - Maximum 3 queries per server (1 initial + 2 retries)  
+✅ **Exponential backoff** for persistent failures (5s → 300s)  
+✅ **Cache duration** between 1 second and 5 minutes  
+✅ **Resource exhaustion protection** with configurable limits
+
+### Why RFC 9520 Matters
+
+RFC 9520 prevents "retry storms" that can generate DDoS-level traffic when DNS servers fail. Our
+implementation:
+
+- **Reduces load** on DNS infrastructure during outages
+- **Improves performance** by eliminating unnecessary retry attempts
+- **Protects against** amplification attacks
+- **Provides monitoring** of resolution failure patterns
+
+**📖 See [docs/RFC9520-COMPLIANCE.md](docs/RFC9520-COMPLIANCE.md) for complete compliance
+documentation.**
 
 ## Quick Start
 
