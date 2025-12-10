@@ -2,6 +2,7 @@ package dev.pacr.dns.api;
 
 import dev.pacr.dns.service.EndpointStatisticsService;
 import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.security.TestSecurity;
 import io.restassured.http.ContentType;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,6 +18,7 @@ import static org.hamcrest.Matchers.notNullValue;
  * Integration tests for endpoint statistics functionality
  */
 @QuarkusTest
+@TestSecurity(user = "testuser", roles = {"admin", "user"})
 public class AdminResourceStatisticsTest {
 	
 	@Inject
@@ -162,7 +164,8 @@ public class AdminResourceStatisticsTest {
 				.body("totalUniqueEndpointsAccessed", equalTo(2));
 		
 		// Reset only endpoint1
-		given().when().post("/api/v1/admin/endpoints/statistics/reset/GET/endpoint1").then()
+		given().contentType(ContentType.JSON).when()
+				.post("/api/v1/admin/endpoints/statistics/reset/GET/endpoint1").then()
 				.statusCode(200);
 		
 		// endpoint1 should be gone

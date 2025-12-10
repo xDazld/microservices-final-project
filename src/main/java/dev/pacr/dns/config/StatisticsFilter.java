@@ -15,14 +15,16 @@ import org.jboss.logging.Logger;
 /**
  * JAX-RS filter for recording endpoint usage statistics
  * <p>
- * This filter intercepts all REST requests and responses to measure: - Response time - HTTP status
+ * This filter intercepts all REST requests and responses to measure: - Response
+ * time - HTTP status
  * codes - Request/response sizes
  * <p>
- * Statistics are recorded per endpoint and can be accessed via the admin endpoint.
+ * Statistics are recorded per endpoint and can be accessed via the admin
+ * endpoint.
  */
 @Provider
 public class StatisticsFilter implements ContainerRequestFilter, ContainerResponseFilter {
-	
+
 	private static final Logger LOG = Logger.getLogger(StatisticsFilter.class);
 	// Thread-local storage for request start time
 	private static final ThreadLocal<Long> REQUEST_START_TIME = new ThreadLocal<>();
@@ -32,20 +34,26 @@ public class StatisticsFilter implements ContainerRequestFilter, ContainerRespon
 	HttpServerRequest request;
 	@Context
 	HttpServerResponse response;
-	
+
 	@Override
 	public void filter(ContainerRequestContext requestContext) {
 		// Record the start time of the request
 		REQUEST_START_TIME.set(System.currentTimeMillis());
-		
+
 		LOG.debugf("Request intercepted: %s %s", requestContext.getMethod(),
 				requestContext.getUriInfo().getPath());
 	}
-	
+
 	@Override
 	public void filter(ContainerRequestContext requestContext,
-					   ContainerResponseContext responseContext) {
+			ContainerResponseContext responseContext) {
 		try {
+			// Skip recording for admin/reset endpoints to avoid polluting statistics
+			String endpoint = requestContext.getUriInfo().getPath();
+			if (endpoint.contains("/api/v1/admin/endpoints/statistics/reset")) {
+				return;
+			}
+
 			// Calculate response time
 			Long startTime = REQUEST_START_TIME.get();
 			if (startTime == null) {
@@ -53,25 +61,24 @@ public class StatisticsFilter implements ContainerRequestFilter, ContainerRespon
 						requestContext.getUriInfo().getPath());
 				return;
 			}
-			
+
 			long responseTime = System.currentTimeMillis() - startTime;
-			
+
 			// Get request/response details
 			String method = requestContext.getMethod();
-			String endpoint = requestContext.getUriInfo().getPath();
 			int statusCode = responseContext.getStatus();
-			
+
 			// Estimate bytes (in a real application, you'd measure these more accurately)
 			long bytesIn = estimateRequestSize(requestContext);
 			long bytesOut = estimateResponseSize(responseContext);
-			
+
 			// Record the statistics
 			statisticsService.recordRequest(method, endpoint, responseTime, statusCode, bytesIn,
 					bytesOut);
-			
+
 			LOG.debugf("Response recorded: %s %s - %d ms - Status %d", method, endpoint,
 					responseTime, statusCode);
-			
+
 		} catch (Exception e) {
 			LOG.warnf(e, "Error recording statistics for request");
 		} finally {
@@ -79,7 +86,7 @@ public class StatisticsFilter implements ContainerRequestFilter, ContainerRespon
 			REQUEST_START_TIME.remove();
 		}
 	}
-	
+
 	/**
 	 * Estimate the size of the request body
 	 */
@@ -93,11 +100,11 @@ public class StatisticsFilter implements ContainerRequestFilter, ContainerRespon
 		} catch (NumberFormatException e) {
 			LOG.debugf("Could not parse Content-Length: %s", e.getMessage());
 		}
-		
+
 		// Default estimate: small value for requests without body
 		return 100;
 	}
-	
+
 	/**
 	 * Estimate the size of the response body
 	 */
@@ -111,7 +118,7 @@ public class StatisticsFilter implements ContainerRequestFilter, ContainerRespon
 		} catch (NumberFormatException e) {
 			LOG.debugf("Could not parse Content-Length from response: %s", e.getMessage());
 		}
-		
+
 		// Estimate based on entity size if available
 		if (responseContext.hasEntity()) {
 			Object entity = responseContext.getEntity();
@@ -121,7 +128,7 @@ public class StatisticsFilter implements ContainerRequestFilter, ContainerRespon
 				return entityStr.length();
 			}
 		}
-		
+
 		// Default estimate
 		return 500;
 	}
