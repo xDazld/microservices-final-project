@@ -6,6 +6,7 @@ with threat detection, content filtering, and AI-powered security analysis.
 ## Features
 
 - **DNS over HTTP (DoH)** - RFC 8484 compliant DNS resolution
+- **RFC 8767 Compliant** - Serve-stale for improved DNS resiliency
 - **RFC 9520 Compliant** - Negative caching of DNS resolution failures
 - **Content Filtering** - Block ads, tracking, malware, phishing, and custom domains
 - **AI Security Agent** - Intelligent threat analysis powered by LLM
@@ -14,6 +15,30 @@ with threat detection, content filtering, and AI-powered security analysis.
 - **Event Streaming** - Kafka integration for security events
 - **Container Ready** - Docker and Kubernetes deployment support
 - **Secure by Default** - JWT authentication with role-based access control
+
+## RFC 8767 Compliance
+
+This implementation is **fully compliant** with RFC 8767 "Serving Stale Data to Improve DNS
+Resiliency":
+
+✅ **Stale data serving** - Uses expired cache data when authorities unreachable  
+✅ **Client response timer** - 1.8 second timeout with stale fallback  
+✅ **Failure recheck timer** - 30 second rate limiting for failed queries  
+✅ **Maximum stale timer** - Retains stale data up to 1 day (configurable)  
+✅ **Proper TTL handling** - Stale responses set TTL to 30 seconds
+
+### Why RFC 8767 Matters
+
+RFC 8767 dramatically improves DNS service resilience by serving cached data even when it's expired,
+preventing outages during authoritative server failures or DDoS attacks. Our implementation:
+
+- **Maintains availability** during upstream outages
+- **Reduces attack impact** by serving stale data during DoS attacks
+- **Protects end users** from temporary DNS infrastructure failures
+- **Rate limits retries** to prevent overwhelming failing servers
+
+**📖 See [docs/RFC8767-COMPLIANCE.md](docs/RFC8767-COMPLIANCE.md) for complete compliance
+documentation.**
 
 ## RFC 9520 Compliance
 

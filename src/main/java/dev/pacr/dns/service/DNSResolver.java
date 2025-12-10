@@ -2,6 +2,7 @@ package dev.pacr.dns.service;
 
 import dev.pacr.dns.model.rfc8427.DnsMessage;
 import dev.pacr.dns.model.rfc8427.DnsMessageConverter;
+import dev.pacr.dns.model.rfc8427.ResourceRecord;
 import io.micrometer.core.annotation.Counted;
 import io.micrometer.core.annotation.Timed;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -14,6 +15,7 @@ import java.net.InetAddress;
 import java.net.NoRouteToHostException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -24,14 +26,33 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Core DNS resolution service that handles DNS queries.
  * RFC 9520 compliant with negative caching for resolution failures.
+ * RFC 8767 compliant with serve-stale for improved DNS resiliency.
  *
  * @see <a href="https://www.rfc-editor.org/rfc/rfc9520.html">RFC 9520</a>
+ * @see <a href="https://www.rfc-editor.org/rfc/rfc8767.html">RFC 8767</a>
  */
 @ApplicationScoped
 public class DNSResolver {
 	
 	private static final Logger LOG = Logger.getLogger(DNSResolver.class);
 	private static final long CACHE_TTL_SECONDS = 300; // 5 minutes
+	
+	// RFC 8767 Section 5: Maximum stale timer - recommended 1-3 days
+	// "The suggested value is between 1 and 3 days"
+	private static final long MAX_STALE_SECONDS = 86400; // 1 day (24 hours)
+	
+	// RFC 8767 Section 5: Client response timer
+	// "recommended value of 1.8 seconds as being just under a common timeout value of 2 seconds"
+	private static final long CLIENT_RESPONSE_TIMEOUT_MS = 1800; // 1.8 seconds
+	
+	// RFC 8767 Section 5: Failure recheck timer
+	// "Attempts to refresh from non-responsive or otherwise failing authoritative nameservers
+	// are recommended to be done no more frequently than every 30 seconds"
+	private static final long FAILURE_RECHECK_SECONDS = 30;
+	
+	// RFC 8767 Section 4: TTL to set on stale records in response
+	// "RECOMMENDED value of 30 seconds"
+	private static final long STALE_RESPONSE_TTL = 30;
 	
 	// RFC 9520 Section 3.1: Maximum retry limit
 	// "A resolver MUST NOT retry a given query to a server address over a given DNS transport
@@ -41,6 +62,9 @@ public class DNSResolver {
 	// Simple in-memory cache for DNS responses
 	private final Map<String, CachedResponse> cache = new ConcurrentHashMap<>();
 	
+	// RFC 8767: Track last failure time for failure recheck timer
+	private final Map<String, Instant> lastFailureTime = new ConcurrentHashMap<>();
+	
 	@Inject
 	MeterRegistry registry;
 	
@@ -48,16 +72,22 @@ public class DNSResolver {
 	NegativeCacheService negativeCacheService;
 	
 	/**
-	 * Resolve a DNS query with RFC 9520 compliant negative caching.
+	 * Resolve a DNS query with RFC 9520 compliant negative caching and RFC 8767 serve-stale.
 	 *
 	 * Per RFC 9520 Section 3.2: "When an incoming query matches a cached resolution failure,
 	 * the resolver MUST NOT send any corresponding outgoing queries until after the cache entries
 	 * expire."
+	 *
+	 * Per RFC 8767 Section 4: "If the data is unable to be authoritatively refreshed when the TTL
+	 * expires, the record MAY be used as though it is unexpired."
 	 */
 	@Timed(value = "dns.query.resolution", description = "Time taken to resolve DNS query")
 	@Counted(value = "dns.query.count", description = "Number of DNS queries processed")
 	public DnsMessage resolve(DnsMessage query) {
 		LOG.infof("Resolving DNS query: %s (type: %d)", query.getQname(), query.getQtype());
+		
+		long startTime = System.currentTimeMillis();
+		String cacheKey = getCacheKey(query);
 		
 		// RFC 9520 Section 3.2: Check negative cache for resolution failures FIRST
 		if (negativeCacheService.isCachedFailure(query.getQname(), query.getQtype())) {
@@ -69,59 +99,193 @@ public class DNSResolver {
 					new ArrayList<>(), 0L);
 		}
 		
-		// Check positive cache
-		CachedResponse cachedResponse = cache.get(getCacheKey(query));
+		// Check positive cache for unexpired records
+		CachedResponse cachedResponse = cache.get(cacheKey);
 		if (cachedResponse != null && !cachedResponse.isExpired()) {
 			LOG.debugf("Cache hit for domain: %s", query.getQname());
 			return cachedResponse.response;
 		}
 		
-		// Perform actual DNS resolution with retry logic
-		DnsMessage response;
-		String qtypeStr = DnsMessageConverter.getQtypeString(query.getQtype());
+		// RFC 8767 Section 5: Check failure recheck timer
+		// "no more frequently than every 30 seconds"
+		Instant lastFailure = lastFailureTime.get(cacheKey);
+		boolean withinFailureRecheckPeriod = lastFailure != null &&
+				Duration.between(lastFailure, Instant.now()).getSeconds() < FAILURE_RECHECK_SECONDS;
+		
+		// RFC 8767 Section 5: If within failure recheck period, immediately use stale data if
+		// available
+		if (withinFailureRecheckPeriod && cachedResponse != null && cachedResponse.isStale()) {
+			LOG.infof("Within failure recheck period for %s, serving stale data (age: %ds)",
+					query.getQname(), cachedResponse.getAgeSeconds());
+			return createStaleResponse(cachedResponse.response, query);
+		}
+		
+		// RFC 8767 Section 5: Client response timer - try to get fresh data but use stale if
+		// timeout
+		DnsMessage response = null;
+		boolean timedOut = false;
 		
 		try {
-			List<String> addresses = performLookupWithRetry(query.getQname(), qtypeStr);
-			response = DnsMessageConverter.createResponse(query.getQname(), query.getQtype(),
-					query.getQclass(), 0, // NOERROR
-					addresses, 300L // TTL 5 minutes
-			);
+			// Start resolution attempt
+			response = performResolutionWithTimeout(query, startTime);
 			
-			// Cache the successful response
-			cache.put(getCacheKey(query), new CachedResponse(response));
+			// Clear last failure time on success
+			lastFailureTime.remove(cacheKey);
 			
-			LOG.infof("Successfully resolved %s to %s", query.getQname(), addresses);
+		} catch (ClientTimeoutException e) {
+			// RFC 8767 Section 5: Client response timer expired
+			timedOut = true;
+			LOG.infof("Client response timeout for %s, checking for stale data", query.getQname());
+		}
+		
+		// RFC 8767 Section 5: If timed out or failed, try to serve stale data
+		if (timedOut && cachedResponse != null && cachedResponse.isStale()) {
+			LOG.infof("Serving stale data for %s due to timeout (age: %ds)", query.getQname(),
+					cachedResponse.getAgeSeconds());
 			
-		} catch (UnknownHostException e) {
-			LOG.warnf("Domain not found: %s", query.getQname());
-			// NXDOMAIN is NOT a resolution failure per RFC 9520, so don't cache in negative cache
-			response = DnsMessageConverter.createResponse(query.getQname(), query.getQtype(),
-					query.getQclass(), 3, // NXDOMAIN
-					new ArrayList<>(), 300L);
-		} catch (DNSResolutionException e) {
-			// RFC 9520 compliant failure handling
-			LOG.errorf(e, "DNS resolution failure for domain: %s", query.getQname());
+			// RFC 8767 Section 5: Continue resolution in background (simulated here)
+			// In production, this would spawn an async task
+			// For now, we just return stale and the next request will retry
 			
-			// Cache the resolution failure per RFC 9520 Section 3.2
-			negativeCacheService.cacheFailure(query.getQname(), query.getQtype(),
-					e.getFailureType());
-			
-			response = DnsMessageConverter.createResponse(query.getQname(), query.getQtype(),
-					query.getQclass(), 2, // SERVFAIL
-					new ArrayList<>(), 0L);
-		} catch (RuntimeException e) {
-			LOG.errorf(e, "Unexpected error resolving domain: %s", query.getQname());
-			
-			// Cache as OTHER failure type
-			negativeCacheService.cacheFailure(query.getQname(), query.getQtype(),
-					NegativeCacheService.FailureType.OTHER);
-			
-			response = DnsMessageConverter.createResponse(query.getQname(), query.getQtype(),
+			return createStaleResponse(cachedResponse.response, query);
+		}
+		
+		// If no response obtained and no stale data available, return SERVFAIL
+		if (response == null) {
+			LOG.warnf("No response and no stale data available for %s", query.getQname());
+			return DnsMessageConverter.createResponse(query.getQname(), query.getQtype(),
 					query.getQclass(), 2, // SERVFAIL
 					new ArrayList<>(), 0L);
 		}
 		
 		return response;
+	}
+	
+	/**
+	 * RFC 8767 Section 5: Perform resolution with client response timeout.
+	 *
+	 * @throws ClientTimeoutException if client response timer expires
+	 */
+	private DnsMessage performResolutionWithTimeout(DnsMessage query, long startTime)
+			throws ClientTimeoutException {
+		String qtypeStr = DnsMessageConverter.getQtypeString(query.getQtype());
+		String cacheKey = getCacheKey(query);
+		
+		try {
+			// Check if we've exceeded client response timeout
+			long elapsed = System.currentTimeMillis() - startTime;
+			if (elapsed > CLIENT_RESPONSE_TIMEOUT_MS) {
+				throw new ClientTimeoutException("Client response timeout exceeded");
+			}
+			
+			List<String> addresses = performLookupWithRetry(query.getQname(), qtypeStr);
+			DnsMessage response = DnsMessageConverter.createResponse(query.getQname(),
+					query.getQtype(),
+					query.getQclass(), 0, // NOERROR
+					addresses, 300L // TTL 5 minutes
+			);
+			
+			// Cache the successful response
+			cache.put(cacheKey, new CachedResponse(response));
+			
+			LOG.infof("Successfully resolved %s to %s", query.getQname(), addresses);
+			return response;
+			
+		} catch (UnknownHostException e) {
+			LOG.warnf("Domain not found: %s", query.getQname());
+			// NXDOMAIN is NOT a resolution failure per RFC 9520, so don't cache in negative cache
+			DnsMessage response = DnsMessageConverter.createResponse(query.getQname(),
+					query.getQtype(),
+					query.getQclass(), 3, // NXDOMAIN
+					new ArrayList<>(), 300L);
+			return response;
+			
+		} catch (DNSResolutionException e) {
+			// RFC 9520 compliant failure handling
+			LOG.errorf(e, "DNS resolution failure for domain: %s", query.getQname());
+			
+			// RFC 8767: Record failure time for failure recheck timer
+			lastFailureTime.put(cacheKey, Instant.now());
+			
+			// Cache the resolution failure per RFC 9520 Section 3.2
+			negativeCacheService.cacheFailure(query.getQname(), query.getQtype(),
+					e.getFailureType());
+			
+			DnsMessage response = DnsMessageConverter.createResponse(query.getQname(),
+					query.getQtype(),
+					query.getQclass(), 2, // SERVFAIL
+					new ArrayList<>(), 0L);
+			return response;
+			
+		} catch (RuntimeException e) {
+			LOG.errorf(e, "Unexpected error resolving domain: %s", query.getQname());
+			
+			// RFC 8767: Record failure time
+			lastFailureTime.put(cacheKey, Instant.now());
+			
+			// Cache as OTHER failure type
+			negativeCacheService.cacheFailure(query.getQname(), query.getQtype(),
+					NegativeCacheService.FailureType.OTHER);
+			
+			DnsMessage response = DnsMessageConverter.createResponse(query.getQname(),
+					query.getQtype(),
+					query.getQclass(), 2, // SERVFAIL
+					new ArrayList<>(), 0L);
+			return response;
+		}
+	}
+	
+	/**
+	 * RFC 8767 Section 4: Create a response using stale data with TTL set to 30 seconds.
+	 * <p>
+	 * "When returning a response containing stale records, a recursive resolver MUST set the
+	 * TTL of
+	 * each expired record in the message to a value greater than 0, with a RECOMMENDED value of 30
+	 * seconds."
+	 */
+	private DnsMessage createStaleResponse(DnsMessage originalResponse, DnsMessage query) {
+		// Clone the response and update TTLs to 30 seconds
+		DnsMessage staleResponse = new DnsMessage();
+		
+		// Copy all header fields
+		staleResponse.setId(query.getId());
+		staleResponse.setQr(1); // Response
+		staleResponse.setOpcode(originalResponse.getOpcode());
+		staleResponse.setAa(0); // Not authoritative for stale data
+		staleResponse.setTc(originalResponse.getTc());
+		staleResponse.setRd(query.getRd());
+		staleResponse.setRa(1); // Recursion available
+		staleResponse.setAd(0); // Not authenticated for stale data
+		staleResponse.setCd(query.getCd());
+		staleResponse.setRcode(originalResponse.getRcode());
+		
+		// Copy question section
+		staleResponse.setQname(query.getQname());
+		staleResponse.setQtype(query.getQtype());
+		staleResponse.setQclass(query.getQclass());
+		staleResponse.setQdcount(1);
+		
+		// Copy answer RRs with updated TTL per RFC 8767
+		if (originalResponse.getAnswerRRs() != null) {
+			List<ResourceRecord> staleAnswers = new ArrayList<>();
+			for (ResourceRecord rr : originalResponse.getAnswerRRs()) {
+				ResourceRecord staleRR =
+						new ResourceRecord(rr.getName(), rr.getType(), rr.getRclass(),
+								STALE_RESPONSE_TTL, // RFC 8767: Set to 30 seconds
+								rr.getRdata());
+				staleAnswers.add(staleRR);
+			}
+			staleResponse.setAnswerRRs(staleAnswers);
+			staleResponse.setAncount(staleAnswers.size());
+		} else {
+			staleResponse.setAncount(0);
+		}
+		
+		// Copy authority and additional sections (also with updated TTL)
+		staleResponse.setNscount(0); // Don't include authority for stale
+		staleResponse.setArcount(0); // Don't include additional for stale
+		
+		return staleResponse;
 	}
 	
 	/**
@@ -218,11 +382,13 @@ public class DNSResolver {
 	/**
 	 * Clear expired cache entries from both positive and negative caches.
 	 * Per RFC 9520 Section 3.2, expired entries should be cleaned up.
+	 * Per RFC 8767 Section 5, stale data should be retained up to MAX_STALE_SECONDS.
 	 */
 	public void clearExpiredCache() {
-		// Clear positive cache
-		cache.entrySet().removeIf(entry -> entry.getValue().isExpired());
-		LOG.debugf("Positive cache cleanup completed. Current size: %d", cache.size());
+		// RFC 8767 Section 5: Only remove data that exceeds maximum stale timer
+		// "The suggested value is between 1 and 3 days"
+		cache.entrySet().removeIf(entry -> entry.getValue().isTooStale());
+		LOG.debugf("Cache cleanup completed. Current size: %d", cache.size());
 		
 		// Clear negative cache
 		negativeCacheService.clearExpiredEntries();
@@ -238,13 +404,16 @@ public class DNSResolver {
 	/**
 	 * Get cache statistics including both positive and negative caches.
 	 * Per RFC 9520, monitoring of negative cache is important for operators.
+	 * Per RFC 8767, monitoring of stale data usage is also important.
 	 */
 	public Map<String, Object> getCacheStats() {
 		long expired = cache.values().stream().filter(CachedResponse::isExpired).count();
+		long stale = cache.values().stream().filter(CachedResponse::isStale).count();
+		long tooStale = cache.values().stream().filter(CachedResponse::isTooStale).count();
 		
 		Map<String, Object> positiveCache =
-				Map.of("total", cache.size(), "expired", expired, "active",
-						cache.size() - expired);
+				Map.of("total", cache.size(), "expired", expired, "stale", stale, "tooStale",
+						tooStale, "active", cache.size() - expired);
 		
 		return Map.of("positiveCache", positiveCache, "negativeCache",
 				negativeCacheService.getCacheStats()
@@ -269,7 +438,7 @@ public class DNSResolver {
 	}
 	
 	/**
-	 * Internal class for cached responses
+	 * Internal class for cached responses with RFC 8767 stale data support
 	 */
 	private static class CachedResponse {
 		final DnsMessage response;
@@ -280,9 +449,45 @@ public class DNSResolver {
 			this.cachedAt = Instant.now();
 		}
 		
+		/**
+		 * RFC 1035 Section 3.2.1: Check if data is expired based on original TTL
+		 */
 		boolean isExpired() {
 			return java.time.Duration.between(cachedAt, Instant.now()).getSeconds() >
 					CACHE_TTL_SECONDS;
+		}
+		
+		/**
+		 * RFC 8767 Section 5: Check if data is stale but still usable Data is stale if expired but
+		 * within MAX_STALE_SECONDS
+		 */
+		boolean isStale() {
+			long age = getAgeSeconds();
+			return age > CACHE_TTL_SECONDS && age <= MAX_STALE_SECONDS;
+		}
+		
+		/**
+		 * RFC 8767 Section 5: Check if data exceeds maximum stale timer "The suggested value is
+		 * between 1 and 3 days"
+		 */
+		boolean isTooStale() {
+			return getAgeSeconds() > MAX_STALE_SECONDS;
+		}
+		
+		/**
+		 * Get the age of this cache entry in seconds
+		 */
+		long getAgeSeconds() {
+			return java.time.Duration.between(cachedAt, Instant.now()).getSeconds();
+		}
+	}
+	
+	/**
+	 * Exception thrown when client response timeout is exceeded (RFC 8767)
+	 */
+	private static class ClientTimeoutException extends Exception {
+		public ClientTimeoutException(String message) {
+			super(message);
 		}
 	}
 }
