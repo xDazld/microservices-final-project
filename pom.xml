@@ -60,10 +60,6 @@
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-messaging-kafka</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.quarkus</groupId>
             <artifactId>quarkus-jdbc-mariadb</artifactId>
         </dependency>
         <dependency>
@@ -96,10 +92,6 @@
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-kafka-streams</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.quarkus</groupId>
             <artifactId>quarkus-rest-jaxb</artifactId>
         </dependency>
         <dependency>
@@ -113,10 +105,6 @@
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-info</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-kafka-client</artifactId>
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>

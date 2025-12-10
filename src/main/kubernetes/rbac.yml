@@ -19,16 +19,6 @@ metadata:
     app.kubernetes.io/name: mariadb
     app.kubernetes.io/component: database
 ---
-# ServiceAccount for Kafka
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: kafka-account
-  namespace: dns-filtering
-  labels:
-    app.kubernetes.io/name: kafka
-    app.kubernetes.io/component: messaging
----
 # ServiceAccount for LGTM
 apiVersion: v1
 kind: ServiceAccount
@@ -85,23 +75,6 @@ rules:
   - apiGroups: [ "" ]
     resources: [ "secrets", "configmaps" ]
     verbs: [ "get", "list" ]
-  - apiGroups: [ "" ]
-    resources: [ "events" ]
-    verbs: [ "create", "patch" ]
----
-# Role for Kafka
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
-  name: kafka-role
-  namespace: dns-filtering
-  labels:
-    app.kubernetes.io/name: kafka
-    app.kubernetes.io/component: messaging
-rules:
-  - apiGroups: [ "" ]
-    resources: [ "configmaps" ]
-    verbs: [ "get", "list", "watch" ]
   - apiGroups: [ "" ]
     resources: [ "events" ]
     verbs: [ "create", "patch" ]
@@ -174,24 +147,6 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: mariadb-account
-    namespace: dns-filtering
----
-# RoleBinding for Kafka
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: kafka-rolebinding
-  namespace: dns-filtering
-  labels:
-    app.kubernetes.io/name: kafka
-    app.kubernetes.io/component: messaging
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: kafka-role
-subjects:
-  - kind: ServiceAccount
-    name: kafka-account
     namespace: dns-filtering
 ---
 # RoleBinding for LGTM

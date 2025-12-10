@@ -18,7 +18,6 @@ resources:
   
   # Service deployments
   - mariadb.yml
-  - kafka.yml
   - lgtm.yml
   - ollama.yml
   - dns-service.yml
@@ -46,8 +45,6 @@ replicas:
     count: 1
   - name: mariadb
     count: 1
-  - name: kafka
-    count: 1
   - name: lgtm
     count: 1
   - name: ollama
@@ -58,8 +55,6 @@ images:
   - name: docker.io/dazld/final-project
     newTag: 1.0-SNAPSHOT
   - name: docker.io/library/mariadb
-    newTag: latest
-  - name: docker.io/redpandadata/redpanda
     newTag: latest
   - name: docker.io/grafana/otel-lgtm
     newTag: latest
@@ -79,13 +74,6 @@ vars:
     objref:
       kind: Service
       name: mariadb
-      apiVersion: v1
-    fieldref:
-      fieldpath: metadata.name
-  - name: KAFKA_HOST
-    objref:
-      kind: Service
-      name: kafka
       apiVersion: v1
     fieldref:
       fieldpath: metadata.name

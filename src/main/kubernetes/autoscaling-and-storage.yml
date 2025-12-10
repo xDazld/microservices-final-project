@@ -46,30 +46,6 @@ spec:
           periodSeconds: 60
       selectPolicy: Max
 ---
-# HorizontalPodAutoscaler for Kafka
-apiVersion: autoscaling/v2
-kind: HorizontalPodAutoscaler
-metadata:
-  name: kafka-hpa
-  namespace: dns-filtering
-  labels:
-    app.kubernetes.io/name: kafka
-    app.kubernetes.io/component: messaging
-spec:
-  scaleTargetRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    name: kafka
-  minReplicas: 1
-  maxReplicas: 3
-  metrics:
-    - type: Resource
-      resource:
-        name: cpu
-        target:
-          type: Utilization
-          averageUtilization: 75
----
 # PersistentVolume for MariaDB
 apiVersion: v1
 kind: PersistentVolume
@@ -107,44 +83,6 @@ spec:
   selector:
     matchLabels:
       app.kubernetes.io/name: mariadb
----
-# PersistentVolume for Kafka
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: kafka-pv
-  labels:
-    app.kubernetes.io/name: kafka
-    app.kubernetes.io/component: messaging
-spec:
-  capacity:
-    storage: 20Gi
-  accessModes:
-    - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Retain
-  storageClassName: manual
-  hostPath:
-    path: /data/kafka
----
-# PersistentVolumeClaim for Kafka
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: kafka-pvc
-  namespace: dns-filtering
-  labels:
-    app.kubernetes.io/name: kafka
-    app.kubernetes.io/component: messaging
-spec:
-  accessModes:
-    - ReadWriteOnce
-  storageClassName: manual
-  resources:
-    requests:
-      storage: 20Gi
-  selector:
-    matchLabels:
-      app.kubernetes.io/name: kafka
 ---
 # PersistentVolume for LGTM
 apiVersion: v1

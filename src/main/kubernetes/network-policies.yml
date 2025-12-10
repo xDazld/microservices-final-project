@@ -23,30 +23,6 @@ spec:
         - protocol: TCP
           port: 3306
 ---
-# Allow traffic between DNS Service and Kafka
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: allow-dns-to-kafka
-  namespace: dns-filtering
-  labels:
-    app.kubernetes.io/name: final-project
-    app.kubernetes.io/component: network-policy
-spec:
-  podSelector:
-    matchLabels:
-      app.kubernetes.io/name: kafka
-  policyTypes:
-    - Ingress
-  ingress:
-    - from:
-        - podSelector:
-            matchLabels:
-              app.kubernetes.io/name: final-project
-      ports:
-        - protocol: TCP
-          port: 9092
----
 # Allow traffic between DNS Service and LGTM (OpenTelemetry)
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy

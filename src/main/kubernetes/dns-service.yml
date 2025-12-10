@@ -65,11 +65,6 @@ spec:
                 secretKeyRef:
                   name: mariadb-credentials
                   key: MYSQL_PASSWORD
-            - name: KAFKA_BOOTSTRAP_SERVERS
-              valueFrom:
-                configMapKeyRef:
-                  name: dns-service-config
-                  key: KAFKA_BOOTSTRAP_SERVERS
             - name: QUARKUS_OPENTELEMETRY_ENABLED
               valueFrom:
                 configMapKeyRef:

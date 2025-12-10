@@ -13,7 +13,6 @@ with threat detection, content filtering, and AI-powered security analysis.
 - **AI Security Agent** - Intelligent threat analysis powered by LLM
 - **Real-time Statistics** - Comprehensive metrics and monitoring
 - **Web Dashboard** - Modern UI for managing filters and monitoring
-- **Event Streaming** - Kafka integration for security events
 - **Container Ready** - Docker and Kubernetes deployment support
 - **Secure by Default** - JWT authentication with role-based access control
 
@@ -258,9 +257,6 @@ Key configuration options in `application.properties`:
 quarkus.http.port=8080
 # Database
 quarkus.datasource.db-kind=mariadb
-# Kafka
-mp.messaging.outgoing.dns-query-logs.topic=dns-query-logs
-mp.messaging.outgoing.dns-security-alerts.topic=dns-security-alerts
 # Metrics
 quarkus.micrometer.export.prometheus.path=/metrics
 # Security
@@ -294,7 +290,6 @@ src/
 │   ├── java/dev/pacr/dns/
 │   │   ├── api/          # REST endpoints (FrontendResource, AdminResource, etc.)
 │   │   ├── agent/        # AI agent
-│   │   ├── messaging/    # Kafka messaging
 │   │   ├── model/        # Data models
 │   │   ├── service/      # Business logic
 │   │   └── util/         # Utilities
