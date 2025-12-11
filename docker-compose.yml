@@ -75,7 +75,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
-    restart: unless-stopped
 
   # MariaDB Database Service
   mariadb:
@@ -100,7 +99,6 @@ services:
       timeout: 5s
       retries: 5
       start_period: 30s
-    restart: unless-stopped
 
   # Kafka/Redpanda Message Broker
   kafka:
@@ -108,31 +106,31 @@ services:
     container_name: dns-shield-kafka
     ports:
       - "9092:9092"
-      - "8082:8082"
-      - "29092:29092"  # Internal advertised port for other containers
-    environment:
-      REDPANDA_ADVERTISED_KAFKA_API: kafka:9092
-      REDPANDA_ADVERTISED_KAFKA_API_INTERNAL: kafka:29092
-      REDPANDA_KAFKA_API_ADVERTISED_HOST: kafka
-      REDPANDA_KAFKA_API_ADVERTISED_PORT: 9092
-    command: >
-      redpanda start
-      --kafka-addr 0.0.0.0:9092
-      --advertise-kafka-addr kafka:9092
-      --admin-api-addr 0.0.0.0:8082
-      --node-id 1
-      --seeds kafka:33145
+      - "9644:9644"  # Admin API
+      - "8082:8082"  # Schema Registry
+    command:
+      - redpanda
+      - start
+      - --kafka-addr internal://0.0.0.0:9092,external://0.0.0.0:19092
+      - --advertise-kafka-addr internal://kafka:9092,external://localhost:19092
+      - --pandaproxy-addr internal://0.0.0.0:8082,external://0.0.0.0:18082
+      - --advertise-pandaproxy-addr internal://kafka:8082,external://localhost:18082
+      - --schema-registry-addr internal://0.0.0.0:8081,external://0.0.0.0:18081
+      - --rpc-addr kafka:33145
+      - --advertise-rpc-addr kafka:33145
+      - --mode dev-container
+      - --smp 1
+      - --default-log-level=info
     volumes:
       - kafka-data:/var/lib/redpanda/data
     networks:
       - dns-shield-network
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8082/v1/brokers" ]
-      interval: 10s
-      timeout: 5s
+      test: [ "CMD-SHELL", "rpk cluster health | grep -E 'Healthy:.+true' || exit 1" ]
+      interval: 15s
+      timeout: 3s
       retries: 5
       start_period: 30s
-    restart: unless-stopped
 
   # Ollama AI Service
   ollama:
@@ -147,44 +145,25 @@ services:
       - ollama-data:/root/.ollama
     networks:
       - dns-shield-network
-    restart: unless-stopped
 
-  # Prometheus Metrics (optional but recommended)
-  prometheus:
-    image: docker.io/prom/prometheus:latest
-    container_name: dns-shield-prometheus
+  # Grafana LGTM Stack (Loki, Grafana, Tempo, Mimir)
+  otel-lgtm:
+    image: docker.io/grafana/otel-lgtm:0.11.0
+    container_name: dns-shield-otel-lgtm
     ports:
-      - "9090:9090"
-    volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - prometheus-data:/prometheus
-    command:
-      - "--config.file=/etc/prometheus/prometheus.yml"
-      - "--storage.tsdb.path=/prometheus"
-    networks:
-      - dns-shield-network
-    depends_on:
-      - dns-shield
-    restart: unless-stopped
-
-  # Grafana Dashboard (optional but recommended)
-  grafana:
-    image: docker.io/grafana/grafana:latest
-    container_name: dns-shield-grafana
-    ports:
-      - "3000:3000"
+      - "3000:3000"   # Grafana
+      - "4317:4317"   # OTLP gRPC
+      - "4318:4318"   # OTLP HTTP
+      - "9090:9090"   # Mimir (Prometheus compatible)
     environment:
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
       GF_SECURITY_ADMIN_USER: ${GRAFANA_USER:-admin}
     volumes:
-      - grafana-data:/var/lib/grafana
-      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
-      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - otel-lgtm-data:/data
     networks:
       - dns-shield-network
     depends_on:
-      - prometheus
-    restart: unless-stopped
+      - dns-shield
 
 volumes:
   mariadb-data:
@@ -193,9 +172,7 @@ volumes:
     driver: local
   ollama-data:
     driver: local
-  prometheus-data:
-    driver: local
-  grafana-data:
+  otel-lgtm-data:
     driver: local
   dns-shield-data:
     driver: local
