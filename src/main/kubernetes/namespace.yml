@@ -1,9 +1,0 @@
----
-# Namespace for the entire application
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: dns-filtering
-  labels:
-    app.kubernetes.io/name: dns-filtering
-    app.kubernetes.io/managed-by: manual

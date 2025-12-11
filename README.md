@@ -92,15 +92,44 @@ documentation.**
 
 ### Prerequisites
 
-- Java 21+
-- Maven 3.8+
-- Docker (optional, for containerized deployment)
-- Kubernetes cluster (optional, for k8s deployment)
+- Docker 20.10+
+- Docker Compose 2.0+
+- Java 21+ (for local development)
+- Maven 3.8+ (for building)
+- Git
 
-### Running Locally
+### Running with Docker Compose (Recommended)
+
+The easiest way to get started is with Docker Compose, which sets up the entire stack with DNS
+Shield, MariaDB, Kafka, Ollama, Prometheus, and Grafana:
 
 ```bash
-# Development mode with hot reload
+# Build the application
+./mvnw package -DskipTests
+
+# Start the entire stack
+docker-compose up -d
+
+# Wait for services to be healthy (30-60 seconds)
+docker-compose ps
+
+# The application will be available at:
+# - Frontend UI: http://localhost:8080/ui
+# - API: http://localhost:8080/api/v1
+# - Metrics: http://localhost:8080/metrics
+# - Prometheus: http://localhost:9090
+# - Grafana: http://localhost:3000 (admin/admin)
+```
+
+For detailed Docker Compose instructions, see [DOCKER_COMPOSE.md](DOCKER_COMPOSE.md).
+
+### Running Locally (Development)
+
+```bash
+# Start only supporting services (DB, Kafka, Ollama)
+docker-compose up -d mariadb kafka ollama
+
+# Run application in dev mode with hot reload
 ./mvnw quarkus:dev
 
 # The application will be available at:
@@ -263,7 +292,10 @@ quarkus.micrometer.export.prometheus.path=/metrics
 quarkus.security.jaxrs.deny-unannotated-endpoints=false
 ```
 
-## Kubernetes Deployment
+## Kubernetes Deployment (Advanced)
+
+For advanced deployments requiring orchestration and auto-scaling, Kubernetes manifests are
+available in `src/main/kubernetes/`:
 
 ```bash
 # Generate Kubernetes manifests
@@ -272,6 +304,9 @@ quarkus.security.jaxrs.deny-unannotated-endpoints=false
 # Apply to cluster
 kubectl apply -f target/kubernetes/kubernetes.yml
 ```
+
+**Note:** For most use cases, Docker Compose (see [DOCKER_COMPOSE.md](DOCKER_COMPOSE.md)) provides a
+simpler alternative that includes all necessary services with easier configuration and monitoring.
 
 ## Monitoring
 

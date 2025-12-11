@@ -66,22 +66,3 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Update Kubernetes deployment
-        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
-        env:
-          KUBECONFIG: ${{ secrets.KUBECONFIG }}
-          IMAGE: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
-        run: |
-          mkdir -p $HOME/.kube
-          echo "${{ secrets.KUBECONFIG }}" | base64 --decode > $HOME/.kube/config
-          chmod 600 $HOME/.kube/config
-          
-          kubectl set image deployment/final-project \
-            final-project=$IMAGE \
-            -n dns-filtering \
-            --record || true
-          
-          kubectl rollout status deployment/final-project \
-            -n dns-filtering \
-            --timeout=5m || true
-

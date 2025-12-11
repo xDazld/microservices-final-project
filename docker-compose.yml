@@ -1,0 +1,206 @@
+version: '3.9'
+
+services:
+  # Main DNS Shield Application
+  dns-shield:
+    build:
+      context: .
+      dockerfile: src/main/docker/Dockerfile.jvm
+    container_name: dns-shield-app
+    ports:
+      - "8080:8080"
+      - "5005:5005"  # Debug port
+    environment:
+      # Database Configuration
+      QUARKUS_DATASOURCE_DB_KIND: mariadb
+      QUARKUS_DATASOURCE_JDBC_URL: jdbc:mariadb://mariadb:3306/dns_shield
+      QUARKUS_DATASOURCE_USERNAME: ${DB_USER:-dns_user}
+      QUARKUS_DATASOURCE_PASSWORD: ${DB_PASSWORD:-dns_password}
+      QUARKUS_DATASOURCE_REACTIVE_URL: mysql://mariadb:3306/dns_shield
+
+      # Kafka Configuration
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      MP_MESSAGING_INCOMING_DNS_EVENTS_BOOTSTRAP_SERVERS: kafka:9092
+      MP_MESSAGING_OUTGOING_DNS_STATS_BOOTSTRAP_SERVERS: kafka:9092
+
+      # Ollama Configuration
+      QUARKUS_LANGCHAIN4J_OLLAMA_BASE_URL: http://ollama:11434
+      QUARKUS_LANGCHAIN4J_TIMEOUT: 120s
+
+      # Metrics
+      QUARKUS_MICROMETER_EXPORT_PROMETHEUS_PATH: /metrics
+
+      # JWT/Security
+      MP_JWT_VERIFY_ISSUER: https://dns-shield.local
+      SMALLRYE_JWT_SIGN_KEY_LOCATION: file:///app/config/keys/privateKey.pem
+      MP_JWT_VERIFY_PUBLICKEY_LOCATION: file:///app/config/keys/publicKey.pem
+
+      # CORS
+      QUARKUS_HTTP_CORS: "true"
+      QUARKUS_HTTP_CORS_ORIGINS: "/.*/"
+      QUARKUS_HTTP_CORS_METHODS: "GET,POST,PUT,DELETE,PATCH"
+      QUARKUS_HTTP_CORS_HEADERS: "accept,authorization,content-type,x-requested-with"
+
+      # RFC Compliance
+      DNS_RFC5358_RECURSION_ENABLED: "true"
+      DNS_RFC5358_DEFAULT_DENY: "false"
+      DNS_RFC5358_ALLOWED_NETWORKS: "127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,::1/128,fc00::/7"
+      DNS_NEGATIVE_CACHE_MIN_DURATION: "1"
+      DNS_NEGATIVE_CACHE_MAX_DURATION: "300"
+      DNS_STALE_MAX_AGE: "86400"
+
+      # Statistics
+      DNS_STATISTICS_ENABLED: "true"
+      DNS_STATISTICS_TRACK_PAYLOAD_SIZE: "true"
+
+      # Debug
+      JAVA_DEBUG: "false"
+      JAVA_OPTS_APPEND: "-Dquarkus.log.level=INFO"
+
+    volumes:
+      - ./src/main/resources/keys:/app/config/keys:ro
+      - dns-shield-data:/opt/app
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      ollama:
+        condition: service_started
+    networks:
+      - dns-shield-network
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/q/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+
+  # MariaDB Database Service
+  mariadb:
+    image: docker.io/library/mariadb:latest
+    container_name: dns-shield-db
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootpassword}
+      MYSQL_DATABASE: ${DB_NAME:-dns_shield}
+      MYSQL_USER: ${DB_USER:-dns_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-dns_password}
+      MARIADB_AUTO_UPGRADE: "1"
+    volumes:
+      - mariadb-data:/var/lib/mysql
+      - ./src/main/resources/db-init:/docker-entrypoint-initdb.d:ro
+    networks:
+      - dns-shield-network
+    healthcheck:
+      test: [ "CMD", "healthcheck.sh", "--su=mysql", "--connect", "--innodb_initialized" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  # Kafka/Redpanda Message Broker
+  kafka:
+    image: docker.io/redpandadata/redpanda:latest
+    container_name: dns-shield-kafka
+    ports:
+      - "9092:9092"
+      - "8082:8082"
+      - "29092:29092"  # Internal advertised port for other containers
+    environment:
+      REDPANDA_ADVERTISED_KAFKA_API: kafka:9092
+      REDPANDA_ADVERTISED_KAFKA_API_INTERNAL: kafka:29092
+      REDPANDA_KAFKA_API_ADVERTISED_HOST: kafka
+      REDPANDA_KAFKA_API_ADVERTISED_PORT: 9092
+    command: >
+      redpanda start
+      --kafka-addr 0.0.0.0:9092
+      --advertise-kafka-addr kafka:9092
+      --admin-api-addr 0.0.0.0:8082
+      --node-id 1
+      --seeds kafka:33145
+    volumes:
+      - kafka-data:/var/lib/redpanda/data
+    networks:
+      - dns-shield-network
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8082/v1/brokers" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  # Ollama AI Service
+  ollama:
+    image: docker.io/ollama/ollama:latest
+    container_name: dns-shield-ollama
+    ports:
+      - "11434:11434"
+    environment:
+      OLLAMA_HOST: 0.0.0.0:11434
+      OLLAMA_MODELS_PATH: /root/.ollama/models
+    volumes:
+      - ollama-data:/root/.ollama
+    networks:
+      - dns-shield-network
+    restart: unless-stopped
+
+  # Prometheus Metrics (optional but recommended)
+  prometheus:
+    image: docker.io/prom/prometheus:latest
+    container_name: dns-shield-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+    networks:
+      - dns-shield-network
+    depends_on:
+      - dns-shield
+    restart: unless-stopped
+
+  # Grafana Dashboard (optional but recommended)
+  grafana:
+    image: docker.io/grafana/grafana:latest
+    container_name: dns-shield-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_USER:-admin}
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+    networks:
+      - dns-shield-network
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
+volumes:
+  mariadb-data:
+    driver: local
+  kafka-data:
+    driver: local
+  ollama-data:
+    driver: local
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local
+  dns-shield-data:
+    driver: local
+
+networks:
+  dns-shield-network:
+    driver: bridge
+
