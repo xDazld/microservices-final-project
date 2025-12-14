@@ -54,7 +54,6 @@ services:
       JAVA_OPTS_APPEND: "-Dquarkus.log.level=INFO"
 
     volumes:
-      - ./src/main/resources/keys:/app/config/keys:ro
       - dns-shield-data:/opt/app
     depends_on:
       mariadb:
@@ -64,7 +63,7 @@ services:
     networks:
       - dns-shield-network
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8080/q/health" ]
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/api/v1/admin/health" ]
       interval: 30s
       timeout: 10s
       retries: 3

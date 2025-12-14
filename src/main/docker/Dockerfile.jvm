@@ -3,7 +3,7 @@
 #
 # Before building the container image run:
 #
-# ./mvnw package
+# mvn package
 #
 # Then, build the image with:
 #
@@ -88,6 +88,12 @@ COPY --chown=185 target/quarkus-app/lib/ /deployments/lib/
 COPY --chown=185 target/quarkus-app/*.jar /deployments/
 COPY --chown=185 target/quarkus-app/app/ /deployments/app/
 COPY --chown=185 target/quarkus-app/quarkus/ /deployments/quarkus/
+
+# Copy JWT keys into the image (must be done as root)
+USER root
+RUN mkdir -p /app/config/keys && chmod 755 /app/config/keys
+COPY --chown=185 target/docker-keys/ /app/config/keys/
+RUN chmod 644 /app/config/keys/*
 
 EXPOSE 8080
 USER 185
