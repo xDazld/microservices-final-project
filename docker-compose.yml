@@ -80,7 +80,7 @@ services:
 
   # MariaDB Database Service
   mariadb:
-    image: docker.io/library/mariadb:latest
+    image: docker.io/library/mariadb:10.11
     container_name: dns-shield-db
     ports:
       - "3306:3306"
