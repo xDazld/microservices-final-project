@@ -3,9 +3,11 @@ package dev.pacr.dns.config;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.json.Json;
 import jakarta.json.JsonObject;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -35,6 +37,13 @@ public class JwtSigningService {
 	 * Logger instance
 	 */
 	private static final Logger LOG = Logger.getLogger(JwtSigningService.class);
+	
+	/**
+	 * Private key location from configuration
+	 */
+	@ConfigProperty(name = "smallrye.jwt.sign.key.location", defaultValue = "classpath:keys" +
+			"/privateKey.pem")
+	String privateKeyLocation;
 	
 	/**
 	 * JWT expiration time in seconds (1 hour)
@@ -111,17 +120,37 @@ public class JwtSigningService {
 			return cachedPrivateKey;
 		}
 		
-		// Try to load from the generated keys directory
-		String keyPath = "src/main/resources/keys/privateKey.pem";
-		
 		try {
-			String keyContent = Files.readString(Paths.get(keyPath));
+			String keyContent;
+			
+			// Support both file:// and classpath: protocols
+			if (privateKeyLocation.startsWith("file://")) {
+				// Load from filesystem
+				String filePath = privateKeyLocation.substring("file://".length());
+				keyContent = Files.readString(Paths.get(filePath));
+				LOG.infof("Loaded private key from file: %s", filePath);
+			} else if (privateKeyLocation.startsWith("classpath:")) {
+				// Load from classpath
+				String resourcePath = privateKeyLocation.substring("classpath:".length());
+				try (InputStream is = Thread.currentThread().getContextClassLoader()
+						.getResourceAsStream(resourcePath)) {
+					if (is == null) {
+						throw new IOException("Resource not found: " + resourcePath);
+					}
+					keyContent = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+					LOG.infof("Loaded private key from classpath: %s", resourcePath);
+				}
+			} else {
+				// Assume it's a direct file path for backwards compatibility
+				keyContent = Files.readString(Paths.get(privateKeyLocation));
+				LOG.infof("Loaded private key from: %s", privateKeyLocation);
+			}
+			
 			cachedPrivateKey = parsePemPrivateKey(keyContent);
-			LOG.infof("Loaded private key from: %s", keyPath);
 			return cachedPrivateKey;
 		} catch (IOException e) {
-			LOG.errorf(e, "Failed to load private key from %s", keyPath);
-			throw new RuntimeException("Private key not found at " + keyPath, e);
+			LOG.errorf(e, "Failed to load private key from %s", privateKeyLocation);
+			throw new RuntimeException("Private key not found at " + privateKeyLocation, e);
 		}
 	}
 	
