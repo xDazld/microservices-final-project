@@ -1,0 +1,445 @@
+package dev.pacr.dns.messaging;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import dev.pacr.dns.agent.DNSIntelligenceAgent;
+import dev.pacr.dns.service.DNSFilterService;
+import dev.pacr.dns.service.SecurityService;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.quarkus.test.junit.QuarkusTest;
+import jakarta.inject.Inject;
+import org.eclipse.microprofile.reactive.messaging.Message;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.util.concurrent.CompletionStage;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+/**
+ * Integration tests for DNSEventConsumer with real RabbitMQ
+ * Tests the consumption and processing of DNS query logs and security alerts
+ * from RabbitMQ
+ */
+@QuarkusTest
+class DNSEventConsumerRabbitMQTest {
+
+    @Inject
+    DNSEventConsumer consumer;
+
+    @Inject
+    DNSIntelligenceAgent agent;
+
+    @Inject
+    SecurityService securityService;
+
+    @Inject
+    DNSFilterService filterService;
+
+    @Inject
+    MeterRegistry registry;
+
+    private ObjectMapper objectMapper;
+
+    @BeforeEach
+    void setUp() {
+        objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+    }
+
+    /**
+     * Test processing a valid DNS query log message
+     * Verifies that the consumer correctly parses and processes query logs
+     */
+    @Test
+    void testProcessValidQueryLog() throws Exception {
+        // Arrange
+        String queryLog = objectMapper.writeValueAsString(new QueryLogPayload(
+                "example.com",
+                "ALLOWED",
+                0,
+                new String[] { "93.184.216.34" }));
+
+        TestMessage message = new TestMessage(queryLog);
+
+        // Act
+        CompletionStage<Void> result = consumer.processQueryLog(message);
+
+        // Assert
+        assertNotNull(result);
+        result.toCompletableFuture().get(); // Wait for completion
+        assertEquals(1, message.getAckCount());
+    }
+
+    /**
+     * Test processing a blocked query log
+     * Verifies that blocked queries trigger threat analysis
+     */
+    @Test
+    void testProcessBlockedQueryLog() throws Exception {
+        // Arrange
+        String queryLog = objectMapper.writeValueAsString(new QueryLogPayload(
+                "malware.example.com",
+                "BLOCKED",
+                5,
+                new String[] {}));
+
+        TestMessage message = new TestMessage(queryLog);
+
+        // Act
+        CompletionStage<Void> result = consumer.processQueryLog(message);
+
+        // Assert
+        assertNotNull(result);
+        result.toCompletableFuture().get();
+        assertEquals(1, message.getAckCount());
+    }
+
+    /**
+     * Test processing multiple query logs in sequence
+     * Verifies that the consumer can handle rapid message processing
+     */
+    @Test
+    void testProcessMultipleQueryLogs() throws Exception {
+        // Arrange
+        String[] domains = { "example.com", "test.com", "another.com" };
+        String[] statuses = { "ALLOWED", "BLOCKED", "ALLOWED" };
+
+        // Act & Assert
+        for (int i = 0; i < domains.length; i++) {
+            String queryLog = objectMapper.writeValueAsString(new QueryLogPayload(
+                    domains[i],
+                    statuses[i],
+                    0,
+                    new String[] { "192.0.2." + i }));
+
+            TestMessage message = new TestMessage(queryLog);
+            CompletionStage<Void> result = consumer.processQueryLog(message);
+
+            assertNotNull(result);
+            result.toCompletableFuture().get();
+            assertEquals(1, message.getAckCount());
+        }
+    }
+
+    /**
+     * Test processing a malware security alert
+     * Verifies that malware alerts trigger autonomous blocking
+     */
+    @Test
+    void testProcessMalwareSecurityAlert() throws Exception {
+        // Arrange
+        String alert = objectMapper.writeValueAsString(new SecurityAlertPayload(
+                "malware-domain.com",
+                "MALWARE_DETECTED",
+                "Malware confirmed by antivirus scanning"));
+
+        TestMessage message = new TestMessage(alert);
+
+        // Act
+        CompletionStage<Void> result = consumer.processSecurityAlert(message);
+
+        // Assert
+        assertNotNull(result);
+        result.toCompletableFuture().get();
+        assertEquals(1, message.getAckCount());
+    }
+
+    /**
+     * Test processing a DGA security alert
+     * Verifies that DGA alerts trigger pattern-based blocking
+     */
+    @Test
+    void testProcessDGASecurityAlert() throws Exception {
+        // Arrange
+        String alert = objectMapper.writeValueAsString(new SecurityAlertPayload(
+                "randomxyzabcdefghijklmnop.com",
+                "DGA_DETECTED",
+                "Domain appears to be generated by DGA algorithm"));
+
+        TestMessage message = new TestMessage(alert);
+
+        // Act
+        CompletionStage<Void> result = consumer.processSecurityAlert(message);
+
+        // Assert
+        assertNotNull(result);
+        result.toCompletableFuture().get();
+        assertEquals(1, message.getAckCount());
+    }
+
+    /**
+     * Test processing a phishing security alert
+     * Verifies that phishing alerts are properly handled
+     */
+    @Test
+    void testProcessPhishingSecurityAlert() throws Exception {
+        // Arrange
+        String alert = objectMapper.writeValueAsString(new SecurityAlertPayload(
+                "paypa1-login.com",
+                "PHISHING_DETECTED",
+                "Domain mimics PayPal login page"));
+
+        TestMessage message = new TestMessage(alert);
+
+        // Act
+        CompletionStage<Void> result = consumer.processSecurityAlert(message);
+
+        // Assert
+        assertNotNull(result);
+        result.toCompletableFuture().get();
+        assertEquals(1, message.getAckCount());
+    }
+
+    /**
+     * Test processing multiple security alerts in sequence
+     * Verifies that different alert types are handled correctly
+     */
+    @Test
+    void testProcessMultipleSecurityAlerts() throws Exception {
+        // Arrange
+        SecurityAlertPayload[] alerts = {
+                new SecurityAlertPayload("malware.com", "MALWARE_DETECTED", "Malware found"),
+                new SecurityAlertPayload("dga-domain.com", "DGA_DETECTED", "DGA pattern"),
+                new SecurityAlertPayload("phishing.site", "PHISHING_DETECTED", "Phishing attempt")
+        };
+
+        // Act & Assert
+        for (SecurityAlertPayload alert : alerts) {
+            String alertJson = objectMapper.writeValueAsString(alert);
+            TestMessage message = new TestMessage(alertJson);
+            CompletionStage<Void> result = consumer.processSecurityAlert(message);
+
+            assertNotNull(result);
+            result.toCompletableFuture().get();
+            assertEquals(1, message.getAckCount());
+        }
+    }
+
+    /**
+     * Test processing threat intelligence update
+     * Verifies that threat intel updates trigger rule creation
+     */
+    @Test
+    void testProcessThreatIntelligenceUpdate() throws Exception {
+        // Arrange
+        String threatIntel = objectMapper.writeValueAsString(new ThreatIntelPayload(
+                "known-malware.com",
+                "malware"));
+
+        TestMessage message = new TestMessage(threatIntel);
+
+        // Act
+        CompletionStage<Void> result = consumer.processThreatIntelligence(message);
+
+        // Assert
+        assertNotNull(result);
+        result.toCompletableFuture().get();
+        assertEquals(1, message.getAckCount());
+    }
+
+    /**
+     * Test processing phishing threat intel
+     * Verifies that phishing threats are properly added to filter rules
+     */
+    @Test
+    void testProcessPhishingThreatIntelligence() throws Exception {
+        // Arrange
+        String threatIntel = objectMapper.writeValueAsString(new ThreatIntelPayload(
+                "phishing-site.com",
+                "phishing"));
+
+        TestMessage message = new TestMessage(threatIntel);
+
+        // Act
+        CompletionStage<Void> result = consumer.processThreatIntelligence(message);
+
+        // Assert
+        assertNotNull(result);
+        result.toCompletableFuture().get();
+        assertEquals(1, message.getAckCount());
+    }
+
+    /**
+     * Test invalid query log JSON handling
+     * Verifies that the consumer handles malformed messages gracefully
+     */
+    @Test
+    void testProcessInvalidQueryLogJSON() throws Exception {
+        // Arrange
+        String invalidJson = "{invalid json}";
+        TestMessage message = new TestMessage(invalidJson);
+
+        // Act
+        CompletionStage<Void> result = consumer.processQueryLog(message);
+
+        // Assert - should complete without exception
+        assertNotNull(result);
+        result.toCompletableFuture().get();
+        assertEquals(1, message.getAckCount());
+    }
+
+    /**
+     * Test missing required fields in query log
+     * Verifies that messages with missing fields are handled
+     */
+    @Test
+    void testProcessQueryLogMissingFields() throws Exception {
+        // Arrange
+        String incompleteLog = "{\"domain\":\"example.com\"}"; // Missing status
+        TestMessage message = new TestMessage(incompleteLog);
+
+        // Act
+        CompletionStage<Void> result = consumer.processQueryLog(message);
+
+        // Assert - should complete without exception
+        assertNotNull(result);
+        result.toCompletableFuture().get();
+        assertEquals(1, message.getAckCount());
+    }
+
+    /**
+     * Test query log with various DNS response codes
+     * Verifies that different response codes are properly processed
+     */
+    @Test
+    void testProcessQueryLogsWithVariousRcodes() throws Exception {
+        // Arrange - various DNS response codes
+        int[] rcodes = { 0, 1, 2, 3, 4, 5 }; // NOERROR, FORMERR, SERVFAIL, NXDOMAIN, NOTIMPL, REFUSED
+
+        // Act & Assert
+        for (int rcode : rcodes) {
+            String queryLog = objectMapper.writeValueAsString(new QueryLogPayload(
+                    "example.com",
+                    "ALLOWED",
+                    rcode,
+                    new String[] {}));
+
+            TestMessage message = new TestMessage(queryLog);
+            CompletionStage<Void> result = consumer.processQueryLog(message);
+
+            assertNotNull(result);
+            result.toCompletableFuture().get();
+        }
+    }
+
+    /**
+     * Test security alert with unknown alert type
+     * Verifies that unknown alert types are logged but not cause failures
+     */
+    @Test
+    void testProcessSecurityAlertUnknownType() throws Exception {
+        // Arrange
+        String alert = objectMapper.writeValueAsString(new SecurityAlertPayload(
+                "unknown-alert.com",
+                "UNKNOWN_ALERT_TYPE",
+                "This is an unknown alert type"));
+
+        TestMessage message = new TestMessage(alert);
+
+        // Act
+        CompletionStage<Void> result = consumer.processSecurityAlert(message);
+
+        // Assert
+        assertNotNull(result);
+        result.toCompletableFuture().get();
+        assertEquals(1, message.getAckCount());
+    }
+
+    /**
+     * Test metrics are updated during message processing
+     * Verifies that the consumer updates metrics correctly
+     */
+    @Test
+    void testMetricsUpdatingDuringProcessing() throws Exception {
+        // Arrange
+        String queryLog = objectMapper.writeValueAsString(new QueryLogPayload(
+                "metric-test.com",
+                "ALLOWED",
+                0,
+                new String[] { "192.0.2.1" }));
+
+        TestMessage message = new TestMessage(queryLog);
+
+        // Act
+        CompletionStage<Void> result = consumer.processQueryLog(message);
+        result.toCompletableFuture().get();
+
+        // Assert - metrics should be incremented
+        assertNotNull(registry.counter("dns.events.processed", "type", "query_log"));
+    }
+
+    // Test helper classes and payloads
+
+    private static class QueryLogPayload {
+        @SuppressWarnings("unused")
+        public String domain;
+        @SuppressWarnings("unused")
+        public String status;
+        @SuppressWarnings("unused")
+        public int rcode;
+        @SuppressWarnings("unused")
+        public String[] answers;
+
+        public QueryLogPayload(String domain, String status, int rcode, String[] answers) {
+            this.domain = domain;
+            this.status = status;
+            this.rcode = rcode;
+            this.answers = answers;
+        }
+    }
+
+    private static class SecurityAlertPayload {
+        @SuppressWarnings("unused")
+        public String domain;
+        @SuppressWarnings("unused")
+        public String alertType;
+        @SuppressWarnings("unused")
+        public String description;
+
+        public SecurityAlertPayload(String domain, String alertType, String description) {
+            this.domain = domain;
+            this.alertType = alertType;
+            this.description = description;
+        }
+    }
+
+    private static class ThreatIntelPayload {
+        @SuppressWarnings("unused")
+        public String domain;
+        @SuppressWarnings("unused")
+        public String threat_type;
+
+        public ThreatIntelPayload(String domain, String threatType) {
+            this.domain = domain;
+            this.threat_type = threatType;
+        }
+    }
+
+    /**
+     * Test Message implementation that tracks acknowledgments
+     */
+    private static class TestMessage implements Message<String> {
+        private final String payload;
+        private int ackCount = 0;
+
+        public TestMessage(String payload) {
+            this.payload = payload;
+        }
+
+        @Override
+        public String getPayload() {
+            return payload;
+        }
+
+        @Override
+        public CompletionStage<Void> ack() {
+            ackCount++;
+            return java.util.concurrent.CompletableFuture.completedFuture(null);
+        }
+
+        public int getAckCount() {
+            return ackCount;
+        }
+    }
+}

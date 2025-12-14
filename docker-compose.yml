@@ -19,6 +19,13 @@ services:
       QUARKUS_DATASOURCE_REACTIVE_URL: mysql://mariadb:3306/dns_shield
 
 
+      # RabbitMQ Configuration
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: ${RABBITMQ_USER:-admin}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-admin}
+      RABBITMQ_VHOST: /
+
       # Ollama Configuration
       QUARKUS_LANGCHAIN4J_OLLAMA_BASE_URL: http://ollama:11434
       QUARKUS_LANGCHAIN4J_TIMEOUT: 120s
@@ -58,6 +65,8 @@ services:
     depends_on:
       mariadb:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
       ollama:
         condition: service_started
     networks:
@@ -93,35 +102,25 @@ services:
       retries: 5
       start_period: 30s
 
-  # Kafka/Redpanda Message Broker
-  kafka:
-    image: docker.io/redpandadata/redpanda:latest
-    container_name: dns-shield-kafka
+  # RabbitMQ Message Broker
+  rabbitmq:
+    image: docker.io/library/rabbitmq:3.12-management
+    container_name: dns-shield-rabbitmq
     ports:
-      - "9092:9092"
-      - "9644:9644"  # Admin API
-      - "8082:8082"  # Schema Registry
-    command:
-      - redpanda
-      - start
-      - --kafka-addr internal://0.0.0.0:9092,external://0.0.0.0:19092
-      - --advertise-kafka-addr internal://kafka:9092,external://localhost:19092
-      - --pandaproxy-addr internal://0.0.0.0:8082,external://0.0.0.0:18082
-      - --advertise-pandaproxy-addr internal://kafka:8082,external://localhost:18082
-      - --schema-registry-addr internal://0.0.0.0:8081,external://0.0.0.0:18081
-      - --rpc-addr kafka:33145
-      - --advertise-rpc-addr kafka:33145
-      - --mode dev-container
-      - --smp 1
-      - --default-log-level=info
+      - "5672:5672"   # AMQP port
+      - "15672:15672" # Management UI
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-admin}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-admin}
+      RABBITMQ_DEFAULT_VHOST: /
     volumes:
-      - kafka-data:/var/lib/redpanda/data
+      - rabbitmq-data:/var/lib/rabbitmq
     networks:
       - dns-shield-network
     healthcheck:
-      test: [ "CMD-SHELL", "rpk cluster health | grep -E 'Healthy:.+true' || exit 1" ]
+      test: [ "CMD", "rabbitmq-diagnostics", "ping" ]
       interval: 15s
-      timeout: 3s
+      timeout: 5s
       retries: 5
       start_period: 30s
 
@@ -147,7 +146,7 @@ services:
       - "3000:3000"   # Grafana
       - "4317:4317"   # OTLP gRPC
       - "4318:4318"   # OTLP HTTP
-      - "9090:9090"   # Mimir (Prometheus compatible)
+      - "9090:9090"   # Mimir
     environment:
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
       GF_SECURITY_ADMIN_USER: ${GRAFANA_USER:-admin}
@@ -161,7 +160,7 @@ services:
 volumes:
   mariadb-data:
     driver: local
-  kafka-data:
+  rabbitmq-data:
     driver: local
   ollama-data:
     driver: local

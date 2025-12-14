@@ -13,6 +13,7 @@ with threat detection, content filtering, and AI-powered security analysis.
 - **AI Security Agent** - Intelligent threat analysis powered by LLM
 - **Real-time Statistics** - Comprehensive metrics and monitoring
 - **Web Dashboard** - Modern UI for managing filters and monitoring
+- **Event Streaming** - RabbitMQ integration for security events
 - **Container Ready** - Docker and Kubernetes deployment support
 - **Secure by Default** - JWT authentication with role-based access control
 
@@ -101,7 +102,7 @@ documentation.**
 ### Running with Docker Compose (Recommended)
 
 The easiest way to get started is with Docker Compose, which sets up the entire stack with DNS
-Shield, MariaDB, Kafka, Ollama, Prometheus, and Grafana:
+Shield, MariaDB, RabbitMQ, Ollama, Prometheus, and Grafana:
 
 ```bash
 # Build the application
@@ -126,8 +127,8 @@ For detailed Docker Compose instructions, see [DOCKER_COMPOSE.md](DOCKER_COMPOSE
 ### Running Locally (Development)
 
 ```bash
-# Start only supporting services (DB, Kafka, Ollama)
-docker-compose up -d mariadb kafka ollama
+# Start only supporting services (DB, RabbitMQ, Ollama)
+docker-compose up -d mariadb rabbitmq ollama
 
 # Run application in dev mode with hot reload
 ./mvnw quarkus:dev
@@ -143,7 +144,7 @@ docker-compose up -d mariadb kafka ollama
 For development and testing:
 
 | Username | Password | Role  | Access                          |
-|----------|----------|-------|---------------------------------|
+| -------- | -------- | ----- | ------------------------------- |
 | `admin`  | `admin`  | admin | Full access to all features     |
 | `user`   | `user`   | user  | Read access, limited operations |
 
@@ -165,7 +166,7 @@ For development and testing:
 ## Frontend Access
 
 | Page         | URL                              | Description                   | Auth Required               |
-|--------------|----------------------------------|-------------------------------|-----------------------------|
+| ------------ | -------------------------------- | ----------------------------- | --------------------------- |
 | Dashboard    | http://localhost:8080/ui         | Overview and quick DNS lookup | No                          |
 | Filter Rules | http://localhost:8080/ui/filters | Manage blocking/allow rules   | View: No, Edit: Yes (admin) |
 | DNS Query    | http://localhost:8080/ui/query   | Test DNS resolution           | No                          |
@@ -177,7 +178,7 @@ For development and testing:
 ### DNS Resolution (Public Access)
 
 | Method | Path                                            | Description           |
-|--------|-------------------------------------------------|-----------------------|
+| ------ | ----------------------------------------------- | --------------------- |
 | GET    | `/dns-query?dns={base64}`                       | DoH GET (RFC 8484)    |
 | POST   | `/dns-query`                                    | DoH POST (RFC 8484)   |
 | GET    | `/api/v1/dns/query?domain={domain}&type={type}` | JSON DNS query        |
@@ -187,7 +188,7 @@ For development and testing:
 ### Filter Management (Authenticated)
 
 | Method | Path                          | Description           | Roles       |
-|--------|-------------------------------|-----------------------|-------------|
+| ------ | ----------------------------- | --------------------- | ----------- |
 | GET    | `/api/v1/filters`             | List all filter rules | admin, user |
 | GET    | `/api/v1/filters/{id}`        | Get specific rule     | admin, user |
 | POST   | `/api/v1/filters`             | Create new rule       | admin       |
@@ -198,7 +199,7 @@ For development and testing:
 ### Administration (Authenticated)
 
 | Method | Path                           | Description         | Roles       |
-|--------|--------------------------------|---------------------|-------------|
+| ------ | ------------------------------ | ------------------- | ----------- |
 | GET    | `/api/v1/admin/stats`          | Overall statistics  | admin, user |
 | GET    | `/api/v1/admin/cache/stats`    | Cache statistics    | admin, user |
 | POST   | `/api/v1/admin/cache/clear`    | Clear expired cache | admin       |
@@ -207,7 +208,7 @@ For development and testing:
 ### AI Agent (Authenticated)
 
 | Method | Path                              | Description                | Roles       |
-|--------|-----------------------------------|----------------------------|-------------|
+| ------ | --------------------------------- | -------------------------- | ----------- |
 | POST   | `/api/v1/agent/analyze`           | Analyze domain threat      | admin, user |
 | POST   | `/api/v1/agent/recommend-filters` | Get filter recommendations | admin       |
 | POST   | `/api/v1/agent/correlate-events`  | Correlate security events  | admin       |
@@ -384,7 +385,7 @@ Run in dev mode for automatic code reloading:
 └─────────────────┘     │  ┌─────────────────────────────────────┐ │
                         │  │         Service Layer               │ │
 ┌─────────────────┐     │  │  DNSOrchestrator, DNSResolver,      │ │
-│  Kafka Events   │◀───▶│  │  DNSFilterService, SecurityService  │ │
+│ RabbitMQ Events │◀───▶│  │  DNSFilterService, SecurityService  │ │
 │                 │     │  └─────────────────────────────────────┘ │
 └─────────────────┘     │  ┌─────────────────────────────────────┐ │
                         │  │         AI Agent Layer              │ │
@@ -412,4 +413,3 @@ For issues and questions:
 - Open an issue on GitHub
 - Check [AUTHENTICATION.md](AUTHENTICATION.md) for auth-related questions
 - Review Quarkus documentation at https://quarkus.io
-
