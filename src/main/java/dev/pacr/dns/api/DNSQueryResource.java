@@ -1,6 +1,7 @@
 package dev.pacr.dns.api;
 
 import dev.pacr.dns.DNSResponseCodes;
+import dev.pacr.dns.model.DNSConstants;
 import dev.pacr.dns.model.rfc8427.DnsMessage;
 import dev.pacr.dns.model.rfc8427.DnsMessageConverter;
 import dev.pacr.dns.service.DNSOrchestrator;
@@ -39,95 +40,56 @@ import java.util.Base64;
 public class DNSQueryResource {
 	
 	/** RFC 8484 media type for DNS messages */
-	public static final String APPLICATION_DNS_MESSAGE = "application/dns-message";
+	public static final String APPLICATION_DNS_MESSAGE = DNSConstants.APPLICATION_DNS_MESSAGE;
 	/**
 	 * Logger for this class
 	 */
 	private static final Logger LOG = Logger.getLogger(DNSQueryResource.class);
 	/** Minimum length of a valid DNS message in bytes */
-	private static final int MIN_DNS_MESSAGE_LENGTH = 12;
+	private static final int MIN_DNS_MESSAGE_LENGTH = DNSConstants.MIN_DNS_MESSAGE_LENGTH;
 	
 	/** Byte mask for bitwise operations */
-	private static final int BYTE_MASK = 0xFF;
+	private static final int BYTE_MASK = DNSConstants.BYTE_MASK;
 	
 	/** DNS compression mask for detecting compressed labels */
-	private static final int DNS_COMPRESSION_MASK = 0xC0;
+	private static final int DNS_COMPRESSION_MASK = DNSConstants.DNS_COMPRESSION_MASK;
 	
 	/** Offset of QDCOUNT field in DNS header */
-	private static final int QDCOUNT_OFFSET = 4;
+	private static final int QDCOUNT_OFFSET = DNSConstants.QDCOUNT_OFFSET;
 	
 	/** Length of DNS header in bytes */
-	private static final int DNS_HEADER_LENGTH = 12;
+	private static final int DNS_HEADER_LENGTH = DNSConstants.DNS_HEADER_LENGTH;
 	
 	/** Length of DNS query type field in bytes */
-	private static final int DNS_QUERYTYPE_LENGTH = 2;
+	private static final int DNS_QUERYTYPE_LENGTH = DNSConstants.DNS_QUERYTYPE_LENGTH;
 	
 	/** DNS response flag with QR bit set */
-	private static final int FLAG_RESPONSE = 0x8400;
+	private static final int FLAG_RESPONSE = DNSConstants.FLAG_RESPONSE;
 	
 	/**
 	 * DNS flag mask for RCODE (lower 4 bits)
 	 */
-	private static final int RCODE_MASK = 0x0F;
+	private static final int RCODE_MASK = DNSConstants.RCODE_MASK;
 	
 	/**
 	 * DNS flag for QR bit (Query/Response)
 	 */
-	private static final int FLAG_QR = 0x8000;
+	private static final int FLAG_QR = DNSConstants.FLAG_QR;
 	
 	/**
 	 * DNS flag for RA bit (Recursion Available)
 	 */
-	private static final int FLAG_RA = 0x0400;
-	
-	/** DNS query type for A records */
-	private static final int QTYPE_A = 1;
-	
-	/** DNS query type for NS records */
-	private static final int QTYPE_NS = 2;
-	
-	/** DNS query type for CNAME records */
-	private static final int QTYPE_CNAME = 5;
-	
-	/** DNS query type for SOA records */
-	private static final int QTYPE_SOA = 6;
-	
-	/** DNS query type for PTR records */
-	private static final int QTYPE_PTR = 12;
-	
-	/** DNS query type for HINFO records */
-	private static final int QTYPE_HINFO = 13;
-	
-	/** DNS query type for MX records */
-	private static final int QTYPE_MX = 15;
-	
-	/** DNS query type for TXT records */
-	private static final int QTYPE_TXT = 16;
-	
-	/** DNS query type for AAAA records */
-	private static final int QTYPE_AAAA = 28;
-	
-	/** DNS query type for SRV records */
-	private static final int QTYPE_SRV = 33;
-	
-	/** DNS query type for OPT records */
-	private static final int QTYPE_OPT = 41;
-	
-	/** DNS query type for DNSKEY records */
-	private static final int QTYPE_DNSKEY = 48;
-	
-	/** DNS query type for CAA records */
-	private static final int QTYPE_CAA = 257;
+	private static final int FLAG_RA = DNSConstants.FLAG_RA;
 	
 	/**
 	 * Maximum length of a DNS label in bytes
 	 */
-	private static final int MAX_DNS_LABEL_LENGTH = 63;
+	private static final int MAX_DNS_LABEL_LENGTH = DNSConstants.MAX_DNS_LABEL_LENGTH;
 	
 	/**
 	 * Maximum length of a domain name in bytes (excluding null terminator)
 	 */
-	private static final int MAX_DOMAIN_LENGTH = 253;
+	private static final int MAX_DOMAIN_LENGTH = DNSConstants.MAX_DOMAIN_LENGTH;
 	
 	/** DNS Orchestrator service for processing DNS queries */
 	@Inject
@@ -627,22 +589,7 @@ public class DNSQueryResource {
 	 * @return String representation of the query type
 	 */
 	private String getQueryTypeString(int type) {
-		return switch (type) {
-			case QTYPE_A -> "A";
-			case QTYPE_NS -> "NS";
-			case QTYPE_CNAME -> "CNAME";
-			case QTYPE_SOA -> "SOA";
-			case QTYPE_PTR -> "PTR";
-			case QTYPE_HINFO -> "HINFO";
-			case QTYPE_MX -> "MX";
-			case QTYPE_TXT -> "TXT";
-			case QTYPE_AAAA -> "AAAA";
-			case QTYPE_SRV -> "SRV";
-			case QTYPE_OPT -> "OPT";
-			case QTYPE_DNSKEY -> "DNSKEY";
-			case QTYPE_CAA -> "CAA";
-			default -> "UNKNOWN(" + type + ')';
-		};
+		return DNSConstants.getRecordTypeName(type);
 	}
 	
 	/**

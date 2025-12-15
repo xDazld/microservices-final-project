@@ -78,7 +78,7 @@ public class DNSOrchestrator {
 		// Step 2: Check if domain is blocked
 		if (filterResult.isBlocked()) {
 			LOG.infof("Domain blocked: %s - %s", qname, filterResult.getReason());
-			response = createBlockedResponse(query, filterResult);
+			response = createBlockedResponse(query);
 			
 			// Log the blocked query via streaming if available
 			if (loggingService.isResolvable()) {
@@ -151,10 +151,9 @@ public class DNSOrchestrator {
 	 * Create a blocked response
 	 *
 	 * @param query the original DNS query
-	 * @param filterResult the filter result (unused but kept for future extensibility)
 	 * @return a DNS response indicating the domain is blocked
 	 */
-	private DnsMessage createBlockedResponse(DnsMessage query, FilterResult filterResult) {
+	private DnsMessage createBlockedResponse(DnsMessage query) {
 		// Return NXDOMAIN for blocked domains
 		return DnsMessageConverter.createResponse(query.getQname(), query.getQtype(),
 				query.getQclass(), DNSResponseCodes.NXDOMAIN, // NXDOMAIN
