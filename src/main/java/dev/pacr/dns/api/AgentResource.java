@@ -20,19 +20,30 @@ import java.util.Map;
  * <p>
  * This endpoint exposes the AI-powered DNS intelligence agent for autonomous threat analysis and
  * security operations
+ *
+ * @author Patrick Rafferty
  */
 @Path("/api/v1/agent")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class AgentResource {
 	
+	/**
+	 * The log.
+	 */
 	private static final Logger LOG = Logger.getLogger(AgentResource.class);
 	
+	/**
+	 * The agent.
+	 */
 	@Inject
 	DNSIntelligenceAgent agent;
 	
 	/**
 	 * Analyze a domain using AI-powered threat intelligence (GET with path parameter)
+	 *
+	 * @param domain the domain
+	 * @return the response
 	 */
 	@GET
 	@Path("/analyze/{domain}")
@@ -52,6 +63,9 @@ public class AgentResource {
 	
 	/**
 	 * Analyze a domain using AI-powered threat intelligence (POST with body)
+	 *
+	 * @param request the request
+	 * @return the response
 	 */
 	@POST
 	@Path("/analyze")
@@ -73,6 +87,9 @@ public class AgentResource {
 	
 	/**
 	 * Get AI-generated filter rule recommendations
+	 *
+	 * @param request the request
+	 * @return the response
 	 */
 	@POST
 	@Path("/recommend-filters")
@@ -95,6 +112,9 @@ public class AgentResource {
 	
 	/**
 	 * Correlate security events using AI
+	 *
+	 * @param request the request
+	 * @return the response
 	 */
 	@POST
 	@Path("/correlate-events")
@@ -117,6 +137,8 @@ public class AgentResource {
 	
 	/**
 	 * Get agent status and capabilities
+	 *
+	 * @return the response
 	 */
 	@GET
 	@Path("/status")

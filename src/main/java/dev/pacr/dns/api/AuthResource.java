@@ -20,17 +20,28 @@ import java.util.Map;
  * Authentication Resource
  * <p>
  * Handles user authentication and JWT token generation
+ *
+ * @author Patrick Rafferty
  */
 @Path("/api/v1/auth")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class AuthResource {
 	
+	/**
+	 * The log.
+	 */
 	private static final Logger LOG = Logger.getLogger(AuthResource.class);
 	
+	/**
+	 * The jwt signing service.
+	 */
 	@Inject
 	JwtSigningService jwtSigningService;
 	
+	/**
+	 * The issuer.
+	 */
 	@ConfigProperty(name = "mp.jwt.verify.issuer", defaultValue = "https://dns-shield.local")
 	String issuer;
 	
@@ -84,6 +95,10 @@ public class AuthResource {
 	 * <p>
 	 * In production, this should query a database with hashed passwords For development, we use
 	 * hardcoded credentials
+	 *
+	 * @param username the username
+	 * @param password the password
+	 * @return the user info
 	 */
 	private UserInfo validateCredentials(String username, String password) {
 		// TODO: In production, replace with database lookup and password hash verification
@@ -102,6 +117,9 @@ public class AuthResource {
 	
 	/**
 	 * Generate JWT token for authenticated user
+	 *
+	 * @param userInfo the user info
+	 * @return the string
 	 */
 	private String generateToken(UserInfo userInfo) {
 		Collection<String> groups = new HashSet<>();
@@ -124,4 +142,3 @@ public class AuthResource {
 		private record UserInfo(String username, String role) {
 	}
 }
-
