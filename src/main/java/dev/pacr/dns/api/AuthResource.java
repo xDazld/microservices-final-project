@@ -1,6 +1,9 @@
 package dev.pacr.dns.api;
 
 import dev.pacr.dns.config.JwtSigningService;
+import dev.pacr.dns.config.PasswordHashingService;
+import dev.pacr.dns.storage.UserRepository;
+import dev.pacr.dns.storage.model.User;
 import jakarta.annotation.security.PermitAll;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
@@ -34,10 +37,27 @@ public class AuthResource {
 	private static final Logger LOG = Logger.getLogger(AuthResource.class);
 	
 	/**
+	 * Token expiration time in seconds (1 hour)
+	 */
+	private static final int TOKEN_EXPIRES_IN = 3600;
+	
+	/**
 	 * The jwt signing service.
 	 */
 	@Inject
 	JwtSigningService jwtSigningService;
+	
+	/**
+	 * The user repository.
+	 */
+	@Inject
+	UserRepository userRepository;
+	
+	/**
+	 * The password hashing service.
+	 */
+	@Inject
+	PasswordHashingService passwordHashingService;
 	
 	/**
 	 * The issuer.
@@ -80,7 +100,7 @@ public class AuthResource {
 			
 			return Response.ok(
 					Map.of("token", token, "username", userInfo.username, "role", userInfo.role,
-							"expiresIn", 3600 // 1 hour
+							"expiresIn", TOKEN_EXPIRES_IN
 					)).build();
 			
 		} catch (RuntimeException e) {
@@ -93,23 +113,23 @@ public class AuthResource {
 	/**
 	 * Validate user credentials
 	 * <p>
-	 * In production, this should query a database with hashed passwords For development, we use
-	 * hardcoded credentials
+	 * Queries the database to find the user and verifies the password using BCrypt hashing
 	 *
 	 * @param username the username
 	 * @param password the password
 	 * @return the user info
 	 */
 	private UserInfo validateCredentials(String username, String password) {
-		// TODO: In production, replace with database lookup and password hash verification
+		// Query database for user
+		User user = userRepository.findByUsername(username);
 		
-		// Development credentials
-		if ("admin".equals(username) && "admin".equals(password)) {
-			return new UserInfo("admin", "admin");
+		if (user == null) {
+			return null;
 		}
 		
-		if ("user".equals(username) && "user".equals(password)) {
-			return new UserInfo("user", "user");
+		// Verify password
+		if (passwordHashingService.verifyPassword(password, user.password)) {
+			return new UserInfo(user.username, user.role);
 		}
 		
 		return null;
@@ -132,13 +152,23 @@ public class AuthResource {
 	 * Login request model
 	 */
 	public static class LoginRequest {
+		/**
+		 * The username
+		 */
 		public String username;
+		
+		/**
+		 * The password
+		 */
 		public String password;
 	}
 	
 	/**
 	 * User information model
+	 *
+	 * @param username the username
+	 * @param role the user role
 	 */
-		private record UserInfo(String username, String role) {
+	private record UserInfo(String username, String role) {
 	}
 }

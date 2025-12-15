@@ -1,8 +1,11 @@
 package dev.pacr.dns;
 
+import dev.pacr.dns.config.PasswordHashingService;
 import dev.pacr.dns.service.DNSFilterService;
 import dev.pacr.dns.service.RFC5358AccessControlService;
 import dev.pacr.dns.service.SecurityService;
+import dev.pacr.dns.storage.UserRepository;
+import dev.pacr.dns.storage.model.User;
 import io.quarkus.runtime.StartupEvent;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
@@ -43,6 +46,18 @@ public class ApplicationInitializer {
 	RFC5358AccessControlService rfc5358AccessControl;
 	
 	/**
+	 * User repository for managing user accounts
+	 */
+	@Inject
+	UserRepository userRepository;
+	
+	/**
+	 * Password hashing service for secure password storage
+	 */
+	@Inject
+	PasswordHashingService passwordHashingService;
+	
+	/**
 	 * Initialize the application on startup.
 	 * <p>
 	 * This method is called automatically by Quarkus when the application starts up.
@@ -67,6 +82,10 @@ public class ApplicationInitializer {
 							"default-deny policy.");
 		}
 		
+		// Initialize user accounts
+		LOG.info("Initializing user accounts...");
+		initializeUsers();
+		
 		// Initialize default filtering rules
 		LOG.info("Initializing default filtering rules...");
 		filterService.initializeDefaultRules();
@@ -81,5 +100,28 @@ public class ApplicationInitializer {
 		LOG.info("Metrics available at: http://localhost:8080/metrics");
 		LOG.info("Health check at: http://localhost:8080/api/v1/admin/health");
 		LOG.info("=================================================");
+	}
+	
+	/**
+	 * Initialize default user accounts if they don't already exist
+	 */
+	private void initializeUsers() {
+		// Create admin user if it doesn't exist
+		if (!userRepository.existsByUsername("admin")) {
+			User admin = new User("admin", passwordHashingService.hashPassword("admin"), "admin");
+			userRepository.persist(admin);
+			LOG.info("Created default admin user");
+		} else {
+			LOG.info("Admin user already exists");
+		}
+		
+		// Create standard user if it doesn't exist
+		if (!userRepository.existsByUsername("user")) {
+			User user = new User("user", passwordHashingService.hashPassword("user"), "user");
+			userRepository.persist(user);
+			LOG.info("Created default user");
+		} else {
+			LOG.info("Standard user already exists");
+		}
 	}
 }
