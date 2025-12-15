@@ -332,20 +332,4 @@ function createFloatEffect(emoji = '❤️') {
     }
 }
 
-export {
-    createFloatingMessage,
-    createRipple,
-    animateCounter,
-    createCelebration,
-    pulseElement,
-    shakeElement,
-    glowElement,
-    showToast,
-    getTypeColor,
-    enableParallax,
-    typewriterEffect,
-    createLoadingAnimation,
-    getRandomFunMessage,
-    createFloatEffect
-};
 
