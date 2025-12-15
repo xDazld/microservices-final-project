@@ -5,10 +5,12 @@ import org.jboss.logging.Logger;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
@@ -28,7 +30,7 @@ public class EndpointStatisticsService {
 	private static final Logger LOG = Logger.getLogger(EndpointStatisticsService.class);
 	// Endpoint statistics keyed by "METHOD ENDPOINT"
 	private final Map<String, EndpointStatistics> statistics = new ConcurrentHashMap<>();
-	private final ReentrantReadWriteLock globalLock = new ReentrantReadWriteLock();
+	private final ReadWriteLock globalLock = new ReentrantReadWriteLock();
 
 	/**
 	 * Record a request to an endpoint
@@ -71,15 +73,14 @@ public class EndpointStatisticsService {
 	public Map<String, Object> getAllStatistics() {
 		globalLock.readLock().lock();
 		try {
-			Map<String, Object> allStats = new LinkedHashMap<>();
-
+			
 			// Overall summary
 			long totalRequests = 0;
 			long totalSuccessful = 0;
 			long totalFailed = 0;
 			double totalAvgResponseTime = 0;
-
-			List<Map<String, Object>> endpoints = new ArrayList<>();
+			
+			Collection<Map<String, Object>> endpoints = new ArrayList<>();
 
 			for (EndpointStatistics stat : statistics.values()) {
 				endpoints.add(stat.toMap());
@@ -96,9 +97,10 @@ public class EndpointStatisticsService {
 			summary.put("totalFailed", totalFailed);
 			summary.put("successRate",
 					totalRequests > 0 ? String.format("%.2f%%", (totalSuccessful * 100.0) / totalRequests) : "N/A");
-			summary.put("averageResponseTimeAcrossAllEndpoints",
-					statistics.size() > 0 ? String.format("%.2f ms", totalAvgResponseTime / statistics.size()) : "N/A");
-
+			summary.put("averageResponseTimeAcrossAllEndpoints", !statistics.isEmpty() ?
+					String.format("%.2f ms", totalAvgResponseTime / statistics.size()) : "N/A");
+			
+			Map<String, Object> allStats = new LinkedHashMap<>();
 			allStats.put("summary", summary);
 			allStats.put("endpoints", endpoints.isEmpty() ? null : endpoints);
 
@@ -146,9 +148,9 @@ public class EndpointStatisticsService {
 	 * @param endpoint API endpoint path
 	 */
 	public void resetEndpointStatistics(String method, String endpoint) {
-		String key = method + ' ' + endpoint;
 		globalLock.writeLock().lock();
 		try {
+			String key = method + ' ' + endpoint;
 			statistics.remove(key);
 			LOG.infof("Statistics reset for: %s", key);
 		} finally {
@@ -170,7 +172,7 @@ public class EndpointStatisticsService {
 		private final String endpoint;
 		private final String method;
 		private final Map<Integer, Long> statusCodeCounts = new ConcurrentHashMap<>();
-		private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+		private final ReadWriteLock lock = new ReentrantReadWriteLock();
 		private long totalRequests = 0;
 		private long successfulRequests = 0;
 		private long failedRequests = 0;

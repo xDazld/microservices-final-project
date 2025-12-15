@@ -5,6 +5,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
+import org.jspecify.annotations.NonNull;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -197,7 +198,6 @@ public class RFC5358AccessControlService {
 	 */
 	private boolean isInCIDRRange(byte[] ip, byte[] network, int prefixLength) {
 		int bytes = prefixLength / 8;
-		int bits = prefixLength % 8;
 		
 		// Check full bytes
 		for (int i = 0; i < bytes; i++) {
@@ -207,6 +207,7 @@ public class RFC5358AccessControlService {
 		}
 		
 		// Check remaining bits
+		int bits = prefixLength % 8;
 		if (bits > 0 && bytes < ip.length) {
 			int mask = (0xFF << (8 - bits)) & 0xFF;
 			return (ip[bytes] & mask) == (network[bytes] & mask);
@@ -309,7 +310,7 @@ public class RFC5358AccessControlService {
 			}
 			
 			@Override
-			public String toString() {
+			public @NonNull String toString() {
 				return String.format(
 						"RFC5358Status{recursion=%s, defaultDeny=%s, networks=%d, allowed=%d, " +
 								"denied=%d, compliant=%s}", recursionEnabled, defaultDeny,

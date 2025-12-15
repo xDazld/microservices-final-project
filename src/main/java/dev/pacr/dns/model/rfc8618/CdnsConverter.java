@@ -2,6 +2,7 @@ package dev.pacr.dns.model.rfc8618;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -116,7 +117,7 @@ public class CdnsConverter {
 	 * @param responseTimeMs the response time ms
 	 */
 	public void addQueryResponse(Block block, String clientIp, String queryName, int qtype,
-								 int qclass, Instant timestamp, List<String> answers,
+								 int qclass, Instant timestamp, Collection<String> answers,
 								 long responseTimeMs) {
 		
 		BlockTables tables = block.getBlockTables();

@@ -5,6 +5,7 @@ import org.jboss.logging.Logger;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Comparator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -141,8 +142,7 @@ public class NegativeCacheService {
 		// Remove 10% of oldest entries
 		int toRemove = MAX_CACHE_ENTRIES / 10;
 		
-		failureCache.entrySet().stream()
-				.sorted((e1, e2) -> e1.getValue().cachedAt.compareTo(e2.getValue().cachedAt))
+		failureCache.entrySet().stream().sorted(Comparator.comparing(e -> e.getValue().cachedAt))
 				.limit(toRemove).forEach(entry -> failureCache.remove(entry.getKey()));
 		
 		LOG.debugf("Evicted %d oldest entries from failure cache", toRemove);
@@ -169,12 +169,12 @@ public class NegativeCacheService {
 	public Map<String, Object> getCacheStats() {
 		long expired = failureCache.values().stream().filter(FailureCacheEntry::isExpired).count();
 		long total = failureCache.size();
-		long active = total - expired;
 		
 		Map<String, Long> typeBreakdown = new ConcurrentHashMap<>();
 		failureCache.values().stream().filter(entry -> !entry.isExpired())
 				.forEach(entry -> typeBreakdown.merge(entry.failureType.name(), 1L, Long::sum));
 		
+		long active = total - expired;
 		return Map.of("total", total, "expired", expired, "active", active, "maxCapacity",
 				(long) MAX_CACHE_ENTRIES, "byType", typeBreakdown);
 	}

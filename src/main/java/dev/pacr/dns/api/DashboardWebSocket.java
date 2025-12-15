@@ -1,5 +1,6 @@
 package dev.pacr.dns.api;
 
+import com.fasterxml.jackson.core.TreeNode;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -143,7 +144,7 @@ public class DashboardWebSocket {
 	/**
 	 * Handle subscription requests
 	 */
-	private void handleSubscribe(JsonNode message, Session session) {
+	private void handleSubscribe(TreeNode message, Session session) {
 		String channel = message.get("channel").asText();
 		LOG.infof("Session %s subscribed to channel: %s", session.getId(), channel);
 		sendMessage(session, Map.of("type", "SUBSCRIBED", "channel", channel));
@@ -152,7 +153,7 @@ public class DashboardWebSocket {
 	/**
 	 * Handle unsubscription requests
 	 */
-	private void handleUnsubscribe(JsonNode message, Session session) {
+	private void handleUnsubscribe(TreeNode message, Session session) {
 		String channel = message.get("channel").asText();
 		LOG.infof("Session %s unsubscribed from channel: %s", session.getId(), channel);
 		sendMessage(session, Map.of("type", "UNSUBSCRIBED", "channel", channel));

@@ -197,11 +197,10 @@ public class DNSResolver {
 		} catch (UnknownHostException e) {
 			LOG.warnf("Domain not found: %s", query.getQname());
 			// NXDOMAIN is NOT a resolution failure per RFC 9520, so don't cache in negative cache
-			DnsMessage response = DnsMessageConverter.createResponse(query.getQname(),
+			return DnsMessageConverter.createResponse(query.getQname(),
 					query.getQtype(),
 					query.getQclass(), 3, // NXDOMAIN
 					new ArrayList<>(), 300L);
-			return response;
 			
 		} catch (DNSResolutionException e) {
 			// RFC 9520 compliant failure handling
@@ -214,11 +213,10 @@ public class DNSResolver {
 			negativeCacheService.cacheFailure(query.getQname(), query.getQtype(),
 					e.getFailureType());
 			
-			DnsMessage response = DnsMessageConverter.createResponse(query.getQname(),
+			return DnsMessageConverter.createResponse(query.getQname(),
 					query.getQtype(),
 					query.getQclass(), 2, // SERVFAIL
 					new ArrayList<>(), 0L);
-			return response;
 			
 		} catch (RuntimeException e) {
 			LOG.errorf(e, "Unexpected error resolving domain: %s", query.getQname());
@@ -230,11 +228,10 @@ public class DNSResolver {
 			negativeCacheService.cacheFailure(query.getQname(), query.getQtype(),
 					NegativeCacheService.FailureType.OTHER);
 			
-			DnsMessage response = DnsMessageConverter.createResponse(query.getQname(),
+			return DnsMessageConverter.createResponse(query.getQname(),
 					query.getQtype(),
 					query.getQclass(), 2, // SERVFAIL
 					new ArrayList<>(), 0L);
-			return response;
 		}
 	}
 	

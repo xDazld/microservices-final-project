@@ -20,6 +20,7 @@ import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import org.jboss.logging.Logger;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -146,11 +147,11 @@ public class FrontendResource {
 							   @QueryParam("domain") String domain) {
 		LOG.debug("Fetching logs table");
 		
-		List<Map<String, Object>> logs;
 		if (limit <= 0) {
 			limit = 100;
 		}
 		
+		List<Map<String, Object>> logs;
 		if (status != null && !status.isEmpty()) {
 			logs = queryLogService.getQueriesByStatus(status, limit);
 		} else if (domain != null && !domain.isEmpty()) {
@@ -201,7 +202,7 @@ public class FrontendResource {
 				
 				html.append("<td>").append(log.get("rcode")).append("</td>");
 				
-				List<String> answers = (List<String>) log.get("answers");
+				Collection<String> answers = (Collection<String>) log.get("answers");
 				String answersStr =
 						answers != null && !answers.isEmpty() ? String.join(", ", answers) : "--";
 				html.append("<td class='answers-cell' title='").append(escapeHtml(answersStr))

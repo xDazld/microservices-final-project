@@ -26,7 +26,6 @@ public class DNSLoggingService {
     
     private static final Logger LOG = Logger.getLogger(DNSLoggingService.class);
     private final ObjectMapper objectMapper;
-    private final CdnsConverter cdnsConverter;
     
     @Inject
     DNSLogRepository logRepository;
@@ -45,7 +44,7 @@ public class DNSLoggingService {
     public DNSLoggingService() {
         this.objectMapper = new ObjectMapper();
         this.objectMapper.registerModule(new JavaTimeModule());
-        this.cdnsConverter = new CdnsConverter();
+        CdnsConverter cdnsConverter = new CdnsConverter();
     }
     
     /**
