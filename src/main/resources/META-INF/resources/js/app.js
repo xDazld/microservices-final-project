@@ -513,9 +513,9 @@ function initEasterEggs() {
 function triggerDNSEasterEgg() {
     const header = document.querySelector('.header');
     if (header) {
-        header.style.background = 'linear-gradient(45deg, #4695EB, #be9100, #28a745, #dc3545, #4695EB)';
+        header.style.background = 'linear-gradient(45deg, #00ff88, #00d9ff, #9d00ff, #00ffff, #00ff88)';
         header.style.backgroundSize = '200% 200%';
-        header.style.animation = 'slideIn 0.5s ease-out';
+        header.style.animation = 'slideIn 0.5s ease-out, gradientShift 2s linear infinite';
 
         showAchievement('🛡️ DNS Master', 'You discovered the DNS Easter Egg!');
 
@@ -524,7 +524,8 @@ function triggerDNSEasterEgg() {
 
         // Reset after animation
         setTimeout(() => {
-            header.style.background = 'linear-gradient(135deg, var(--darker-bg), var(--card-bg))';
+            header.style.background = 'rgba(10, 15, 26, 0.8)';
+            header.style.animation = '';
         }, 3000);
     }
 }
@@ -616,19 +617,21 @@ function initConfetti() {
  */
 function triggerConfetti() {
     const confettiPieces = 30;
-    const colors = ['#4695EB', '#be9100', '#28a745', '#dc3545', '#ffc107'];
+    const colors = ['#00ff88', '#00d9ff', '#00ffff', '#9d00ff', '#00cc66'];
 
     for (let i = 0; i < confettiPieces; i++) {
         const confetti = document.createElement('div');
         confetti.style.position = 'fixed';
         confetti.style.width = '10px';
         confetti.style.height = '10px';
-        confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        confetti.style.backgroundColor = color;
         confetti.style.borderRadius = '50%';
         confetti.style.left = Math.random() * window.innerWidth + 'px';
         confetti.style.top = '-10px';
         confetti.style.pointerEvents = 'none';
         confetti.style.zIndex = '9998';
+        confetti.style.boxShadow = `0 0 8px ${color}`;
 
         document.body.appendChild(confetti);
 
