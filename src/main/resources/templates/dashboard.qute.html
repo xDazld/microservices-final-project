@@ -8,7 +8,7 @@
         <div class="dashboard-grid">
             <div class="card stat-card">
                 <div class="stat-value" id="total-queries"
-                     hx-get="/ui/stats/queries"
+                     hx-get="/ui/logs/stats/total"
                      hx-trigger="load, every 30s"
                      hx-swap="innerHTML">
                     --
@@ -28,17 +28,17 @@
 
             <div class="card stat-card">
                 <div class="stat-value" id="blocked-queries"
-                     hx-get="/ui/stats/blocked"
+                     hx-get="/ui/logs/stats/blocked"
                      hx-trigger="load, every 30s"
                      hx-swap="innerHTML">
                     --
                 </div>
-                <div class="stat-label">Filter Checks</div>
+                <div class="stat-label">Blocked Queries</div>
             </div>
 
             <div class="card stat-card">
                 <div class="stat-value" id="threats-detected"
-                     hx-get="/ui/stats/threats"
+                     hx-get="/ui/logs/stats/threats"
                      hx-trigger="load, every 30s"
                      hx-swap="innerHTML">
                     --
