@@ -1,5 +1,6 @@
 package dev.pacr.dns.service;
 
+import dev.pacr.dns.DNSResponseCodes;
 import dev.pacr.dns.model.FilterResult;
 import dev.pacr.dns.model.rfc8427.DnsMessage;
 import dev.pacr.dns.model.rfc8427.DnsMessageConverter;
@@ -14,29 +15,42 @@ import java.util.List;
 
 /**
  * Orchestrator service that coordinates DNS resolution, filtering, and logging
+ *
+ * @author Patrick Rafferty
  */
 @ApplicationScoped
 public class DNSOrchestrator {
 	
+	/**
+	 * Logger for this class
+	 */
 	private static final Logger LOG = Logger.getLogger(DNSOrchestrator.class);
 	
+	/** DNS Resolver service */
 	@Inject
 	DNSResolver dnsResolver;
 	
+	/** DNS Filter service */
 	@Inject
 	DNSFilterService filterService;
 	
+	/** DNS Logging service instance */
 	@Inject
 	Instance<DNSLoggingService> loggingService;
 	
+	/** Query log service */
 	@Inject
 	QueryLogService queryLogService;
 	
+	/** Security service */
 	@Inject
 	SecurityService securityService;
 	
 	/**
 	 * Process a complete DNS query: filter, resolve, and log
+	 *
+	 * @param query the DNS query message
+	 * @return the DNS response message
 	 */
 	@Timed(value = "dns.query.total", description = "Total time to process DNS query")
 	public DnsMessage processQuery(DnsMessage query) {
@@ -45,6 +59,10 @@ public class DNSOrchestrator {
 	
 	/**
 	 * Process a complete DNS query: filter, resolve, and log with client IP
+	 *
+	 * @param query the DNS query message
+	 * @param clientIp the client IP address for logging
+	 * @return the DNS response message
 	 */
 	@Timed(value = "dns.query.total", description = "Total time to process DNS query")
 	public DnsMessage processQuery(DnsMessage query, String clientIp) {
@@ -66,7 +84,8 @@ public class DNSOrchestrator {
 			if (loggingService.isResolvable()) {
 				loggingService.get().logQuery(query, response, filterResult);
 			}
-			queryLogService.logQuery(qname, queryType, "BLOCKED", 3, new ArrayList<>(), clientIp);
+			queryLogService.logQuery(qname, queryType, "BLOCKED", DNSResponseCodes.NXDOMAIN,
+					new ArrayList<>(), clientIp);
 			
 			return response;
 		}
@@ -82,7 +101,7 @@ public class DNSOrchestrator {
 		response = dnsResolver.resolve(query);
 		
 		// Step 5: Security check on resolved addresses
-		if (response.getRcode() != null && response.getRcode() == 0 &&
+		if (response.getRcode() != null && response.getRcode() == DNSResponseCodes.NO_ERROR &&
 				response.getAnswerRRs() != null) {
 			List<String> addresses = new ArrayList<>();
 			response.getAnswerRRs().forEach(rr -> addresses.add(rr.getRdata()));
@@ -91,7 +110,7 @@ public class DNSOrchestrator {
 			
 			if (isThreat) {
 				LOG.warnf("Security threat detected for domain: %s", qname);
-				response.setRcode(3); // NXDOMAIN
+				response.setRcode(DNSResponseCodes.NXDOMAIN); // NXDOMAIN
 				response.setAnswerRRs(new ArrayList<>());
 				response.setAncount(0);
 				
@@ -100,7 +119,8 @@ public class DNSOrchestrator {
 					loggingService.get().logSecurityAlert(qname, "MALWARE_DETECTED",
 						"Domain identified as malicious");
 				}
-				queryLogService.logQuery(qname, queryType, "THREAT", 3, new ArrayList<>(),
+				queryLogService.logQuery(qname, queryType, "THREAT", DNSResponseCodes.NXDOMAIN,
+						new ArrayList<>(),
 						clientIp);
 			} else {
 				// Log allowed query with answers
@@ -109,10 +129,11 @@ public class DNSOrchestrator {
 			}
 		} else {
 			// Log allowed query (no answers or error)
-			String status =
-					response.getRcode() != null && response.getRcode() != 0 ? "ERROR" : "ALLOWED";
+			String status = response.getRcode() != null &&
+					response.getRcode() != DNSResponseCodes.NO_ERROR ? "ERROR" : "ALLOWED";
 			queryLogService.logQuery(qname, queryType, status,
-					response.getRcode() != null ? response.getRcode() : 0, new ArrayList<>(),
+					response.getRcode() != null ? response.getRcode() : DNSResponseCodes.NO_ERROR,
+					new ArrayList<>(),
 					clientIp);
 		}
 		
@@ -128,11 +149,15 @@ public class DNSOrchestrator {
 	
 	/**
 	 * Create a blocked response
+	 *
+	 * @param query the original DNS query
+	 * @param filterResult the filter result (unused but kept for future extensibility)
+	 * @return a DNS response indicating the domain is blocked
 	 */
 	private DnsMessage createBlockedResponse(DnsMessage query, FilterResult filterResult) {
 		// Return NXDOMAIN for blocked domains
 		return DnsMessageConverter.createResponse(query.getQname(), query.getQtype(),
-				query.getQclass(), 3, // NXDOMAIN
+				query.getQclass(), DNSResponseCodes.NXDOMAIN, // NXDOMAIN
 				new ArrayList<>(), 0L);
 	}
 }

@@ -1,5 +1,6 @@
 package dev.pacr.dns.model;
 
+import dev.pacr.dns.DNSResponseCodes;
 import dev.pacr.dns.model.rfc8427.DnsMessage;
 import dev.pacr.dns.model.rfc8427.DnsMessageConverter;
 import org.junit.jupiter.api.Test;
@@ -28,13 +29,14 @@ class DnsMessageTest {
 	
 	@Test
 	void testCreateDnsMessageResponse() {
-		DnsMessage message = DnsMessageConverter.createResponse("example.com", 1, 1, 0,
+		DnsMessage message =
+				DnsMessageConverter.createResponse("example.com", 1, 1, DNSResponseCodes.NO_ERROR,
 				java.util.List.of("93.184.216.34"), 300L);
 		
 		assertNotNull(message);
 		assertEquals("example.com", message.getQname());
 		assertEquals(1, message.getQr()); // Response
-		assertEquals(0, message.getRcode()); // NOERROR
+		assertEquals(DNSResponseCodes.NO_ERROR, message.getRcode()); // NOERROR
 		assertNotNull(message.getAnswerRRs());
 		assertEquals(1, message.getAnswerRRs().size());
 		assertEquals(1, message.getAncount());
@@ -106,14 +108,15 @@ class DnsMessageTest {
 	@Test
 	void testDnsMessageRcodes() {
 		// Test different response codes
-		DnsMessage noerror = DnsMessageConverter.createResponse("example.com", 1, 1, 0,
+		DnsMessage noerror =
+				DnsMessageConverter.createResponse("example.com", 1, 1, DNSResponseCodes.NO_ERROR,
 				java.util.List.of("1.2.3.4"), 300L);
-		assertEquals(0, noerror.getRcode()); // NOERROR
+		assertEquals(DNSResponseCodes.NO_ERROR, noerror.getRcode()); // NOERROR
 		
-		DnsMessage nxdomain =
-				DnsMessageConverter.createResponse("nonexistent.com", 1, 1, 3, java.util.List.of(),
+		DnsMessage nxdomain = DnsMessageConverter.createResponse("nonexistent.com", 1, 1,
+				DNSResponseCodes.NXDOMAIN, java.util.List.of(),
 						300L);
-		assertEquals(3, nxdomain.getRcode()); // NXDOMAIN
+		assertEquals(DNSResponseCodes.NXDOMAIN, nxdomain.getRcode()); // NXDOMAIN
 	}
 	
 	@Test
@@ -171,4 +174,3 @@ class DnsMessageTest {
 		assertNotNull(message.getQclass());
 	}
 }
-

@@ -34,10 +34,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class RFCComplianceTest {
 	
 	// DNS Response Code constants
-	private static final int RCODE_NO_ERROR = 0;
-	private static final int RCODE_FORMAT_ERROR = 1;
-	private static final int RCODE_SERVER_FAILURE = 2;
-	private static final int RCODE_NXDOMAIN = 3;
+	private static final int RCODE_NO_ERROR = DNSResponseCodes.NO_ERROR;
+	private static final int RCODE_FORMAT_ERROR = DNSResponseCodes.FORMAT_ERROR;
+	private static final int RCODE_SERVER_FAILURE = DNSResponseCodes.SERVER_FAILURE;
+	private static final int RCODE_NXDOMAIN = DNSResponseCodes.NXDOMAIN;
 	
 	/**
 	 * Helper to parse DNS response from HTTP response body
