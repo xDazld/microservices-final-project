@@ -27,6 +27,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Core DNS resolution service that handles DNS queries.
@@ -70,6 +71,12 @@ public class DNSResolver {
 	
 	// RFC 8767: Track last failure time for failure recheck timer
 	private final Map<String, Instant> lastFailureTime = new ConcurrentHashMap<>();
+	
+	// Track cache statistics manually since Quarkus Cache doesn't expose them
+	private final AtomicLong cacheHits = new AtomicLong(0);
+	private final AtomicLong cacheMisses = new AtomicLong(0);
+	private final AtomicLong cacheWrites = new AtomicLong(0);
+	private final Instant startTime = Instant.now();
 	
 	@Inject
 	MeterRegistry registry;
@@ -119,8 +126,12 @@ public class DNSResolver {
 			}).await().indefinitely();
 			cachedResponse =
 					cachedObj instanceof CachedResponse ? (CachedResponse) cachedObj : null;
+			if (cachedResponse != null) {
+				cacheHits.incrementAndGet();
+			}
 		} catch (RuntimeException e) {
 			// Cache miss - continue with fresh lookup
+			cacheMisses.incrementAndGet();
 			LOG.debugf("Cache miss for domain: %s", query.getQname());
 		}
 		
@@ -210,10 +221,11 @@ public class DNSResolver {
 			
 			// Cache the successful response using Quarkus Cache
 			CachedResponse cachedResp = new CachedResponse(response);
-			dnsCache.get(cacheKey, k -> cachedResp).subscribe()
-					.with(item -> LOG.debugf("Cached response for %s", query.getQname()),
-							failure -> LOG.warnf("Failed to cache response for %s: %s",
-									query.getQname(), failure.getMessage()));
+			dnsCache.get(cacheKey, k -> cachedResp).subscribe().with(item -> {
+				cacheWrites.incrementAndGet();
+				LOG.debugf("Cached response for %s", query.getQname());
+			}, failure -> LOG.warnf("Failed to cache response for %s: %s", query.getQname(),
+					failure.getMessage()));
 			
 			LOG.infof("Successfully resolved %s to %s", query.getQname(), addresses);
 			return response;
@@ -433,12 +445,19 @@ public class DNSResolver {
 	 * Per RFC 8767, monitoring of stale data usage is also important.
 	 */
 	public Map<String, Object> getCacheStats() {
-		// Note: Quarkus Cache doesn't provide detailed statistics like size/expired/stale counts
-		// We can only provide the cache name and negative cache stats
-		// For more detailed stats, consider using Redis cache backend which provides metrics
+		long hits = cacheHits.get();
+		long misses = cacheMisses.get();
+		long writes = cacheWrites.get();
+		long total = hits + misses;
 		
-		Map<String, Object> positiveCache = Map.of("cacheName", "dns-response-cache", "note",
-				"Using Quarkus Cache - detailed stats available via cache backend metrics");
+		double hitRate = total > 0 ? ((double) hits / total) * 100.0 : 0.0;
+		long uptimeSeconds = java.time.Duration.between(startTime, Instant.now()).getSeconds();
+		
+		Map<String, Object> positiveCache =
+				Map.of("cacheName", "dns-response-cache (Redis)", "backend", "Redis", "cacheHits",
+						hits, "cacheMisses", misses, "totalLookups", total, "hitRate",
+						String.format("%.1f%%", hitRate), "cacheWrites", writes, "ttl",
+						"300 seconds (5 minutes)", "uptimeSeconds", uptimeSeconds);
 		
 		return Map.of("positiveCache", positiveCache, "negativeCache",
 				negativeCacheService.getCacheStats()
