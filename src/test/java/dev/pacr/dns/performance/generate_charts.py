@@ -37,7 +37,7 @@ def create_comprehensive_dashboard(df, output_file):
     colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8']
 
     # Title
-    fig.suptitle('🚀 DNS Shield Performance Testing Dashboard 🚀\n' +
+    fig.suptitle('DNS Shield Performance Testing Dashboard\n' +
                  f'Generated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}',
                  fontsize=20, fontweight='bold', y=0.98)
 
@@ -49,7 +49,7 @@ def create_comprehensive_dashboard(df, output_file):
                 marker='o', linewidth=3, markersize=8, label=endpoint, color=colors[i % len(colors)])
     ax1.set_xlabel('Concurrent Users', fontsize=12, fontweight='bold')
     ax1.set_ylabel('Throughput (requests/second)', fontsize=12, fontweight='bold')
-    ax1.set_title('📈 Throughput Scalability Under Load', fontsize=14, fontweight='bold', pad=10)
+    ax1.set_title('Throughput Scalability Under Load', fontsize=14, fontweight='bold', pad=10)
     ax1.legend(loc='best', fontsize=10)
     ax1.grid(True, alpha=0.3)
     ax1.set_facecolor('#f8f9fa')
@@ -70,7 +70,7 @@ def create_comprehensive_dashboard(df, output_file):
 
     ax2.set_xlabel('Percentile', fontsize=11, fontweight='bold')
     ax2.set_ylabel('Latency (ms)', fontsize=11, fontweight='bold')
-    ax2.set_title('⏱️ Latency at Max Load', fontsize=12, fontweight='bold', pad=10)
+    ax2.set_title('Latency at Max Load', fontsize=12, fontweight='bold', pad=10)
     ax2.set_xticks(x_pos + width / 2)
     ax2.set_xticklabels(['P50', 'P90', 'P95', 'P99'])
     ax2.legend(loc='best', fontsize=9)
@@ -102,7 +102,7 @@ def create_comprehensive_dashboard(df, output_file):
     ax3.set_ylim(0, 1.2)
     ax3.set_xlim(0, np.pi)
     ax3.axis('off')
-    ax3.set_title('✅ Overall Success Rate', fontsize=12, fontweight='bold', pad=10)
+    ax3.set_title('Overall Success Rate', fontsize=12, fontweight='bold', pad=10)
 
     # 4. Mean vs P95 Latency Scatter (Middle Center)
     ax4 = fig.add_subplot(gs[1, 1])
@@ -114,7 +114,7 @@ def create_comprehensive_dashboard(df, output_file):
 
     ax4.set_xlabel('Mean Latency (ms)', fontsize=11, fontweight='bold')
     ax4.set_ylabel('P95 Latency (ms)', fontsize=11, fontweight='bold')
-    ax4.set_title('🎯 Mean vs P95 Latency\n(Bubble size = concurrent users)',
+    ax4.set_title('Mean vs P95 Latency\n(Bubble size = concurrent users)',
                   fontsize=12, fontweight='bold', pad=10)
     ax4.legend(loc='best', fontsize=9)
     ax4.grid(True, alpha=0.3)
@@ -132,7 +132,7 @@ def create_comprehensive_dashboard(df, output_file):
     p2 = ax5.bar(x, total_failed, width, bottom=total_successful, label='Failed', color='#F44336', alpha=0.8)
 
     ax5.set_ylabel('Total Requests', fontsize=11, fontweight='bold')
-    ax5.set_title('📊 Request Distribution', fontsize=12, fontweight='bold', pad=10)
+    ax5.set_title('Request Distribution', fontsize=12, fontweight='bold', pad=10)
     ax5.set_xticks(x)
     ax5.set_xticklabels(total_successful.index, rotation=15, ha='right')
     ax5.legend(loc='best', fontsize=10)
@@ -181,7 +181,7 @@ def create_comprehensive_dashboard(df, output_file):
 
     ax6.set_xlabel('Test Configuration', fontsize=11, fontweight='bold')
     ax6.set_ylabel('Latency Distribution (ms)', fontsize=11, fontweight='bold')
-    ax6.set_title('🎻 Latency Distribution Across All Tests', fontsize=12, fontweight='bold', pad=10)
+    ax6.set_title('Latency Distribution Across All Tests', fontsize=12, fontweight='bold', pad=10)
     ax6.set_xticks(positions)
     ax6.set_xticklabels(labels, rotation=45, ha='right', fontsize=8)
     ax6.grid(True, alpha=0.3, axis='y')
@@ -211,20 +211,20 @@ def create_comprehensive_dashboard(df, output_file):
     ║   PERFORMANCE SCORECARD   ║
     ╚═══════════════════════════════╝
 
-    🏆 Overall Score: {performance_score:.0f}/100
+    Overall Score: {performance_score:.0f}/100
 
     Key Metrics:
     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    🚀 Max Throughput:
+    Max Throughput:
        {max_throughput:.1f} req/s
 
-    ⚡ Best Mean Latency:
+    Best Mean Latency:
        {min_mean_latency:.1f} ms
 
-    ✅ Avg Success Rate:
+    Avg Success Rate:
        {avg_success:.1f}%
 
-    📦 Total Requests:
+    Total Requests:
        {total_requests:,}
     """
 
@@ -233,7 +233,7 @@ def create_comprehensive_dashboard(df, output_file):
 
     # Save the figure
     plt.savefig(output_file, dpi=300, bbox_inches='tight', facecolor='white')
-    print(f"✨ Comprehensive dashboard saved to: {output_file}")
+    print(f"Comprehensive dashboard saved to: {output_file}")
 
     # Show the plot
     plt.show()
@@ -251,24 +251,24 @@ def main():
     output_file = f"performance-dashboard-{timestamp}.svg"
 
     print("=" * 80)
-    print("🎨 DNS Shield Performance Visualization Tool")
+    print("DNS Shield Performance Visualization Tool")
     print("=" * 80)
-    print(f"📊 Loading data from: {csv_file}")
+    print(f"Loading data from: {csv_file}")
 
     try:
         df = load_data(csv_file)
-        print(f"✓ Loaded {len(df)} test results")
-        print(f"✓ Found {len(df['Endpoint'].unique())} unique endpoints")
+        print(f"Loaded {len(df)} test results")
+        print(f"Found {len(df['Endpoint'].unique())} unique endpoints")
 
-        print("\n🎨 Generating entertaining charts...")
+        print("\nGenerating entertaining charts...")
         create_comprehensive_dashboard(df, output_file)
 
         print("\n" + "=" * 80)
-        print("✅ Chart generation complete!")
+        print("Chart generation complete!")
         print("=" * 80)
 
     except Exception as e:
-        print(f"\n❌ Error generating charts: {e}")
+        print(f"\nError generating charts: {e}")
         import traceback
         traceback.print_exc()
         sys.exit(1)
