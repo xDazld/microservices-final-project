@@ -21,6 +21,29 @@ class DashboardWebSocketClient {
     }
 
     /**
+     * Get constants
+     */
+    static get RECONNECT_DELAY_MS() {
+        return 3000;
+    }
+
+    static get MAX_RECONNECT_DELAY_MS() {
+        return 30000;
+    }
+
+    static get PING_INTERVAL_MS() {
+        return 30000;
+    }
+
+    static get MILLION() {
+        return 1000000;
+    }
+
+    static get THOUSAND() {
+        return 1000;
+    }
+
+    /**
      * Initialize WebSocket connection
      */
     connect() {
@@ -156,12 +179,7 @@ class DashboardWebSocketClient {
      * Update logs display in dashboard
      */
     updateLogsDisplay(logEntry) {
-        // Update log statistics
-        const totalEl = document.getElementById('log-total');
-        const blockedEl = document.getElementById('log-blocked');
-        const threatsEl = document.getElementById('log-threats');
-
-        // These would typically increment the displayed counts
+        // Update log statistics would be done via separate stats update messages
         // In practice, you'd fetch fresh stats from the server
 
         // Update the logs table if it's visible
@@ -257,6 +275,8 @@ class DashboardWebSocketClient {
 
     /**
      * Subscribe to a channel
+     * @param {string} channel - Channel name to subscribe to
+     * @public
      */
     subscribe(channel) {
         if (this.isConnected && this.ws.readyState === WebSocket.OPEN) {
@@ -268,6 +288,8 @@ class DashboardWebSocketClient {
 
     /**
      * Unsubscribe from a channel
+     * @param {string} channel - Channel name to unsubscribe from
+     * @public
      */
     unsubscribe(channel) {
         if (this.isConnected && this.ws.readyState === WebSocket.OPEN) {
@@ -297,7 +319,7 @@ class DashboardWebSocketClient {
 
             setTimeout(() => {
                 this.connect();
-            }, Math.min(delay, 30000)); // Cap at 30 seconds
+            }, Math.min(delay, DashboardWebSocketClient.MAX_RECONNECT_DELAY_MS));
         } else {
             console.error('Max reconnection attempts reached. Manual reload may be required.');
             this.emit('reconnect_failed', {message: 'Failed to reconnect after multiple attempts'});
@@ -320,11 +342,11 @@ class DashboardWebSocketClient {
         if (isNaN(num) || !isFinite(num)) {
             return '0';
         }
-        if (num >= 1000000) {
-            return (num / 1000000).toFixed(1) + 'M';
+        if (num >= DashboardWebSocketClient.MILLION) {
+            return (num / DashboardWebSocketClient.MILLION).toFixed(1) + 'M';
         }
-        if (num >= 1000) {
-            return (num / 1000).toFixed(1) + 'K';
+        if (num >= DashboardWebSocketClient.THOUSAND) {
+            return (num / DashboardWebSocketClient.THOUSAND).toFixed(1) + 'K';
         }
         return Math.round(num).toString();
     }
@@ -363,19 +385,19 @@ document.addEventListener('DOMContentLoaded', () => {
         dashboardWs = new DashboardWebSocketClient();
 
         // Set up event handlers
-        dashboardWs.on('connected', (data) => {
+        dashboardWs.on('connected', () => {
             console.log('Dashboard event stream ready');
         });
 
-        dashboardWs.on('metrics', (message) => {
+        dashboardWs.on('metrics', () => {
             // Real-time metric update received
         });
 
-        dashboardWs.on('log', (message) => {
+        dashboardWs.on('log', () => {
             // Real-time log entry received
         });
 
-        dashboardWs.on('stats', (message) => {
+        dashboardWs.on('stats', () => {
             // Real-time stats update received
         });
 
@@ -387,7 +409,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (dashboardWs && dashboardWs.isConnected) {
                 dashboardWs.ping();
             }
-        }, 30000); // Every 30 seconds
+        }, DashboardWebSocketClient.PING_INTERVAL_MS);
     }
 });
 

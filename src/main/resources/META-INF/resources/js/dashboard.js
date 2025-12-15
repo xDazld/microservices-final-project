@@ -18,7 +18,7 @@ async function displayRandomFact() {
         }
 
         // Show loading state
-        factDiv.innerHTML = '🤔 Generating a fun DNS fact...';
+        factDiv.textContent = '🤔 Generating a fun DNS fact...';
         factDiv.style.animation = 'pulse 1s infinite';
 
         // Create a session with the Prompt API and monitor download progress
@@ -33,21 +33,34 @@ async function displayRandomFact() {
             expectedOutputs: [
                 {type: "text", languages: ["en"]}
             ],
-            monitor(m) {
-                m.addEventListener("downloadprogress", e => {
+            monitor(monitorInstance) {
+                monitorInstance.addEventListener("downloadprogress", e => {
                     const percent = Math.round(e.loaded * 100);
                     console.log(`Downloaded ${percent}%`);
 
-                    // Show progress bar in the UI
-                    factDiv.innerHTML = `
-                        <div style="text-align: center;">
-                            <div>📥 Downloading AI model...</div>
-                            <div style="margin-top: 10px; background: var(--background-secondary); border-radius: 10px; overflow: hidden; height: 20px;">
-                                <div style="width: ${percent}%; height: 100%; background: linear-gradient(90deg, var(--primary-color), var(--accent-color)); transition: width 0.3s ease;"></div>
-                            </div>
-                            <div style="margin-top: 5px; font-size: 0.9em; color: var(--text-secondary);">${percent}%</div>
-                        </div>
-                    `;
+                    // Show progress bar in the UI - create elements safely
+                    factDiv.textContent = ''; // Clear content
+                    const container = document.createElement('div');
+                    container.style.textAlign = 'center';
+
+                    const downloadText = document.createElement('div');
+                    downloadText.textContent = '📥 Downloading AI model...';
+                    container.appendChild(downloadText);
+
+                    const progressBg = document.createElement('div');
+                    progressBg.style.cssText = 'margin-top: 10px; background: var(--background-secondary, #f0f0f0); border-radius: 10px; overflow: hidden; height: 20px;';
+
+                    const progressBar = document.createElement('div');
+                    progressBar.style.cssText = `width: ${percent}%; height: 100%; background: linear-gradient(90deg, var(--primary-color, #4CAF50), var(--accent-color, #2196F3)); transition: width 0.3s ease;`;
+                    progressBg.appendChild(progressBar);
+                    container.appendChild(progressBg);
+
+                    const percentText = document.createElement('div');
+                    percentText.style.cssText = 'margin-top: 5px; font-size: 0.9em; color: var(--text-secondary, #666);';
+                    percentText.textContent = `${percent}%`;
+                    container.appendChild(percentText);
+
+                    factDiv.appendChild(container);
                 });
             }
         });
@@ -61,7 +74,7 @@ async function displayRandomFact() {
         factDiv.style.animation = 'none';
         setTimeout(() => {
             factDiv.style.animation = 'slideIn 0.5s ease-out';
-            factDiv.innerHTML = result;
+            factDiv.textContent = result;
         }, 10);
 
     } catch (error) {
@@ -92,7 +105,7 @@ function displayFallbackFact() {
     factDiv.style.animation = 'none';
     setTimeout(() => {
         factDiv.style.animation = 'slideIn 0.5s ease-out';
-        factDiv.innerHTML = fact;
+        factDiv.textContent = fact;
     }, 10);
 }
 

@@ -421,7 +421,7 @@ async function clearCache() {
 
         if (response.ok) {
             showAlert('Cache cleared successfully!', 'success');
-            loadDashboardStats();
+            void loadDashboardStats();
         } else {
             const error = await response.json();
             showAlert('Error: ' + (error.error || 'Failed to clear cache'), 'danger');
@@ -702,7 +702,7 @@ function playNotificationSound() {
 /**
  * Enhanced alert display with animations
  */
-async function showAlert(message, type = 'info') {
+function showAlert(message, type = 'info') {
     const container = document.getElementById('alerts-container');
     if (!container) {
         return;
@@ -736,10 +736,12 @@ function formatNumber(num) {
 }
 
 // Category Filter
-function filterByCategory(category) {
+function filterByCategory(event, category) {
     const buttons = document.querySelectorAll('.filter-btn');
     buttons.forEach(btn => btn.classList.remove('active'));
-    event.target.classList.add('active');
+    if (event && event.target) {
+        event.target.classList.add('active');
+    }
 
     const url = category ? `/ui/filters/list?category=${category}` : '/ui/filters/list';
     htmx.ajax('GET', url, '#rules-table-body');

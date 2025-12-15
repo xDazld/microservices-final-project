@@ -7,153 +7,128 @@
  */
 
 /**
+ * Configuration constants to avoid magic numbers
+ */
+const RIPPLE_REMOVE_DELAY_MS = 600;
+const PULSE_DEFAULT_DURATION_MS = 500;
+const SHAKE_DEFAULT_DURATION_MS = 500;
+const TOAST_DEFAULT_DURATION_MS = 3000;
+const TOAST_FADE_OUT_MS = 300;
+const TYPEWRITER_DEFAULT_SPEED_MS = 50;
+
+/**
+ * Helper to safely append to the DOM body or documentElement for XHTML compatibility
+ */
+function appendToRoot(element) {
+    const root = document.body || document.documentElement;
+    root.appendChild(element);
+}
+
+/**
  * Create a floating text message that fades away
  */
 function createFloatingMessage(text, x, y) {
     const message = document.createElement('div');
-    message.style.position = 'fixed';
-    message.style.left = x + 'px';
-    message.style.top = y + 'px';
-    message.style.color = 'var(--primary-color)';
-    message.style.fontSize = '14px';
-    message.style.fontWeight = 'bold';
-    message.style.pointerEvents = 'none';
-    message.style.zIndex = '9999';
+    message.className = 'floating-message';
     message.textContent = text;
+    message.style.left = `${x}px`;
+    message.style.top = `${y}px`;
+    // Use safe appender to avoid XHTML warnings
+    appendToRoot(message);
 
-    document.body.appendChild(message);
+    const duration = 1000;
+    const start = performance.now();
 
-    // Animate floating upwards
-    const startTime = Date.now();
-    const duration = 2000;
-
-    const animate = () => {
-        const elapsed = Date.now() - startTime;
-        const progress = elapsed / duration;
-
+    const animate = (time) => {
+        const elapsed = time - start;
+        const progress = Math.min(elapsed / duration, 1);
         if (progress >= 1) {
             message.remove();
             return;
         }
-
-        message.style.opacity = 1 - progress;
-        message.style.transform = `translateY(${-progress * 100}px)`;
+        // Ensure style.opacity receives a string value
+        message.style.opacity = String(1 - progress);
+        message.style.transform = `translateY(-${progress * 20}px)`;
         requestAnimationFrame(animate);
     };
-
-    animate();
+    requestAnimationFrame(animate);
 }
 
 /**
  * Create a ripple effect on click
  */
 function createRipple(event) {
-    const element = event.currentTarget;
-    const rect = element.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-
     const ripple = document.createElement('span');
-    ripple.style.position = 'absolute';
-    ripple.style.width = '20px';
-    ripple.style.height = '20px';
-    ripple.style.background = 'rgba(255, 255, 255, 0.5)';
-    ripple.style.borderRadius = '50%';
-    ripple.style.left = x + 'px';
-    ripple.style.top = y + 'px';
-    ripple.style.pointerEvents = 'none';
-    ripple.style.transform = 'scale(0)';
-    ripple.style.animation = 'ripple 0.6s ease-out';
-
-    if (element.style.position === 'static') {
-        element.style.position = 'relative';
-    }
-
-    element.appendChild(ripple);
-    setTimeout(() => ripple.remove(), 600);
+    ripple.className = 'ripple';
+    const rect = event.currentTarget.getBoundingClientRect();
+    ripple.style.left = `${event.clientX - rect.left}px`;
+    ripple.style.top = `${event.clientY - rect.top}px`;
+    event.currentTarget.appendChild(ripple);
+    // Use constant instead of magic number
+    setTimeout(() => ripple.remove(), RIPPLE_REMOVE_DELAY_MS);
 }
 
 /**
  * Stats counter animation - animates numbers counting up
  */
 function animateCounter(element, endValue, duration = 1000) {
-    const startValue = 0;
-    const startTime = Date.now();
+    const startValue = parseInt(element.textContent || '0', 10) || 0;
+    const startTime = performance.now();
 
-    const animate = () => {
-        const elapsed = Date.now() - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-
-        const currentValue = Math.floor(startValue + (endValue - startValue) * progress);
-        element.textContent = formatNumber(currentValue);
-
+    const animate = (time) => {
+        const progress = Math.min((time - startTime) / duration, 1);
+        const value = Math.floor(startValue + (endValue - startValue) * progress);
+        element.textContent = String(value);
         if (progress < 1) {
             requestAnimationFrame(animate);
         }
     };
-
-    animate();
+    requestAnimationFrame(animate);
 }
 
 /**
  * Create a celebration effect
  */
 function createCelebration() {
-    // Create confetti pieces
-    const confettiCount = 50;
-    const colors = ['#4695EB', '#be9100', '#28a745', '#dc3545', '#ffc107'];
+    const colors = ['#FF6347', '#FFD700', '#32CD32', '#1E90FF', '#FF69B4'];
+    const count = 100;
 
-    for (let i = 0; i < confettiCount; i++) {
+    for (let i = 0; i < count; i++) {
         const confetti = document.createElement('div');
-        confetti.style.position = 'fixed';
-        confetti.style.width = Math.random() * 10 + 5 + 'px';
-        confetti.style.height = Math.random() * 10 + 5 + 'px';
+        confetti.className = 'confetti';
         confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        confetti.style.width = `${Math.random() * 8 + 4}px`;
+        confetti.style.height = confetti.style.width;
         confetti.style.borderRadius = '50%';
-        confetti.style.left = Math.random() * window.innerWidth + 'px';
+        confetti.style.position = 'fixed';
+        confetti.style.left = `${Math.random() * 100}%`;
         confetti.style.top = '-10px';
-        confetti.style.pointerEvents = 'none';
-        confetti.style.zIndex = '9998';
+        confetti.style.opacity = '1';
+        // Safe append
+        appendToRoot(confetti);
 
-        document.body.appendChild(confetti);
-
-        const startX = Math.random() * window.innerWidth;
-        const endX = startX + (Math.random() - 0.5) * 400;
-        const duration = 2.5 + Math.random() * 1.5;
-        const delay = Math.random() * 0.2;
-
-        setTimeout(() => {
-            confetti.animate([
-                {
-                    transform: 'translateY(0) translateX(0) rotate(0deg)',
-                    opacity: 1
-                },
-                {
-                    transform: `translateY(${window.innerHeight + 100}px) translateX(${endX - startX}px) rotate(720deg)`,
-                    opacity: 0
-                }
-            ], {
-                duration: duration * 1000,
-                easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)'
-            });
-
-            setTimeout(() => confetti.remove(), duration * 1000);
-        }, delay * 1000);
+        const fallDuration = Math.random() * 2000 + 3000;
+        confetti.animate([
+            {transform: 'translateY(0)', opacity: 1},
+            {transform: 'translateY(100vh)', opacity: 0}
+        ], {
+            duration: fallDuration,
+            easing: 'ease-in',
+            fill: 'forwards'
+        }).onfinish = () => confetti.remove();
     }
 }
 
 /**
  * Pulse animation on elements
  */
-function pulseElement(element, duration = 500) {
-    const keyframes = [
-        {transform: 'scale(1)', opacity: 1},
-        {transform: 'scale(1.1)', opacity: 0.8},
-        {transform: 'scale(1)', opacity: 1}
-    ];
-
-    element.animate(keyframes, {
-        duration: duration,
+function pulseElement(element, duration = PULSE_DEFAULT_DURATION_MS) {
+    element.animate([
+        {transform: 'scale(1)'},
+        {transform: 'scale(1.05)'},
+        {transform: 'scale(1)'}
+    ], {
+        duration,
         easing: 'ease-in-out'
     });
 }
@@ -161,18 +136,14 @@ function pulseElement(element, duration = 500) {
 /**
  * Shake animation for errors
  */
-function shakeElement(element, duration = 500) {
-    const keyframes = [
+function shakeElement(element, duration = SHAKE_DEFAULT_DURATION_MS) {
+    element.animate([
         {transform: 'translateX(0)'},
-        {transform: 'translateX(-5px)'},
-        {transform: 'translateX(5px)'},
-        {transform: 'translateX(-5px)'},
-        {transform: 'translateX(5px)'},
+        {transform: 'translateX(-3px)'},
+        {transform: 'translateX(3px)'},
         {transform: 'translateX(0)'}
-    ];
-
-    element.animate(keyframes, {
-        duration: duration,
+    ], {
+        duration,
         easing: 'ease-in-out'
     });
 }
@@ -181,45 +152,28 @@ function shakeElement(element, duration = 500) {
  * Highlight element with glow effect
  */
 function glowElement(element, duration = 1000) {
-    const originalBox = element.style.boxShadow || '';
-
     element.animate([
-        {boxShadow: 'none'},
-        {boxShadow: '0 0 20px rgba(70, 149, 235, 0.8)'},
-        {boxShadow: 'none'}
+        {boxShadow: '0 0 0px rgba(255, 215, 0, 0.0)'},
+        {boxShadow: '0 0 12px rgba(255, 215, 0, 0.8)'},
+        {boxShadow: '0 0 0px rgba(255, 215, 0, 0.0)'}
     ], {
-        duration: duration,
+        duration,
         easing: 'ease-in-out'
     });
-
-    setTimeout(() => {
-        element.style.boxShadow = originalBox;
-    }, duration);
 }
 
 /**
  * Create a toast-like notification
  */
-function showToast(message, type = 'info', duration = 3000) {
+function showToast(message, type = 'info', duration = TOAST_DEFAULT_DURATION_MS) {
     const toast = document.createElement('div');
-    toast.style.position = 'fixed';
-    toast.style.bottom = '20px';
-    toast.style.right = '20px';
-    toast.style.padding = '15px 20px';
-    toast.style.backgroundColor = getTypeColor(type);
-    toast.style.color = 'white';
-    toast.style.borderRadius = '5px';
-    toast.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.3)';
-    toast.style.zIndex = '10000';
-    toast.style.minWidth = '250px';
-    toast.style.animation = 'slideIn 0.3s ease-out';
+    toast.className = `toast toast-${type}`;
     toast.textContent = message;
-
-    document.body.appendChild(toast);
+    appendToRoot(toast);
 
     setTimeout(() => {
-        toast.style.animation = 'fadeIn 0.3s ease-out reverse';
-        setTimeout(() => toast.remove(), 300);
+        toast.classList.add('fade-out');
+        setTimeout(() => toast.remove(), TOAST_FADE_OUT_MS);
     }, duration);
 }
 
@@ -240,13 +194,13 @@ function getTypeColor(type) {
  * Parallax scroll effect
  */
 function enableParallax() {
-    const parallaxElements = document.querySelectorAll('[data-parallax]');
-
+    const elements = document.querySelectorAll('[data-parallax]');
     window.addEventListener('scroll', () => {
-        parallaxElements.forEach(element => {
-            const speed = element.dataset.parallax || 0.5;
-            const yPos = window.pageYOffset * speed;
-            element.style.transform = `translateY(${yPos}px)`;
+        elements.forEach((el) => {
+            const speed = parseFloat(el.getAttribute('data-parallax')) || 0.2;
+            // Use window.scrollY instead of deprecated pageYOffset
+            const yPos = window.scrollY * speed;
+            el.style.transform = `translateY(${yPos}px)`;
         });
     });
 }
@@ -254,18 +208,17 @@ function enableParallax() {
 /**
  * Typewriter effect for text
  */
-function typewriterEffect(element, text, speed = 50) {
-    let index = 0;
+function typewriterEffect(element, text, speed = TYPEWRITER_DEFAULT_SPEED_MS) {
+    let i = 0;
     element.textContent = '';
 
-    const type = () => {
-        if (index < text.length) {
-            element.textContent += text.charAt(index);
-            index++;
+    function type() {
+        if (i < text.length) {
+            element.textContent += text.charAt(i);
+            i += 1;
             setTimeout(type, speed);
         }
-    };
-
+    }
     type();
 }
 
@@ -273,11 +226,11 @@ function typewriterEffect(element, text, speed = 50) {
  * Fun loading animation
  */
 function createLoadingAnimation() {
-    const dots = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
-    let index = 0;
-
-    return () => {
-        return dots[index++ % dots.length];
+    const loader = document.createElement('div');
+    loader.className = 'loader';
+    appendToRoot(loader);
+    return {
+        stop: () => loader.remove()
     };
 }
 
@@ -286,18 +239,8 @@ function createLoadingAnimation() {
  */
 function getRandomFunMessage() {
     const messages = [
-        '🚀 DNS is faster than a speeding bullet!',
-        '🛡️ Your shields are holding!',
-        '⚡ Filtering like a boss!',
-        '🎯 On target!',
-        '💫 DNS magic in progress...',
-        '🔒 Keeping you safe!',
-        '📡 Signals received!',
-        '🎪 Having fun with DNS!',
-        '🌟 Shielding complete!',
-        '🏆 DNS Champion!'
+        '🎉 You rock!', '🚀 Keep going!', '✨ Nice click!', '🔥 That was awesome!', '💡 Great idea!'
     ];
-
     return messages[Math.floor(Math.random() * messages.length)];
 }
 
@@ -305,34 +248,34 @@ function getRandomFunMessage() {
  * Create a floating heart or star effect
  */
 function createFloatEffect(emoji = '❤️') {
-    for (let i = 0; i < 5; i++) {
-        const float = document.createElement('div');
-        float.style.position = 'fixed';
-        float.style.left = Math.random() * window.innerWidth + 'px';
-        float.style.top = window.innerHeight + 'px';
-        float.style.fontSize = '2rem';
-        float.style.pointerEvents = 'none';
-        float.style.zIndex = '9998';
-        float.textContent = emoji;
-
-        document.body.appendChild(float);
-
-        const duration = 3 + Math.random() * 2;
-        const offsetX = (Math.random() - 0.5) * 200;
-
-        float.animate([
-            {transform: 'translateY(0) translateX(0) scale(1)', opacity: 1},
-            {
-                transform: `translateY(-${window.innerHeight + 100}px) translateX(${offsetX}px) scale(0)`,
-                opacity: 0
-            }
-        ], {
-            duration: duration * 1000,
-            easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)'
-        });
-
-        setTimeout(() => float.remove(), duration * 1000);
-    }
+    const float = document.createElement('div');
+    float.className = 'float-emoji';
+    float.textContent = emoji;
+    appendToRoot(float);
+    const duration = Math.random() * 1000 + 1000;
+    float.animate([
+        {transform: 'translateY(0)', opacity: 1},
+        {transform: 'translateY(-80px)', opacity: 0}
+    ], {
+        duration,
+        easing: 'ease-out',
+        fill: 'forwards'
+    }).onfinish = () => float.remove();
 }
 
-
+// Expose utilities to a single namespace to avoid unused warnings and enable usage across the app
+window.Entertainment = {
+    createFloatingMessage,
+    createRipple,
+    animateCounter,
+    createCelebration,
+    pulseElement,
+    shakeElement,
+    glowElement,
+    showToast,
+    enableParallax,
+    typewriterEffect,
+    createLoadingAnimation,
+    getRandomFunMessage,
+    createFloatEffect
+};
