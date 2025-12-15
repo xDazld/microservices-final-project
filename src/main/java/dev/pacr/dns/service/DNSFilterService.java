@@ -7,7 +7,6 @@ import io.micrometer.core.annotation.Counted;
 import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.transaction.Transactional;
 import org.jboss.logging.Logger;
 
 import java.util.HashMap;
@@ -57,7 +56,6 @@ public class DNSFilterService {
 	/**
 	 * Initialize with default filtering rules
 	 */
-	@Transactional
 	public void initializeDefaultRules() {
 		// Check if rules already exist to avoid duplicates
 		if (ruleRepository.count() > 0) {
@@ -137,7 +135,6 @@ public class DNSFilterService {
 	/**
 	 * Add a new filtering rule
 	 */
-	@Transactional
 	public FilterRule addRule(String name, String pattern, FilterRule.RuleType type,
 							  String category, int priority) {
 		FilterRule rule = new FilterRule();
@@ -157,7 +154,6 @@ public class DNSFilterService {
 	/**
 	 * Update an existing rule
 	 */
-	@Transactional
 	public FilterRule updateRule(String ruleId, FilterRule updatedRule) {
 		FilterRule existingRule = ruleRepository.findByRuleId(ruleId);
 		if (existingRule == null) {
@@ -186,7 +182,6 @@ public class DNSFilterService {
 	/**
 	 * Delete a rule
 	 */
-	@Transactional
 	public void deleteRule(String ruleId) {
 		FilterRule rule = ruleRepository.findByRuleId(ruleId);
 		if (rule != null) {
@@ -220,7 +215,6 @@ public class DNSFilterService {
 	/**
 	 * Enable/disable a rule
 	 */
-	@Transactional
 	public void toggleRule(String ruleId, boolean enabled) {
 		FilterRule rule = ruleRepository.findByRuleId(ruleId);
 		if (rule != null) {
