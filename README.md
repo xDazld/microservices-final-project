@@ -101,10 +101,12 @@ flowchart TB
     Admin --> Core
     Agent --> Ollama
     WS --> RabbitMQ
+
     Resolver --> Redis
     Filter --> MariaDB
     Security --> MongoDB
     Core --> RabbitMQ
+
     Core --> Prometheus
     Core --> Loki
     Core --> Tempo
@@ -160,9 +162,9 @@ flowchart TB
    ```
 
 5. **Access the dashboard:**
-    - Application: http://localhost:8080
-    - Grafana: http://localhost:3000 (admin/admin)
-    - RabbitMQ Management: http://localhost:15672 (admin/admin)
+   - Application: http://localhost:8080
+   - Grafana: http://localhost:3000 (admin/admin)
+   - RabbitMQ Management: http://localhost:15672 (admin/admin)
 
 ### Kubernetes Deployment
 
@@ -198,7 +200,6 @@ This automatically starts dev services for MongoDB, Redis, MariaDB, RabbitMQ, an
 All protected endpoints require a JWT token obtained via the login endpoint.
 
 #### Login
-
 ```http
 POST /api/v1/auth/login
 Content-Type: application/json
@@ -220,7 +221,6 @@ Content-Type: application/json
 ```
 
 Use the token in subsequent requests:
-
 ```http
 Authorization: Bearer <token>
 ```
@@ -232,14 +232,12 @@ Authorization: Bearer <token>
 #### DNS-over-HTTPS (DoH) - RFC 8484
 
 **GET Request (Base64URL encoded):**
-
 ```http
 GET /dns-query?dns=AAABAAABAAAAAAAAB2V4YW1wbGUDY29tAAABAAE
 Accept: application/dns-message
 ```
 
 **POST Request (Binary wire format):**
-
 ```http
 POST /dns-query
 Content-Type: application/dns-message
@@ -250,7 +248,6 @@ Content-Type: application/dns-message
 #### JSON DNS API
 
 **Simple Query:**
-
 ```http
 GET /api/v1/dns/query?domain=example.com&type=A
 ```
@@ -278,7 +275,6 @@ GET /api/v1/dns/query?domain=example.com&type=A
 ```
 
 **POST Query:**
-
 ```http
 POST /api/v1/dns/query
 Content-Type: application/json
@@ -290,7 +286,6 @@ Content-Type: application/json
 ```
 
 **Batch Query:**
-
 ```http
 POST /api/v1/dns/batch
 Content-Type: application/json
@@ -306,14 +301,12 @@ Content-Type: application/json
 ### Filter Management
 
 #### List All Rules
-
 ```http
 GET /api/v1/filters
 Authorization: Bearer <token>
 ```
 
 #### Create Filter Rule
-
 ```http
 POST /api/v1/filters
 Authorization: Bearer <admin-token>
@@ -329,7 +322,6 @@ Content-Type: application/json
 ```
 
 #### Toggle Rule
-
 ```http
 PATCH /api/v1/filters/{ruleId}/toggle
 Authorization: Bearer <admin-token>
@@ -345,7 +337,6 @@ Content-Type: application/json
 ### AI Agent API
 
 #### Analyze Domain Threat
-
 ```http
 GET /api/v1/agent/analyze/{domain}
 Authorization: Bearer <token>
@@ -362,7 +353,6 @@ Authorization: Bearer <token>
 ```
 
 #### Get Filter Recommendations
-
 ```http
 POST /api/v1/agent/recommend-filters
 Authorization: Bearer <admin-token>
@@ -374,7 +364,6 @@ Content-Type: application/json
 ```
 
 #### Correlate Security Events
-
 ```http
 POST /api/v1/agent/correlate-events
 Authorization: Bearer <admin-token>
@@ -390,7 +379,6 @@ Content-Type: application/json
 ### Administration
 
 #### Get Endpoint Statistics
-
 ```http
 GET /api/v1/admin/endpoints/statistics
 Authorization: Bearer <token>
@@ -414,21 +402,18 @@ Authorization: Bearer <token>
 ```
 
 #### Get Cache Statistics
-
 ```http
 GET /api/v1/admin/cache/stats
 Authorization: Bearer <token>
 ```
 
 #### RFC 5358 Access Control
-
 ```http
 GET /api/v1/admin/rfc5358/status
 Authorization: Bearer <token>
 ```
 
 #### Health Check
-
 ```http
 GET /api/v1/admin/health
 ```
@@ -443,14 +428,14 @@ Connect to the WebSocket endpoint for live updates:
 const ws = new WebSocket('ws://localhost:8080/ws/dashboard');
 
 ws.onmessage = (event) => {
-    const data = JSON.parse(event.data);
-    console.log('Dashboard event:', data);
+   const data = JSON.parse(event.data);
+   console.log('Dashboard event:', data);
 };
 
 // Subscribe to specific channels
 ws.send(JSON.stringify({
-    type: 'SUBSCRIBE',
-    channel: 'metrics'
+   type: 'SUBSCRIBE',
+   channel: 'metrics'
 }));
 ```
 
@@ -518,26 +503,26 @@ curl -X POST http://localhost:8080/api/v1/admin/security/threats/domains \
 const ws = new WebSocket('ws://localhost:8080/ws/dashboard');
 
 ws.onopen = () => {
-    console.log('Connected to DNS Shield dashboard');
+   console.log('Connected to DNS Shield dashboard');
 
-    // Subscribe to all events
-    ws.send(JSON.stringify({type: 'SUBSCRIBE', channel: 'all'}));
+   // Subscribe to all events
+   ws.send(JSON.stringify({type: 'SUBSCRIBE', channel: 'all'}));
 };
 
 ws.onmessage = (event) => {
-    const data = JSON.parse(event.data);
+   const data = JSON.parse(event.data);
 
-    switch (data.type) {
-        case 'QUERY_LOG':
-            console.log(`DNS Query: ${data.domain} -> ${data.status}`);
-            break;
-        case 'SECURITY_ALERT':
-            console.log(`⚠️ Security Alert: ${data.message}`);
-            break;
-        case 'METRICS':
-            console.log(`Metrics update: ${data.totalQueries} queries`);
-            break;
-    }
+   switch (data.type) {
+      case 'QUERY_LOG':
+         console.log(`DNS Query: ${data.domain} -> ${data.status}`);
+         break;
+      case 'SECURITY_ALERT':
+         console.log(`⚠️ Security Alert: ${data.message}`);
+         break;
+      case 'METRICS':
+         console.log(`Metrics update: ${data.totalQueries} queries`);
+         break;
+   }
 };
 ```
 
@@ -657,21 +642,6 @@ users making DNS queries.
 5. **gRPC API:** Add gRPC endpoints for high-performance inter-service communication.
 
 ---
-
-## 📋 Assignment Feedback
-
-### Positive Aspects
-
-1. **Flexibility:** The assignment's open-ended nature allowed for creativity in choosing the
-   application domain and technology stack. This made the project more engaging and relevant to
-   real-world scenarios.
-
-2. **Practical Focus:** Requirements like containerization, access control, and usage statistics
-   closely mirror production deployment concerns, providing valuable learning opportunities.
-
-3. **Extra Credit Opportunities:** The additional requirements (Kubernetes, storage systems, AI
-   agents) encouraged exploration of advanced topics without penalizing those who focused on core
-   requirements.
 
 ### Overall Assessment
 
