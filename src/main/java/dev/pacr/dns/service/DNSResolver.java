@@ -1,15 +1,20 @@
 package dev.pacr.dns.service;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.pacr.dns.model.rfc8427.DnsMessage;
 import dev.pacr.dns.model.rfc8427.DnsMessageConverter;
 import dev.pacr.dns.model.rfc8427.ResourceRecord;
 import io.micrometer.core.annotation.Counted;
 import io.micrometer.core.annotation.Timed;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.quarkus.cache.Cache;
+import io.quarkus.cache.CacheName;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
 
+import java.io.Serializable;
 import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.NoRouteToHostException;
@@ -59,8 +64,9 @@ public class DNSResolver {
 	// more than twice (i.e., three queries in total)"
 	private static final int MAX_RETRIES = 2; // 2 retries = 3 total queries
 	
-	// Simple in-memory cache for DNS responses
-	private final Map<String, CachedResponse> cache = new ConcurrentHashMap<>();
+	@Inject
+	@CacheName("dns-response-cache")
+	Cache dnsCache;
 	
 	// RFC 8767: Track last failure time for failure recheck timer
 	private final Map<String, Instant> lastFailureTime = new ConcurrentHashMap<>();
@@ -103,7 +109,21 @@ public class DNSResolver {
 		}
 		
 		// Check positive cache for unexpired records
-		CachedResponse cachedResponse = cache.get(cacheKey);
+		CachedResponse cachedResponse = null;
+		try {
+			// Try to get from cache - if key doesn't exist, throw exception to signal cache miss
+			Object cachedObj = dnsCache.get(cacheKey, k -> {
+				// This function is only called on cache miss
+				// We don't want to cache null, so we throw an exception to signal cache miss
+				throw new RuntimeException("Cache miss");
+			}).await().indefinitely();
+			cachedResponse =
+					cachedObj instanceof CachedResponse ? (CachedResponse) cachedObj : null;
+		} catch (RuntimeException e) {
+			// Cache miss - continue with fresh lookup
+			LOG.debugf("Cache miss for domain: %s", query.getQname());
+		}
+		
 		if (cachedResponse != null && !cachedResponse.isExpired()) {
 			LOG.debugf("Cache hit for domain: %s", query.getQname());
 			return cachedResponse.response;
@@ -188,8 +208,12 @@ public class DNSResolver {
 					addresses, 300L // TTL 5 minutes
 			);
 			
-			// Cache the successful response
-			cache.put(cacheKey, new CachedResponse(response));
+			// Cache the successful response using Quarkus Cache
+			CachedResponse cachedResp = new CachedResponse(response);
+			dnsCache.get(cacheKey, k -> cachedResp).subscribe()
+					.with(item -> LOG.debugf("Cached response for %s", query.getQname()),
+							failure -> LOG.warnf("Failed to cache response for %s: %s",
+									query.getQname(), failure.getMessage()));
 			
 			LOG.infof("Successfully resolved %s to %s", query.getQname(), addresses);
 			return response;
@@ -387,8 +411,10 @@ public class DNSResolver {
 	public void clearExpiredCache() {
 		// RFC 8767 Section 5: Only remove data that exceeds maximum stale timer
 		// "The suggested value is between 1 and 3 days"
-		cache.entrySet().removeIf(entry -> entry.getValue().isTooStale());
-		LOG.debugf("Cache cleanup completed. Current size: %d", cache.size());
+		// Note: With Quarkus Cache (Redis), expiration is handled automatically by the cache
+		// backend
+		// based on the expire-after-write configuration. Manual cleanup is not needed.
+		LOG.debugf("Cache cleanup - expiration handled by cache backend");
 		
 		// Clear negative cache
 		negativeCacheService.clearExpiredEntries();
@@ -407,13 +433,12 @@ public class DNSResolver {
 	 * Per RFC 8767, monitoring of stale data usage is also important.
 	 */
 	public Map<String, Object> getCacheStats() {
-		long expired = cache.values().stream().filter(CachedResponse::isExpired).count();
-		long stale = cache.values().stream().filter(CachedResponse::isStale).count();
-		long tooStale = cache.values().stream().filter(CachedResponse::isTooStale).count();
+		// Note: Quarkus Cache doesn't provide detailed statistics like size/expired/stale counts
+		// We can only provide the cache name and negative cache stats
+		// For more detailed stats, consider using Redis cache backend which provides metrics
 		
-		Map<String, Object> positiveCache =
-				Map.of("total", cache.size(), "expired", expired, "stale", stale, "tooStale",
-						tooStale, "active", cache.size() - expired);
+		Map<String, Object> positiveCache = Map.of("cacheName", "dns-response-cache", "note",
+				"Using Quarkus Cache - detailed stats available via cache backend metrics");
 		
 		return Map.of("positiveCache", positiveCache, "negativeCache",
 				negativeCacheService.getCacheStats()
@@ -440,9 +465,25 @@ public class DNSResolver {
 	/**
 	 * Internal class for cached responses with RFC 8767 stale data support
 	 */
-	private static class CachedResponse {
-		final DnsMessage response;
-		final Instant cachedAt;
+	public static class CachedResponse implements Serializable {
+		private static final long serialVersionUID = 1L;
+		
+		@JsonProperty("response")
+		DnsMessage response;
+		
+		@JsonProperty("cachedAt")
+		Instant cachedAt;
+		
+		// No-arg constructor for serialization
+		public CachedResponse() {
+		}
+		
+		@JsonCreator
+		public CachedResponse(@JsonProperty("response") DnsMessage response,
+							  @JsonProperty("cachedAt") Instant cachedAt) {
+			this.response = response;
+			this.cachedAt = cachedAt != null ? cachedAt : Instant.now();
+		}
 		
 		CachedResponse(DnsMessage response) {
 			this.response = response;

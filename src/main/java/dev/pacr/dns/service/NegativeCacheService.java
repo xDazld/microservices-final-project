@@ -1,8 +1,14 @@
 package dev.pacr.dns.service;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import io.quarkus.cache.Cache;
+import io.quarkus.cache.CacheName;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
 
+import java.io.Serializable;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Comparator;
@@ -37,8 +43,11 @@ public class NegativeCacheService {
 	// Maximum number of cache entries to prevent resource exhaustion
 	private static final int MAX_CACHE_ENTRIES = 10000;
 	
-	// Cache for resolution failures
-	private final Map<String, FailureCacheEntry> failureCache = new ConcurrentHashMap<>();
+	// Track size since Quarkus Cache doesn't expose size directly
+	private final Map<String, FailureCacheEntry> sizeTracker = new ConcurrentHashMap<>();
+	@Inject
+	@CacheName("dns-negative-cache")
+	Cache negativeCache;
 	
 	/**
 	 * Check if a query should be blocked due to cached resolution failure.
@@ -53,7 +62,18 @@ public class NegativeCacheService {
 	 */
 	public boolean isCachedFailure(String domain, int qtype) {
 		String cacheKey = getCacheKey(domain, qtype);
-		FailureCacheEntry entry = failureCache.get(cacheKey);
+		FailureCacheEntry entry = null;
+		
+		try {
+			// Try to get from cache - throw exception on miss to avoid caching null
+			Object cachedObj = negativeCache.get(cacheKey, k -> {
+				throw new RuntimeException("Cache miss");
+			}).await().indefinitely();
+			entry = cachedObj instanceof FailureCacheEntry ? (FailureCacheEntry) cachedObj : null;
+		} catch (RuntimeException e) {
+			// Cache miss - no cached failure
+			return false;
+		}
 		
 		if (entry == null) {
 			return false;
@@ -61,7 +81,8 @@ public class NegativeCacheService {
 		
 		if (entry.isExpired()) {
 			// Clean up expired entry
-			failureCache.remove(cacheKey);
+			negativeCache.invalidate(cacheKey).await().indefinitely();
+			sizeTracker.remove(cacheKey);
 			return false;
 		}
 		
@@ -82,14 +103,25 @@ public class NegativeCacheService {
 	 */
 	public void cacheFailure(String domain, int qtype, FailureType failureType) {
 		// RFC 9520 Section 3.2: Protection against resource exhaustion
-		if (failureCache.size() >= MAX_CACHE_ENTRIES) {
+		if (sizeTracker.size() >= MAX_CACHE_ENTRIES) {
 			LOG.warnf("Failure cache at maximum capacity (%d entries), evicting oldest entries",
 					MAX_CACHE_ENTRIES);
 			evictOldestEntries();
 		}
 		
 		String cacheKey = getCacheKey(domain, qtype);
-		FailureCacheEntry existingEntry = failureCache.get(cacheKey);
+		FailureCacheEntry existingEntry = null;
+		
+		try {
+			// Try to get existing entry - throw exception on miss
+			Object cachedObj = negativeCache.get(cacheKey, k -> {
+				throw new RuntimeException("Cache miss");
+			}).await().indefinitely();
+			existingEntry =
+					cachedObj instanceof FailureCacheEntry ? (FailureCacheEntry) cachedObj : null;
+		} catch (RuntimeException e) {
+			// Cache miss - this is a new failure
+		}
 		
 		long cacheDuration;
 		int retryCount = 0;
@@ -111,7 +143,12 @@ public class NegativeCacheService {
 		FailureCacheEntry entry =
 				new FailureCacheEntry(domain, qtype, failureType, cacheDuration, retryCount);
 		
-		failureCache.put(cacheKey, entry);
+		// Store in Quarkus Cache and size tracker
+		negativeCache.get(cacheKey, k -> entry).subscribe()
+				.with(item -> LOG.debugf("Cached failure for %s (type %d)", domain, qtype),
+						failure -> LOG.warnf("Failed to cache failure for %s: %s", domain,
+								failure.getMessage()));
+		sizeTracker.put(cacheKey, entry);
 		
 		LOG.infof("Cached %s failure for %s (type %d) for %d seconds (retry count: %d)",
 				failureType, domain, qtype, cacheDuration, retryCount);
@@ -142,8 +179,11 @@ public class NegativeCacheService {
 		// Remove 10% of oldest entries
 		int toRemove = MAX_CACHE_ENTRIES / 10;
 		
-		failureCache.entrySet().stream().sorted(Comparator.comparing(e -> e.getValue().cachedAt))
-				.limit(toRemove).forEach(entry -> failureCache.remove(entry.getKey()));
+		sizeTracker.entrySet().stream().sorted(Comparator.comparing(e -> e.getValue().cachedAt))
+				.limit(toRemove).forEach(entry -> {
+					negativeCache.invalidate(entry.getKey()).await().indefinitely();
+					sizeTracker.remove(entry.getKey());
+				});
 		
 		LOG.debugf("Evicted %d oldest entries from failure cache", toRemove);
 	}
@@ -152,9 +192,17 @@ public class NegativeCacheService {
 	 * Clear expired cache entries. Should be called periodically by a cleanup task.
 	 */
 	public void clearExpiredEntries() {
-		int initialSize = failureCache.size();
-		failureCache.entrySet().removeIf(entry -> entry.getValue().isExpired());
-		int removed = initialSize - failureCache.size();
+		int initialSize = sizeTracker.size();
+		
+		sizeTracker.entrySet().removeIf(entry -> {
+			if (entry.getValue().isExpired()) {
+				negativeCache.invalidate(entry.getKey()).await().indefinitely();
+				return true;
+			}
+			return false;
+		});
+		
+		int removed = initialSize - sizeTracker.size();
 		
 		if (removed > 0) {
 			LOG.debugf("Cleared %d expired entries from failure cache", removed);
@@ -167,11 +215,11 @@ public class NegativeCacheService {
 	 * @return Map containing cache statistics
 	 */
 	public Map<String, Object> getCacheStats() {
-		long expired = failureCache.values().stream().filter(FailureCacheEntry::isExpired).count();
-		long total = failureCache.size();
+		long expired = sizeTracker.values().stream().filter(FailureCacheEntry::isExpired).count();
+		long total = sizeTracker.size();
 		
 		Map<String, Long> typeBreakdown = new ConcurrentHashMap<>();
-		failureCache.values().stream().filter(entry -> !entry.isExpired())
+		sizeTracker.values().stream().filter(entry -> !entry.isExpired())
 				.forEach(entry -> typeBreakdown.merge(entry.failureType.name(), 1L, Long::sum));
 		
 		long active = total - expired;
@@ -190,8 +238,9 @@ public class NegativeCacheService {
 	 * Clear all cache entries (for testing or admin purposes).
 	 */
 	public void clearAll() {
-		int size = failureCache.size();
-		failureCache.clear();
+		int size = sizeTracker.size();
+		negativeCache.invalidateAll().await().indefinitely();
+		sizeTracker.clear();
 		LOG.infof("Cleared all %d entries from failure cache", size);
 	}
 	
@@ -213,13 +262,45 @@ public class NegativeCacheService {
 	/**
 	 * Internal class representing a cached failure entry.
 	 */
-	private static class FailureCacheEntry {
-		final String domain;
-		final int qtype;
-		final FailureType failureType;
-		final Instant cachedAt;
-		final long cacheDurationSeconds;
-		final int retryCount;
+	public static class FailureCacheEntry implements Serializable {
+		private static final long serialVersionUID = 1L;
+		
+		@JsonProperty("domain")
+		String domain;
+		
+		@JsonProperty("qtype")
+		int qtype;
+		
+		@JsonProperty("failureType")
+		FailureType failureType;
+		
+		@JsonProperty("cachedAt")
+		Instant cachedAt;
+		
+		@JsonProperty("cacheDurationSeconds")
+		long cacheDurationSeconds;
+		
+		@JsonProperty("retryCount")
+		int retryCount;
+		
+		// No-arg constructor for serialization
+		public FailureCacheEntry() {
+		}
+		
+		@JsonCreator
+		public FailureCacheEntry(@JsonProperty("domain") String domain,
+								 @JsonProperty("qtype") int qtype,
+								 @JsonProperty("failureType") FailureType failureType,
+								 @JsonProperty("cachedAt") Instant cachedAt,
+								 @JsonProperty("cacheDurationSeconds") long cacheDurationSeconds,
+								 @JsonProperty("retryCount") int retryCount) {
+			this.domain = domain;
+			this.qtype = qtype;
+			this.failureType = failureType;
+			this.cachedAt = cachedAt != null ? cachedAt : Instant.now();
+			this.cacheDurationSeconds = cacheDurationSeconds;
+			this.retryCount = retryCount;
+		}
 		
 		FailureCacheEntry(String domain, int qtype, FailureType failureType,
 						  long cacheDurationSeconds, int retryCount) {

@@ -19,6 +19,14 @@ services:
       QUARKUS_MONGODB_CONNECTION_STRING: mongodb://${MONGO_USER:-admin}:${MONGO_PASSWORD:-admin}@mongodb:27017/${MONGO_DB:-dns_shield}?authSource=admin
       QUARKUS_MONGODB_DATABASE: ${MONGO_DB:-dns_shield}
 
+      # Redis Cache Configuration
+      QUARKUS_REDIS_HOSTS: redis://redis:6379
+      QUARKUS_CACHE_TYPE: redis
+      QUARKUS_CACHE_REDIS_DNS_RESPONSE_CACHE_EXPIRE_AFTER_WRITE: 300s
+      QUARKUS_CACHE_REDIS_DNS_RESPONSE_CACHE_PREFIX: dns:response
+      QUARKUS_CACHE_REDIS_DNS_NEGATIVE_CACHE_EXPIRE_AFTER_WRITE: 300s
+      QUARKUS_CACHE_REDIS_DNS_NEGATIVE_CACHE_PREFIX: dns:negative
+
       # RabbitMQ Configuration
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
@@ -66,6 +74,8 @@ services:
       mariadb:
         condition: service_healthy
       mongodb:
+        condition: service_healthy
+      redis:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
@@ -159,6 +169,22 @@ services:
       retries: 5
       start_period: 30s
 
+  # Redis Cache Service
+  redis:
+    image: docker.io/library/redis:7
+    container_name: dns-shield-redis
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis-data:/data
+    networks:
+      - dns-shield-network
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
   # Grafana LGTM Stack (Loki, Grafana, Tempo, Mimir)
   otel-lgtm:
     image: docker.io/grafana/otel-lgtm:0.11.0
@@ -185,6 +211,8 @@ volumes:
   mongodb-data:
     driver: local
   mongodb-config:
+    driver: local
+  redis-data:
     driver: local
   otel-lgtm-data:
     driver: local
