@@ -31,9 +31,6 @@ import java.util.Collection;
  * @author Patrick Rafferty
  */
 @ApplicationScoped
-/**
-	 * JwtSigningService class.
- */
 public class JwtSigningService {
 	
 	/**

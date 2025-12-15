@@ -12,9 +12,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * @see <a href="https://tools.ietf.org/html/rfc8427">RFC 8427</a>
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-/**
-	 * ResourceRecord class.
- */
 public class ResourceRecord {
 	
 	@JsonProperty("NAME")

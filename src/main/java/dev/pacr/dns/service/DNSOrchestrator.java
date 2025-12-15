@@ -19,9 +19,6 @@ import java.util.List;
  * @author Patrick Rafferty
  */
 @ApplicationScoped
-/**
-	 * DNSOrchestrator class.
- */
 public class DNSOrchestrator {
 	
 	/**
@@ -55,11 +52,8 @@ public class DNSOrchestrator {
 	 * @param query the DNS query message
 	 * @return the DNS response message
 	 */
-	@Timed(value = "dns.query.total", description = "Total time to process DNS query")
-	/**
-	 * processQuery method.
-	 */
-	public DnsMessage processQuery(DnsMessage query) {
+@Timed(value = "dns.query.total", description = "Total time to process DNS query")
+	public {
 		return processQuery(query, "unknown");
 	}
 	
@@ -70,11 +64,8 @@ public class DNSOrchestrator {
 	 * @param clientIp the client IP address for logging
 	 * @return the DNS response message
 	 */
-	@Timed(value = "dns.query.total", description = "Total time to process DNS query")
-	/**
-	 * processQuery method.
-	 */
-	public DnsMessage processQuery(DnsMessage query, String clientIp) {
+@Timed(value = "dns.query.total", description = "Total time to process DNS query")
+	public {
 		String qname = query.getQname();
 		String queryType = query.getQtype() != null ? query.getQtype().toString() : "A";
 		LOG.infof("Processing DNS query for: %s (type=%s) from %s", qname, queryType, clientIp);

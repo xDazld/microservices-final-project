@@ -22,9 +22,6 @@ import java.util.List;
 	 * Service for logging DNS queries in RFC 8618 C-DNS format to RabbitMQ
  */
 @ApplicationScoped
-/**
-	 * DNSLoggingService class.
- */
 public class DNSLoggingService {
     
     /**

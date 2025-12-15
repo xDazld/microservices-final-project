@@ -14,9 +14,6 @@ import java.util.List;
  * @see <a href="https://tools.ietf.org/html/rfc8618">RFC 8618</a>
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-/**
-	 * CdnsFile class.
- */
 public class CdnsFile {
 	
 	@JsonProperty("file-type-id")

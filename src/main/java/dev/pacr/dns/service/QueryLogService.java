@@ -19,9 +19,6 @@ import java.util.stream.Collectors;
  * Retrieves logs from the database (MongoDB) instead of maintaining an in-memory buffer.
  */
 @ApplicationScoped
-/**
-	 * QueryLogService class.
- */
 public class QueryLogService {
     
     /**

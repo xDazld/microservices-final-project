@@ -11,9 +11,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * @see <a href="https://tools.ietf.org/html/rfc8618">RFC 8618</a>
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-/**
-	 * ResponseProcessingData class.
- */
 public class ResponseProcessingData {
 	
 	@JsonProperty("bailiwick-index")

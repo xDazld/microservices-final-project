@@ -25,9 +25,6 @@ import java.util.Base64;
  * @author Patrick Rafferty
  */
 @ApplicationScoped
-/**
-	 * JwtKeyGenerator class.
- */
 public class JwtKeyGenerator {
 	
 	/**

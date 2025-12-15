@@ -23,9 +23,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * Thread-safe for concurrent access.
  */
 @ApplicationScoped
-/**
-	 * EndpointStatisticsService class.
- */
 public class EndpointStatisticsService {
 
 	/**

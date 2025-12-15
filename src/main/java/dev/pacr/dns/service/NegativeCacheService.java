@@ -20,9 +20,6 @@ import java.util.concurrent.ConcurrentHashMap;
  * @see <a href="https://www.rfc-editor.org/rfc/rfc9520.html">RFC 9520</a>
  */
 @ApplicationScoped
-/**
-	 * NegativeCacheService class.
- */
 public class NegativeCacheService {
 	
 	/**

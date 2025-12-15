@@ -16,9 +16,6 @@ import org.jboss.logging.Logger;
  * recommendations - Pattern recognition in DNS queries - Security alert correlation
  */
 @ApplicationScoped
-/**
-	 * DNSIntelligenceAgent class.
- */
 public class DNSIntelligenceAgent {
 	
 	/**
@@ -147,10 +144,7 @@ public class DNSIntelligenceAgent {
 	/**
 	 * AI Assistant interface for DNS analysis
 	 */
-	@RegisterAiService(tools = DNSAnalysisTools.class)
-	/**
-	 * DNSAssistant interface.
-	 */
+@RegisterAiService(tools = DNSAnalysisTools.class)
 	public interface DNSAssistant {
 		
 		@SystemMessage("You are a DNS security expert. Analyze domains for threats, " +

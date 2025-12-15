@@ -28,9 +28,6 @@ import java.util.concurrent.ConcurrentHashMap;
  * Nameservers in Reflector Attacks</a>
  */
 @ApplicationScoped
-/**
-	 * RFC5358AccessControlService class.
- */
 public class RFC5358AccessControlService {
 	
 	/**

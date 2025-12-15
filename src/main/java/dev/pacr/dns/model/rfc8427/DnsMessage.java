@@ -14,9 +14,6 @@ import java.util.List;
  * @see <a href="https://tools.ietf.org/html/rfc8427">RFC 8427</a>
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-/**
-	 * DnsMessage class.
- */
 public class DnsMessage {
 	
 	@JsonProperty("ID")

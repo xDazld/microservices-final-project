@@ -17,9 +17,6 @@ import java.util.concurrent.CompletionStage;
  * connected WebSocket dashboard clients for real-time updates.
  */
 @ApplicationScoped
-/**
-	 * DashboardEventConsumer class.
- */
 public class DashboardEventConsumer {
 	
 	/**

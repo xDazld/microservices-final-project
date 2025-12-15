@@ -23,9 +23,6 @@ import org.jboss.logging.Logger;
  * @author Patrick Rafferty
  */
 @ApplicationScoped
-/**
-	 * ApplicationInitializer class.
- */
 public class ApplicationInitializer {
 	
 	/**

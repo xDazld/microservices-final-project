@@ -33,9 +33,6 @@ import java.util.regex.Pattern;
  * @author Patrick Rafferty
  */
 @ApplicationScoped
-/**
-	 * DNSFilterService class.
- */
 public class DNSFilterService {
 	
 	/**
@@ -81,11 +78,8 @@ public class DNSFilterService {
 	/**
 	 * Apply filtering rules to a domain
 	 */
-	@Counted(value = "dns.filter.checks", description = "Number of filter checks performed")
-	/**
-	 * applyFilters method.
-	 */
-	public FilterResult applyFilters(CharSequence domain) {
+@Counted(value = "dns.filter.checks", description = "Number of filter checks performed")
+	public {
 		LOG.debugf("Applying filters to domain: %s", domain);
 		
 		// Explicitly increment counter (in case @Counted annotation doesn't work)

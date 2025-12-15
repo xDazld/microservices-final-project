@@ -8,9 +8,6 @@ import jakarta.enterprise.context.ApplicationScoped;
 	 * Repository for persisting security alerts to MongoDB
  */
 @ApplicationScoped
-/**
-	 * SecurityAlertRepository class.
- */
 public class SecurityAlertRepository
 		implements PanacheMongoRepositoryBase<SecurityAlertEntry, String> {
 	

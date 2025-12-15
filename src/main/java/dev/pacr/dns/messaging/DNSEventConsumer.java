@@ -25,9 +25,6 @@ import java.util.concurrent.CompletionStage;
  * correlation
  */
 @ApplicationScoped
-/**
-	 * DNSEventConsumer class.
- */
 public class DNSEventConsumer {
 
     /**

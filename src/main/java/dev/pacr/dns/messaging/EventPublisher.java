@@ -16,9 +16,6 @@ import java.util.Map;
  * clients
  */
 @ApplicationScoped
-/**
-	 * EventPublisher class.
- */
 public class EventPublisher {
 	
 	/**

@@ -16,9 +16,6 @@ import java.util.concurrent.ConcurrentHashMap;
 	 * Security service for threat intelligence and malware detection
  */
 @ApplicationScoped
-/**
-	 * SecurityService class.
- */
 public class SecurityService {
 	
 	/**

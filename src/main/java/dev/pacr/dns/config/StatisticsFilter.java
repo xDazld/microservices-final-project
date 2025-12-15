@@ -23,9 +23,6 @@ import org.jboss.logging.Logger;
  * endpoint.
  */
 @Provider
-/**
-	 * StatisticsFilter class.
- */
 public class StatisticsFilter implements ContainerRequestFilter, ContainerResponseFilter {
 
 	/**

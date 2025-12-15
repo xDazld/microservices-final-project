@@ -32,9 +32,6 @@ import java.util.concurrent.ConcurrentHashMap;
  * @see <a href="https://www.rfc-editor.org/rfc/rfc8767.html">RFC 8767</a>
  */
 @ApplicationScoped
-/**
-	 * DNSResolver class.
- */
 public class DNSResolver {
 	
 	/**
