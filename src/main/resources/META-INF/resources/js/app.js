@@ -25,6 +25,9 @@ function initializeApp() {
             window.location.href = '/ui/login';
         }
     }
+
+    // Initialize entertainment features
+    initEntertainmentFeatures();
 }
 
 // Update UI based on authentication status
@@ -416,36 +419,299 @@ async function clearCache() {
     }
 }
 
-// Utility Functions
-function showAlert(message, type = 'info') {
-    const alertsContainer = document.getElementById('alerts-container');
-    if (!alertsContainer) return;
+// ====== ENTERTAINMENT FEATURES ======
 
-    const alert = document.createElement('div');
-    alert.className = `alert alert-${type}`;
-    alert.innerHTML = `
-        <span>${message}</span>
-        <button onclick="this.parentElement.remove()" style="background:none;border:none;color:inherit;cursor:pointer;margin-left:auto;">×</button>
-    `;
+/**
+ * Initialize all entertainment and interactive features
+ */
+function initEntertainmentFeatures() {
+    // Create floating particles background
+    createParticleBackground();
 
-    alertsContainer.appendChild(alert);
+    // Set up easter egg listeners
+    initEasterEggs();
 
-    // Auto-remove after 5 seconds
-    setTimeout(() => {
-        if (alert.parentElement) {
-            alert.remove();
-        }
-    }, 5000);
+    // Initialize fun animations
+    initFunAnimations();
+
+    // Add confetti for successful operations
+    initConfetti();
 }
 
+/**
+ * Create animated floating particles in the background
+ */
+function createParticleBackground() {
+    const particleCount = 15;
+
+    for (let i = 0; i < particleCount; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+
+        // Random positioning
+        const x = Math.random() * window.innerWidth;
+        const y = Math.random() * window.innerHeight;
+        const delay = Math.random() * 20;
+        const duration = 20 + Math.random() * 10;
+
+        particle.style.left = x + 'px';
+        particle.style.top = y + 'px';
+        particle.style.animationDelay = delay + 's';
+        particle.style.animationDuration = duration + 's';
+        particle.style.zIndex = '-1';
+
+        document.body.appendChild(particle);
+    }
+}
+
+/**
+ * Initialize easter eggs and hidden interactions
+ */
+function initEasterEggs() {
+    let clickSequence = [];
+    const secretSequence = ['d', 'n', 's'];
+
+    // Easter egg: Type "dns" to trigger special effects
+    document.addEventListener('keypress', function (e) {
+        const key = e.key.toLowerCase();
+        clickSequence.push(key);
+        clickSequence = clickSequence.slice(-3);
+
+        if (clickSequence.join('') === secretSequence.join('')) {
+            triggerDNSEasterEgg();
+            clickSequence = [];
+        }
+    });
+
+    // Easter egg: Double-click the logo
+    const logo = document.querySelector('.logo h1');
+    if (logo) {
+        logo.style.cursor = 'pointer';
+        logo.addEventListener('dblclick', triggerLogoAnimation);
+    }
+
+    // Easter egg: Click shield stats 5 times for achievement
+    let shieldClicks = 0;
+    const statCards = document.querySelectorAll('.stat-card');
+    statCards.forEach(card => {
+        card.style.cursor = 'pointer';
+        card.addEventListener('click', function () {
+            shieldClicks++;
+            if (shieldClicks === 5) {
+                showAchievement('🎯 Click Master', 'You clicked 5 stat cards!');
+                shieldClicks = 0;
+                this.classList.add('wiggle');
+                setTimeout(() => this.classList.remove('wiggle'), 300);
+            }
+        });
+    });
+}
+
+/**
+ * DNS Easter Egg - Trigger special animation
+ */
+function triggerDNSEasterEgg() {
+    const header = document.querySelector('.header');
+    if (header) {
+        header.style.background = 'linear-gradient(45deg, #4695EB, #be9100, #28a745, #dc3545, #4695EB)';
+        header.style.backgroundSize = '200% 200%';
+        header.style.animation = 'slideIn 0.5s ease-out';
+
+        showAchievement('🛡️ DNS Master', 'You discovered the DNS Easter Egg!');
+
+        // Play notification sound if available
+        playNotificationSound();
+
+        // Reset after animation
+        setTimeout(() => {
+            header.style.background = 'linear-gradient(135deg, var(--darker-bg), var(--card-bg))';
+        }, 3000);
+    }
+}
+
+/**
+ * Logo animation easter egg
+ */
+function triggerLogoAnimation() {
+    const logo = document.querySelector('.logo h1');
+    if (logo) {
+        logo.classList.add('rotating-icon');
+        showAchievement('🎪 Logo Master', 'Wow, you found the spinning logo!');
+        playNotificationSound();
+
+        setTimeout(() => logo.classList.remove('rotating-icon'), 2000);
+    }
+}
+
+/**
+ * Show achievement badge with animation
+ */
+function showAchievement(title, description) {
+    const container = document.getElementById('alerts-container') || document.querySelector('main .container');
+
+    if (!container) return;
+
+    const achievement = document.createElement('div');
+    achievement.className = 'achievement-badge';
+    achievement.innerHTML = `<strong>${title}</strong> - ${description}`;
+    achievement.style.position = 'fixed';
+    achievement.style.top = '100px';
+    achievement.style.right = '20px';
+    achievement.style.zIndex = '9999';
+    achievement.style.minWidth = '300px';
+
+    container.insertBefore(achievement, container.firstChild);
+
+    // Auto-remove after 3 seconds
+    setTimeout(() => {
+        achievement.style.animation = 'fadeIn 0.3s ease-out reverse';
+        setTimeout(() => achievement.remove(), 300);
+    }, 3000);
+}
+
+/**
+ * Initialize fun animations on page load
+ */
+function initFunAnimations() {
+    // Animate all cards on load
+    const cards = document.querySelectorAll('.card');
+    cards.forEach((card, index) => {
+        card.style.animationDelay = (index * 0.1) + 's';
+    });
+
+    // Add fun hover tooltips
+    document.querySelectorAll('.btn-primary').forEach(btn => {
+        btn.addEventListener('mouseenter', function () {
+            const messages = [
+                '✨ Let\'s go!',
+                '🚀 Ready?',
+                '⚡ Click me!',
+                '💫 Do it!',
+                '🎯 Let\'s go!'
+            ];
+            const randomMsg = messages[Math.floor(Math.random() * messages.length)];
+            this.title = randomMsg;
+        });
+    });
+}
+
+/**
+ * Initialize confetti on success
+ */
+function initConfetti() {
+    // Override showAlert to add confetti on success
+    const originalShowAlert = window.showAlert;
+
+    window.showAlert = function (message, type) {
+        originalShowAlert(message, type);
+
+        if (type === 'success') {
+            triggerConfetti();
+        }
+    };
+}
+
+/**
+ * Trigger confetti animation
+ */
+function triggerConfetti() {
+    const confettiPieces = 30;
+    const colors = ['#4695EB', '#be9100', '#28a745', '#dc3545', '#ffc107'];
+
+    for (let i = 0; i < confettiPieces; i++) {
+        const confetti = document.createElement('div');
+        confetti.style.position = 'fixed';
+        confetti.style.width = '10px';
+        confetti.style.height = '10px';
+        confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        confetti.style.borderRadius = '50%';
+        confetti.style.left = Math.random() * window.innerWidth + 'px';
+        confetti.style.top = '-10px';
+        confetti.style.pointerEvents = 'none';
+        confetti.style.zIndex = '9998';
+
+        document.body.appendChild(confetti);
+
+        const startX = Math.random() * window.innerWidth;
+        const endX = startX + (Math.random() - 0.5) * 300;
+        const duration = 2 + Math.random() * 1;
+
+        confetti.animate([
+            {
+                transform: 'translateY(0) translateX(0) rotate(0deg)',
+                opacity: 1
+            },
+            {
+                transform: `translateY(${window.innerHeight}px) translateX(${endX - startX}px) rotate(360deg)`,
+                opacity: 0
+            }
+        ], {
+            duration: duration * 1000,
+            easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+        });
+
+        setTimeout(() => confetti.remove(), duration * 1000);
+    }
+}
+
+/**
+ * Play notification sound (silent fallback)
+ */
+function playNotificationSound() {
+    try {
+        // Create a simple beep sound using Web Audio API
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        oscillator.frequency.value = 800;
+        oscillator.type = 'sine';
+
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.1);
+    } catch (e) {
+        // Silent fail - some browsers don't support Web Audio API
+    }
+}
+
+/**
+ * Enhanced alert display with animations
+ */
+async function showAlert(message, type = 'info') {
+    const container = document.getElementById('alerts-container');
+    if (!container) return;
+
+    const alert = document.createElement('div');
+    alert.className = `alert alert-${type} scale-up`;
+
+    const icons = {
+        success: '✅',
+        danger: '❌',
+        warning: '⚠️',
+        info: 'ℹ️'
+    };
+
+    alert.innerHTML = `${icons[type] || type} ${message}`;
+    container.insertBefore(alert, container.firstChild);
+
+    // Auto-remove after 4 seconds
+    setTimeout(() => {
+        alert.style.animation = 'fadeIn 0.3s ease-out reverse';
+        setTimeout(() => alert.remove(), 300);
+    }, 4000);
+}
+
+/**
+ * Format numbers with commas and thousand separators
+ */
 function formatNumber(num) {
-    if (num >= 1000000) {
-        return (num / 1000000).toFixed(1) + 'M';
-    }
-    if (num >= 1000) {
-        return (num / 1000).toFixed(1) + 'K';
-    }
-    return num.toString();
+    return Math.round(num).toLocaleString('en-US');
 }
 
 // Category Filter

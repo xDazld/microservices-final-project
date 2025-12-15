@@ -37,6 +37,49 @@
 
     {#scripts}
         <script>
+            // Fun login page features
+            document.addEventListener('DOMContentLoaded', function () {
+                // Add click animation to submit button
+                const submitBtn = document.querySelector('.btn-primary');
+                if (submitBtn) {
+                    submitBtn.addEventListener('click', function () {
+                        this.classList.add('wiggle');
+                    });
+                }
+
+                // Easter egg: Type "shield" for a fun message
+                let keySequence = '';
+                document.addEventListener('keypress', function (e) {
+                    keySequence += e.key.toLowerCase();
+                    if (keySequence.includes('shield')) {
+                        showLoginEasterEgg();
+                        keySequence = '';
+                    }
+                    if (keySequence.length > 10) {
+                        keySequence = keySequence.slice(-10);
+                    }
+                });
+
+                // Fun loading messages
+                const loadingMessages = [
+                    'Authenticating your DNS shield...',
+                    'Checking your credentials...',
+                    'Verifying JWT token...',
+                    'Bringing up the shields...',
+                    'Syncing with cloud...'
+                ];
+            });
+
+            function showLoginEasterEgg() {
+                const header = document.querySelector('.card-header');
+                if (header) {
+                    header.innerHTML = '🛡️ <span class="neon-text">DNS SHIELD ACTIVATED</span> 🛡️';
+                    setTimeout(() => {
+                        header.innerHTML = '🔐 Admin Login';
+                    }, 3000);
+                }
+            }
+
             async function handleLogin(event) {
                 event.preventDefault();
 
@@ -73,23 +116,36 @@
                         sessionStorage.setItem('username', data.username);
                         sessionStorage.setItem('role', data.role);
 
-                        // Redirect to the page user was trying to access, or dashboard
-                        const redirectUrl = sessionStorage.getItem('redirect_after_login') || '/ui';
-                        sessionStorage.removeItem('redirect_after_login');
+                        // Success animation
+                        buttonText.style.display = 'none';
+                        buttonText.textContent = '✅ Welcome!';
+                        buttonText.style.display = 'inline';
+                        spinner.style.display = 'none';
 
-                        window.location.href = redirectUrl;
+                        // Show success message with delay
+                        setTimeout(() => {
+                            // Redirect to the page user was trying to access, or dashboard
+                            const redirectUrl = sessionStorage.getItem('redirect_after_login') || '/ui';
+                            sessionStorage.removeItem('redirect_after_login');
+                            window.location.href = redirectUrl;
+                        }, 500);
                     } else {
                         const error = await response.json();
                         errorDiv.textContent = error.error || 'Login failed. Please check your credentials.';
                         errorDiv.style.display = 'block';
+                        // Shake animation on error
+                        document.querySelector('.card').classList.add('wiggle');
+                        setTimeout(() => document.querySelector('.card').classList.remove('wiggle'), 300);
                     }
                 } catch (error) {
                     errorDiv.textContent = 'Network error. Please try again.';
                     errorDiv.style.display = 'block';
                 } finally {
                     // Reset loading state
-                    buttonText.style.display = 'inline';
-                    spinner.style.display = 'none';
+                    if (!response || !response.ok) {
+                        buttonText.style.display = 'inline';
+                        spinner.style.display = 'none';
+                    }
                 }
             }
         </script>

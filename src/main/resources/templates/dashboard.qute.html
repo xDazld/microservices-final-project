@@ -125,7 +125,47 @@
                     Loading...
                 </div>
             </div>
+
+            <!-- Fun Facts Section -->
+            <div class="card fun-container">
+                <div class="card-header">
+                    <h2>💡 DNS Fun Facts</h2>
+                    <button class="btn btn-sm btn-primary" onclick="displayRandomFact()">New Fact!
+                    </button>
+                </div>
+                <div id="fun-fact"
+                     style="min-height: 80px; font-style: italic; color: var(--text-secondary);">
+                    Click "New Fact!" to learn something interesting about DNS!
+                </div>
+            </div>
         </div>
+
+        <script>
+            function displayRandomFact() {
+                const facts = [
+                    '🌐 DNS requests happen billions of times per day! Without DNS, you\'d have to memorize IP addresses like 93.184.216.34 instead of typing example.com',
+                    '⚡ The first DNS query to a domain is usually the slowest - that\'s why DNS caching is so important!',
+                    '🛡️ DNS filtering can block malware, phishing, and ad networks before they even load!',
+                    '📡 DNS uses UDP port 53 by default, but DNS-over-HTTPS (DoH) uses port 443 for privacy!',
+                    '🔒 DNSSEC adds cryptographic signatures to DNS records to prevent spoofing attacks!',
+                    '🎯 Google\'s public DNS (8.8.8.8) processes over 400 billion queries per day!',
+                    '💾 DNS TTL (Time To Live) tells your computer how long to cache a DNS response!',
+                    '🚀 DNS queries typically complete in milliseconds - it\'s incredibly fast!',
+                    '🌍 There are 13 root nameservers managing all top-level domains globally!',
+                    '🔄 Reverse DNS lookups let you find domain names from IP addresses!'
+                ];
+
+                const fact = facts[Math.floor(Math.random() * facts.length)];
+                const factDiv = document.getElementById('fun-fact');
+
+                // Add animation
+                factDiv.style.animation = 'none';
+                setTimeout(() => {
+                    factDiv.style.animation = 'slideIn 0.5s ease-out';
+                    factDiv.innerHTML = fact;
+                }, 10);
+            }
+        </script>
     {/content}
 
     {#scripts}{/scripts}

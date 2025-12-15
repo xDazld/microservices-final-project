@@ -103,6 +103,30 @@ main {
     padding: 25px;
     border: 1px solid var(--border-color);
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    animation: slideInCard 0.5s ease-out backwards;
+}
+
+.card:nth-child(1) {
+    animation-delay: 0.1s;
+}
+
+.card:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.card:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+.card:nth-child(4) {
+    animation-delay: 0.4s;
+}
+
+.card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 35px rgba(70, 149, 235, 0.3);
+    border-color: var(--primary-color);
 }
 
 .card-header {
@@ -126,6 +150,23 @@ main {
 /* Stat Cards */
 .stat-card {
     text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transition: left 0.5s ease;
+}
+
+.stat-card:hover::before {
+    left: 100%;
 }
 
 .stat-value {
@@ -133,6 +174,14 @@ main {
     font-weight: bold;
     color: var(--primary-color);
     margin-bottom: 10px;
+    transition: all 0.3s ease;
+    font-variant-numeric: tabular-nums;
+}
+
+.stat-card:hover .stat-value {
+    color: var(--secondary-color);
+    text-shadow: 0 0 20px rgba(70, 149, 235, 0.5);
+    transform: scale(1.1);
 }
 
 .stat-label {
@@ -169,7 +218,9 @@ table th {
 }
 
 table tr:hover {
-    background: rgba(70, 149, 235, 0.1);
+    background: rgba(70, 149, 235, 0.15);
+    transform: scale(1.01);
+    transition: all 0.2s ease-out;
 }
 
 /* Buttons */
@@ -185,6 +236,26 @@ table tr:hover {
     cursor: pointer;
     transition: all 0.3s ease;
     text-decoration: none;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.btn:active::before {
+    width: 300px;
+    height: 300px;
 }
 
 .btn-primary {
@@ -194,6 +265,8 @@ table tr:hover {
 
 .btn-primary:hover {
     background: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(70, 149, 235, 0.4);
 }
 
 .btn-danger {
@@ -221,6 +294,8 @@ table tr:hover {
 
 .btn-secondary:hover {
     background: #888;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(160, 160, 160, 0.3);
 }
 
 .btn-sm {
@@ -238,6 +313,7 @@ table tr:hover {
     margin-bottom: 8px;
     color: var(--text-secondary);
     font-weight: 500;
+    transition: all 0.3s ease;
 }
 
 .form-control {
@@ -248,13 +324,19 @@ table tr:hover {
     border-radius: 5px;
     color: var(--text-primary);
     font-size: 1rem;
-    transition: border-color 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .form-control:focus {
     outline: none;
     border-color: var(--primary-color);
     box-shadow: 0 0 0 3px rgba(70, 149, 235, 0.2);
+    transform: scale(1.01);
+    background: var(--darker-bg);
+}
+
+.form-control:focus ~ label {
+    color: var(--primary-color);
 }
 
 select.form-control {
@@ -578,3 +660,237 @@ footer {
     color: white;
 }
 
+/* ====== ENTERTAINMENT KEYFRAME ANIMATIONS ====== */
+
+@keyframes slideInCard {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes bounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+@keyframes glow {
+    0%, 100% {
+        box-shadow: 0 0 5px rgba(70, 149, 235, 0.5);
+    }
+    50% {
+        box-shadow: 0 0 20px rgba(70, 149, 235, 0.8);
+    }
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -1000px 0;
+    }
+    100% {
+        background-position: 1000px 0;
+    }
+}
+
+@keyframes rotate {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes float {
+    0% {
+        transform: translateY(0) translateX(0);
+        opacity: 0;
+    }
+    10% {
+        opacity: 1;
+    }
+    90% {
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(-100vh) translateX(100px);
+        opacity: 0;
+    }
+}
+
+@keyframes successPulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 15px rgba(40, 167, 69, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(40, 167, 69, 0);
+    }
+}
+
+@keyframes ripple {
+    to {
+        transform: scale(4);
+        opacity: 0;
+    }
+}
+
+@keyframes neon-glow {
+    0%, 100% {
+        text-shadow: 0 0 7px #fff, 0 0 10px #fff, 0 0 21px #fff, 0 0 42px var(--primary-color), 0 0 82px var(--primary-color), 0 0 92px var(--primary-color), 0 0 102px var(--primary-color), 0 0 151px var(--primary-color);
+    }
+    50% {
+        text-shadow: 0 0 4px #fff, 0 0 10px #fff, 0 0 18px #fff, 0 0 38px var(--primary-color), 0 0 73px var(--primary-color), 0 0 80px var(--primary-color), 0 0 100px var(--primary-color), 0 0 150px var(--primary-color);
+    }
+}
+
+@keyframes wiggle {
+    0%, 100% {
+        transform: rotate(0deg);
+    }
+    25% {
+        transform: rotate(-2deg);
+    }
+    75% {
+        transform: rotate(2deg);
+    }
+}
+
+/* Achievement Badge Animation */
+.achievement-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+    border-radius: 20px;
+    color: white;
+    font-weight: bold;
+    font-size: 0.85rem;
+    animation: bounce 0.6s ease-in-out;
+}
+
+/* Success indicator pulse */
+.success-indicator {
+    animation: successPulse 1s ease-out;
+}
+
+/* Enhanced table row hover */
+table tr:hover {
+    background: rgba(70, 149, 235, 0.15);
+    transform: scale(1.01);
+    transition: all 0.2s ease-out;
+}
+
+/* Loading skeleton */
+.loading-skeleton {
+    background: linear-gradient(90deg, var(--darker-bg), var(--card-bg), var(--darker-bg));
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+}
+
+/* Rotating icon */
+.rotating-icon {
+    display: inline-block;
+    animation: rotate 2s linear infinite;
+}
+
+/* Interactive Particle - Background */
+.particle {
+    position: fixed;
+    width: 5px;
+    height: 5px;
+    background: rgba(70, 149, 235, 0.5);
+    border-radius: 50%;
+    pointer-events: none;
+    animation: float 20s infinite linear;
+    z-index: -1;
+    top: 0;
+    left: 0;
+}
+
+/* Neon text effect */
+.neon-text {
+    font-weight: bold;
+    color: var(--primary-color);
+    animation: neon-glow 2s ease-in-out infinite;
+}
+
+/* Alert critical pulse */
+.alert-critical {
+    animation: glow 2s ease-in-out infinite;
+}
+
+/* Fun container styles */
+.fun-container {
+    background: var(--card-bg);
+    border-radius: 10px;
+    padding: 25px;
+    border: 2px dashed var(--primary-color);
+    position: relative;
+    overflow: hidden;
+}
+
+.fun-container::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: repeating-linear-gradient(
+            45deg,
+            transparent,
+            transparent 10px,
+            rgba(70, 149, 235, 0.05) 10px,
+            rgba(70, 149, 235, 0.05) 20px
+    );
+    animation: shimmer 3s linear infinite;
+    pointer-events: none;
+}
+
+/* Scale animation on load */
+.scale-up {
+    animation: slideInCard 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Wiggle animation for attention */
+.wiggle {
+    animation: wiggle 0.3s ease-in-out;
+}
+
+/* Confetti-like burst effect */
+.burst-icon {
+    font-size: 2rem;
+    animation: bounce 0.6s ease-in-out;
+}
