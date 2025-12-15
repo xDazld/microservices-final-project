@@ -366,22 +366,69 @@ public class FrontendResource {
 	@RolesAllowed({"admin", "user"})
 	public String getCacheStats() {
 		Map<String, Object> stats = dnsResolver.getCacheStats();
+		return formatStatsHtml(stats, 0);
+	}
+	
+	/**
+	 * Recursively format stats map into HTML, handling nested maps
+	 */
+	private String formatStatsHtml(Map<String, Object> stats, int depth) {
 		StringBuilder html = new StringBuilder();
-		html.append("<div style='display: grid; gap: 15px;'>");
+		html.append("<div style='display: grid; gap: ").append(depth == 0 ? "15px" : "10px")
+				.append(";'>");
 		
 		for (Map.Entry<String, Object> entry : stats.entrySet()) {
-			html.append(
-					"<div style='display: flex; justify-content: space-between; padding: 10px 0; " +
-							"border-bottom: 1px solid var(--border-color);'>");
-			html.append("<span style='color: var(--text-secondary);'>")
-					.append(formatLabel(entry.getKey())).append("</span>");
-			html.append("<span style='font-weight: bold;'>").append(entry.getValue())
-					.append("</span>");
-			html.append("</div>");
+			Object value = entry.getValue();
+			
+			if (value instanceof Map) {
+				// Handle nested maps with a header
+				html.append("<div style='");
+				if (depth > 0) {
+					html.append("margin-left: 15px; ");
+				}
+				html.append("'>");
+				html.append(
+						"<div style='font-weight: bold; color: var(--primary-color); " +
+								"margin-bottom: 8px;'>");
+				html.append(formatLabel(entry.getKey()));
+				html.append("</div>");
+				@SuppressWarnings("unchecked") Map<String, Object> nestedMap =
+						(Map<String, Object>) value;
+				html.append(formatStatsHtml(nestedMap, depth + 1));
+				html.append("</div>");
+			} else {
+				// Handle simple values
+				html.append(
+						"<div style='display: flex; justify-content: space-between; padding: 10px " +
+								"0; " +
+								"border-bottom: 1px solid var(--border-color);");
+				if (depth > 0) {
+					html.append(" margin-left: 15px;");
+				}
+				html.append("'>");
+				html.append("<span style='color: var(--text-secondary);'>")
+						.append(formatLabel(entry.getKey())).append("</span>");
+				html.append("<span style='font-weight: bold;'>").append(formatValue(value))
+						.append("</span>");
+				html.append("</div>");
+			}
 		}
 		
 		html.append("</div>");
 		return html.toString();
+	}
+	
+	/**
+	 * Format a value for display, handling various types
+	 */
+	private String formatValue(Object value) {
+		if (value == null) {
+			return "N/A";
+		}
+		if (value instanceof Number) {
+			return formatNumber(((Number) value).doubleValue());
+		}
+		return escapeHtml(value.toString());
 	}
 	
 	@GET
@@ -414,22 +461,7 @@ public class FrontendResource {
 	@RolesAllowed({"admin", "user"})
 	public String getSecurityStats() {
 		Map<String, Object> stats = securityService.getThreatStats();
-		StringBuilder html = new StringBuilder();
-		html.append("<div style='display: grid; gap: 15px;'>");
-		
-		for (Map.Entry<String, Object> entry : stats.entrySet()) {
-			html.append(
-					"<div style='display: flex; justify-content: space-between; padding: 10px 0; " +
-							"border-bottom: 1px solid var(--border-color);'>");
-			html.append("<span style='color: var(--text-secondary);'>")
-					.append(formatLabel(entry.getKey())).append("</span>");
-			html.append("<span style='font-weight: bold;'>").append(entry.getValue())
-					.append("</span>");
-			html.append("</div>");
-		}
-		
-		html.append("</div>");
-		return html.toString();
+		return formatStatsHtml(stats, 0);
 	}
 	
 	@GET
