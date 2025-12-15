@@ -13,33 +13,33 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
-	 * Security service for threat intelligence and malware detection
- */
+	  * Security service for threat intelligence and malware detection
+  */
 @ApplicationScoped
 public class SecurityService {
 	
 	/**
-	 * The LOG.
-	 */
+	  * The LOG.
+	  */
 	private static final Logger LOG = Logger.getLogger(SecurityService.class);
 	
 	// In-memory threat database (in production, use external threat intelligence
 	// APIs)
 	/**
-	 * The maliciousDomains.
-	 */
+	  * The maliciousDomains.
+	  */
 	private final Set<String> maliciousDomains = ConcurrentHashMap.newKeySet();
 	/**
-	 * The maliciousIPs.
-	 */
+	  * The maliciousIPs.
+	  */
 	private final Set<String> maliciousIPs = ConcurrentHashMap.newKeySet();
 	
 	@Inject
 	MeterRegistry registry;
 	
 	/**
-	 * Initialize with known malicious domains
-	 */
+	  * Initialize with known malicious domains
+	  */
 	public void initializeThreatDatabase() {
 		// Example malicious domains (in production, integrate with real threat
 		// intelligence)
@@ -55,8 +55,8 @@ public class SecurityService {
 	}
 	
 	/**
-	 * Check if a domain or its resolved IPs are known threats
-	 */
+	  * Check if a domain or its resolved IPs are known threats
+	  */
 	public boolean checkForThreats(String domain, Iterable<String> resolvedAddresses) {
 		// Check domain against malicious domains
 		if (isDomainMalicious(domain)) {
@@ -82,8 +82,8 @@ public class SecurityService {
 	}
 	
 	/**
-	 * Check if domain is in malicious domain list or matches patterns
-	 */
+	  * Check if domain is in malicious domain list or matches patterns
+	  */
 	private boolean isDomainMalicious(String domain) {
 		// Direct match
 		if (maliciousDomains.contains(domain)) {
@@ -106,62 +106,62 @@ public class SecurityService {
 	}
 	
 	/**
-	 * Add a domain to the threat database
-	 */
+	  * Add a domain to the threat database
+	  */
 	public void addMaliciousDomain(String domain) {
 		maliciousDomains.add(domain);
 		LOG.infof("Added malicious domain: %s", domain);
 	}
 	
 	/**
-	 * Remove a domain from the threat database
-	 */
+	  * Remove a domain from the threat database
+	  */
 	public void removeMaliciousDomain(String domain) {
 		maliciousDomains.remove(domain);
 		LOG.infof("Removed malicious domain: %s", domain);
 	}
 	
 	/**
-	 * Add an IP to the threat database
-	 */
+	  * Add an IP to the threat database
+	  */
 	public void addMaliciousIP(String ip) {
 		maliciousIPs.add(ip);
 		LOG.infof("Added malicious IP: %s", ip);
 	}
 	
 	/**
-	 * Remove an IP from the threat database
-	 */
+	  * Remove an IP from the threat database
+	  */
 	public void removeMaliciousIP(String ip) {
 		maliciousIPs.remove(ip);
 		LOG.infof("Removed malicious IP: %s", ip);
 	}
 	
 	/**
-	 * Get all malicious domains
-	 */
+	  * Get all malicious domains
+	  */
 	public Set<String> getMaliciousDomains() {
 		return new HashSet<>(maliciousDomains);
 	}
 	
 	/**
-	 * Get all malicious IPs
-	 */
+	  * Get all malicious IPs
+	  */
 	public Set<String> getMaliciousIPs() {
 		return new HashSet<>(maliciousIPs);
 	}
 	
 	/**
-	 * Get threat statistics
-	 */
+	  * Get threat statistics
+	  */
 	public Map<String, Object> getThreatStats() {
 		return Map.of("maliciousDomains", maliciousDomains.size(), "maliciousIPs",
 				maliciousIPs.size());
 	}
 	
 	/**
-	 * Analyze domain for potential threats (heuristic analysis)
-	 */
+	  * Analyze domain for potential threats (heuristic analysis)
+	  */
 	public ThreatAnalysis analyzeDomain(String domain) {
 		ThreatAnalysis analysis = new ThreatAnalysis();
 		analysis.domain = domain;
@@ -193,8 +193,8 @@ public class SecurityService {
 	}
 	
 	/**
-	 * Calculate risk score based on analysis
-	 */
+	  * Calculate risk score based on analysis
+	  */
 	private int calculateRiskScore(ThreatAnalysis analysis) {
 		int score = 0;
 		
@@ -208,24 +208,24 @@ public class SecurityService {
 	}
 	
 	/**
-	 * Threat analysis result
-	 */
+	  * Threat analysis result
+	  */
 	public static class ThreatAnalysis {
 		/**
-	 * The domain.
-		 */
+	  * The domain.
+		  */
 		public String domain;
 		/**
-	 * The isMalicious.
-		 */
+	  * The isMalicious.
+		  */
 		public boolean isMalicious;
 		/**
-	 * The suspiciousPatterns.
-		 */
+	  * The suspiciousPatterns.
+		  */
 		public List<String> suspiciousPatterns;
 		/**
-	 * The riskScore.
-		 */
+	  * The riskScore.
+		  */
 		public int riskScore;
 	}
 }

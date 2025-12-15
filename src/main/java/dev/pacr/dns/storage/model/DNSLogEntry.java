@@ -7,34 +7,37 @@ import org.bson.types.ObjectId;
 import java.time.Instant;
 import java.util.List;
 
-@MongoEntity(collection = "dns_logs", database = "dns_service")
 /**
-	 * DNSLogEntry class.
+ * Represents a DNS query log entry stored in MongoDB.
+ * <p>
+ * Contains information about DNS queries processed by the service, including
+ * the queried domain, resolution status, response code, and answers.
  */
+@MongoEntity(collection = "dns_logs", database = "dns_service")
 public class DNSLogEntry {
-    @BsonId
     /**
-	 * The id.
+     * MongoDB unique identifier.
      */
-    public ObjectId id; // MongoDB _id
+    @BsonId
+    public ObjectId id;
     /**
-	 * The domain.
+     * Domain name that was queried.
      */
     public String domain;
     /**
-	 * The status.
+     * Resolution status (e.g., "RESOLVED", "FILTERED", "FAILED").
      */
     public String status;
     /**
-	 * The rcode.
+     * DNS response code (RCODE) from the resolution.
      */
     public int rcode;
     /**
-	 * The answers.
+     * List of DNS answers returned for the query.
      */
     public List<String> answers;
     /**
-	 * The timestamp.
+     * Timestamp when the query was processed.
      */
     public Instant timestamp;
 }

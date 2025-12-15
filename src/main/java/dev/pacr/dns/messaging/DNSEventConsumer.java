@@ -16,24 +16,24 @@ import org.jboss.logging.Logger;
 import java.util.concurrent.CompletionStage;
 
 /**
-	 * RabbitMQ message consumer for processing DNS query logs and security alerts
- * <p>
- * This service consumes messages from RabbitMQ topics and performs: - Real-time
- * analytics on DNS
- * queries - Autonomous threat detection - Automatic filter rule updates -
- * Security event
- * correlation
- */
+	  * RabbitMQ message consumer for processing DNS query logs and security alerts
+  * <p>
+  * This service consumes messages from RabbitMQ topics and performs: - Real-time
+  * analytics on DNS
+  * queries - Autonomous threat detection - Automatic filter rule updates -
+  * Security event
+  * correlation
+  */
 @ApplicationScoped
 public class DNSEventConsumer {
 
     /**
-	 * The LOG.
-     */
+	  * The LOG.
+      */
 	private static final Logger LOG = Logger.getLogger(DNSEventConsumer.class);
     /**
-	 * The objectMapper.
-     */
+	  * The objectMapper.
+      */
 	private final ObjectMapper objectMapper = new ObjectMapper();
     @Inject
     DNSIntelligenceAgent agent;
@@ -45,16 +45,16 @@ public class DNSEventConsumer {
     MeterRegistry registry;
 
     /**
-	 * Consume and analyze DNS query logs
-     * <p>
-     * This consumer processes query logs in real-time to: - Detect suspicious
-     * patterns - Update
-     * threat intelligence - Generate analytics
-     */
+	  * Consume and analyze DNS query logs
+      * <p>
+      * This consumer processes query logs in real-time to: - Detect suspicious
+      * patterns - Update
+      * threat intelligence - Generate analytics
+      */
     @Incoming("dns-query-logs-in")
     /**
-	 * processQueryLog method.
-     */
+	  * processQueryLog method.
+      */
     public CompletionStage<Void> processQueryLog(Message<String> message) {
         String payload = message.getPayload();
 
@@ -96,17 +96,17 @@ public class DNSEventConsumer {
     }
 
     /**
-	 * Consume and respond to security alerts
-     * <p>
-     * This consumer handles security alerts and takes autonomous actions: -
-     * Automatic blocking of
-     * malicious domains - Alert correlation and pattern detection - Escalation of
-     * critical threats
-     */
+	  * Consume and respond to security alerts
+      * <p>
+      * This consumer handles security alerts and takes autonomous actions: -
+      * Automatic blocking of
+      * malicious domains - Alert correlation and pattern detection - Escalation of
+      * critical threats
+      */
     @Incoming("dns-security-alerts-in")
     /**
-	 * processSecurityAlert method.
-     */
+	  * processSecurityAlert method.
+      */
     public CompletionStage<Void> processSecurityAlert(Message<String> message) {
         String payload = message.getPayload();
 
@@ -147,12 +147,12 @@ public class DNSEventConsumer {
     }
 
     /**
-	 * Consume threat intelligence updates from external sources
-     */
+	  * Consume threat intelligence updates from external sources
+      */
     @Incoming("threat-intelligence-updates")
     /**
-	 * processThreatIntelligence method.
-     */
+	  * processThreatIntelligence method.
+      */
     public CompletionStage<Void> processThreatIntelligence(Message<String> message) {
         String payload = message.getPayload();
 
@@ -189,8 +189,8 @@ public class DNSEventConsumer {
     }
 
     /**
-	 * Handle malware alerts - autonomous blocking
-     */
+	  * Handle malware alerts - autonomous blocking
+      */
     private void handleMalwareAlert(String domain) {
         LOG.warnf("Autonomous response: Blocking malware domain: %s", domain);
 
@@ -205,8 +205,8 @@ public class DNSEventConsumer {
     }
 
     /**
-	 * Handle DGA alerts - pattern-based blocking
-     */
+	  * Handle DGA alerts - pattern-based blocking
+      */
     private void handleDGAAlert(String domain) {
         LOG.warnf("DGA pattern detected: %s", domain);
 
@@ -220,8 +220,8 @@ public class DNSEventConsumer {
     }
 
     /**
-	 * Handle phishing alerts
-     */
+	  * Handle phishing alerts
+      */
     private void handlePhishingAlert(String domain) {
         LOG.warnf("Phishing domain detected: %s", domain);
 
@@ -234,8 +234,8 @@ public class DNSEventConsumer {
     }
 
     /**
-	 * Simple DGA detection heuristic
-     */
+	  * Simple DGA detection heuristic
+      */
     private boolean isDGAPattern(String domain) {
         // Check for long random-looking strings
         String domainPart = domain.split("\\.")[0];

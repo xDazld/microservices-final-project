@@ -4,29 +4,32 @@ import io.quarkus.mongodb.panache.common.MongoEntity;
 
 import java.time.Instant;
 
-@MongoEntity(collection = "security_alerts", database = "dns_service")
 /**
-	 * SecurityAlertEntry class.
+ * Represents a security alert event stored in MongoDB.
+ * <p>
+ * Contains information about security threats detected during DNS query processing,
+ * including the domain name, alert type, and timestamp.
  */
+@MongoEntity(collection = "security_alerts", database = "dns_service")
 public class SecurityAlertEntry {
 	/**
-	 * The id.
+	 * Unique identifier for the security alert.
 	 */
 	public String id;
 	/**
-	 * The domain.
+	 * Domain name associated with the security alert.
 	 */
 	public String domain;
 	/**
-	 * The alertType.
+	 * Type of security alert (e.g., "MALWARE", "PHISHING", "SUSPICIOUS").
 	 */
 	public String alertType;
 	/**
-	 * The description.
+	 * Detailed description of the security alert.
 	 */
 	public String description;
 	/**
-	 * The timestamp.
+	 * Timestamp when the security alert was created.
 	 */
 	public Instant timestamp;
 }

@@ -16,28 +16,28 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
 /**
-	 * DNS filtering service that applies filtering rules to domains.
- * <p>
- * This service provides DNS-based content filtering capabilities by applying configurable rules
- * to domain names. It supports different rule types (BLOCK, ALLOW, REDIRECT) with priority-based
- * evaluation and wildcard pattern matching.
- * <p>
- * Features:
- * - In-memory rule storage with thread-safe operations
- * - Regex pattern compilation for performance
- * - Metrics collection for monitoring filter effectiveness
- * - Priority-based rule evaluation
- * <p>
- * Rules are evaluated in descending priority order, with higher priority rules taking precedence.
- *
- * @author Patrick Rafferty
- */
+  * DNS filtering service that applies filtering rules to domains.
+  * <p>
+  * This service provides DNS-based content filtering capabilities by applying configurable rules
+  * to domain names. It supports different rule types (BLOCK, ALLOW, REDIRECT) with priority-based
+  * evaluation and wildcard pattern matching.
+  * <p>
+  * Features:
+  * - In-memory rule storage with thread-safe operations
+  * - Regex pattern compilation for performance
+  * - Metrics collection for monitoring filter effectiveness
+  * - Priority-based rule evaluation
+  * <p>
+  * Rules are evaluated in descending priority order, with higher priority rules taking precedence.
+  *
+  * @author Patrick Rafferty
+  */
 @ApplicationScoped
 public class DNSFilterService {
 	
 	/**
-	 * Logger for this class
-	 */
+	  * Logger for this class
+	  */
 	private static final Logger LOG = Logger.getLogger(DNSFilterService.class);
 	
 	/** In-memory storage for filter rules (in production, use database) */
@@ -51,8 +51,8 @@ public class DNSFilterService {
 	MeterRegistry registry;
 	
 	/**
-	 * Initialize with default filtering rules
-	 */
+	  * Initialize with default filtering rules
+	  */
 	public void initializeDefaultRules() {
 		// Ad blockers
 		addRule("Block Ads - DoubleClick", "*.doubleclick.net", FilterRule.RuleType.BLOCK, "ads",
@@ -76,10 +76,10 @@ public class DNSFilterService {
 	}
 	
 	/**
-	 * Apply filtering rules to a domain
-	 */
-@Counted(value = "dns.filter.checks", description = "Number of filter checks performed")
-	public {
+	  * Apply filtering rules to a domain
+	  */
+	@Counted(value = "dns.filter.checks", description = "Number of filter checks performed")
+	public FilterResult applyFilters(CharSequence domain) {
 		LOG.debugf("Applying filters to domain: %s", domain);
 		
 		// Explicitly increment counter (in case @Counted annotation doesn't work)
@@ -113,8 +113,8 @@ public class DNSFilterService {
 	}
 	
 	/**
-	 * Check if domain matches a pattern
-	 */
+	  * Check if domain matches a pattern
+	  */
 	private boolean matchesPattern(CharSequence domain, String pattern) {
 		// Convert wildcard pattern to regex if not already cached
 		Pattern compiledPattern = compiledPatterns.computeIfAbsent(pattern, p -> {
@@ -126,8 +126,8 @@ public class DNSFilterService {
 	}
 	
 	/**
-	 * Add a new filtering rule
-	 */
+	  * Add a new filtering rule
+	  */
 	public FilterRule addRule(String name, String pattern, FilterRule.RuleType type,
 							  String category, int priority) {
 		FilterRule rule = new FilterRule();
@@ -145,8 +145,8 @@ public class DNSFilterService {
 	}
 	
 	/**
-	 * Update an existing rule
-	 */
+	  * Update an existing rule
+	  */
 	public FilterRule updateRule(String ruleId, FilterRule updatedRule) {
 		FilterRule existingRule = rules.get(ruleId);
 		if (existingRule == null) {
@@ -165,8 +165,8 @@ public class DNSFilterService {
 	}
 	
 	/**
-	 * Delete a rule
-	 */
+	  * Delete a rule
+	  */
 	public void deleteRule(String ruleId) {
 		FilterRule rule = rules.remove(ruleId);
 		if (rule != null) {
@@ -176,29 +176,29 @@ public class DNSFilterService {
 	}
 	
 	/**
-	 * Get all rules
-	 */
+	  * Get all rules
+	  */
 	public List<FilterRule> getAllRules() {
 		return new ArrayList<>(rules.values());
 	}
 	
 	/**
-	 * Get rules by category
-	 */
+	  * Get rules by category
+	  */
 	public List<FilterRule> getRulesByCategory(String category) {
 		return rules.values().stream().filter(rule -> category.equals(rule.getCategory())).toList();
 	}
 	
 	/**
-	 * Get a specific rule
-	 */
+	  * Get a specific rule
+	  */
 	public FilterRule getRule(String ruleId) {
 		return rules.get(ruleId);
 	}
 	
 	/**
-	 * Enable/disable a rule
-	 */
+	  * Enable/disable a rule
+	  */
 	public void toggleRule(String ruleId, boolean enabled) {
 		FilterRule rule = rules.get(ruleId);
 		if (rule != null) {
@@ -209,8 +209,8 @@ public class DNSFilterService {
 	}
 	
 	/**
-	 * Get filtering statistics
-	 */
+	  * Get filtering statistics
+	  */
 	public Map<String, Object> getFilterStats() {
 		Map<String, Long> categoryCounts = new HashMap<>();
 		Map<String, Long> typeCounts = new HashMap<>();

@@ -7,36 +7,38 @@ import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
 
 /**
-	 * Scheduled maintenance tasks for DNS caching per RFC 9520.
+	  * Scheduled maintenance tasks for DNS caching per RFC 9520.
+  * <p>
+  * This service performs periodic cleanup of expired cache entries for both positive and negative
+  * caches as recommended by RFC 9520.
+  *
+  * @author Patrick Rafferty
+  */
+/**
+ * Service for periodic DNS cache maintenance and cleanup.
  * <p>
- * This service performs periodic cleanup of expired cache entries for both positive and negative
- * caches as recommended by RFC 9520.
- *
- * @author Patrick Rafferty
+ * Automatically removes expired cache entries and runs periodic statistics reports.
  */
 @Startup
 @ApplicationScoped
-/**
-	 * DNSCacheMaintenanceService class.
- */
 public class DNSCacheMaintenanceService {
 	
 	/**
-	 * Logger instance for this service
+	 * Logger instance for this service.
 	 */
 	private static final Logger LOG = Logger.getLogger(DNSCacheMaintenanceService.class);
 	/**
-	 * DNS resolver service
-	 */
+	  * DNS resolver service
+	  */
 	@Inject
 	DNSResolver dnsResolver;
 	
 	/**
-	 * Periodically clear expired cache entries every 60 seconds.
-	 * <p>
-	 * RFC 9520 Section 3.2 recommends cleaning up expired entries to maintain cache efficiency and
-	 * prevent memory bloat.
-	 */
+	  * Periodically clear expired cache entries every 60 seconds.
+	  * <p>
+	  * RFC 9520 Section 3.2 recommends cleaning up expired entries to maintain cache efficiency and
+	  * prevent memory bloat.
+	  */
 	@Scheduled(every = "60s")
 	void cleanupExpiredEntries() {
 		LOG.debug("Running scheduled cache cleanup");
@@ -49,11 +51,11 @@ public class DNSCacheMaintenanceService {
 	}
 	
 	/**
-	 * Periodically log cache statistics for monitoring every 5 minutes.
-	 * <p>
-	 * Helps operators monitor cache performance and detect potential issues per RFC 9520
-	 * operational guidance.
-	 */
+	  * Periodically log cache statistics for monitoring every 5 minutes.
+	  * <p>
+	  * Helps operators monitor cache performance and detect potential issues per RFC 9520
+	  * operational guidance.
+	  */
 	@Scheduled(every = "5m")
 	void logCacheStatistics() {
 		try {

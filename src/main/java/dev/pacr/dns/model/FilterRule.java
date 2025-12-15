@@ -4,54 +4,54 @@ import java.time.Instant;
 import java.util.UUID;
 
 /**
-	 * Represents a DNS filtering rule
- */
+	  * Represents a DNS filtering rule
+  */
 public class FilterRule {
 	
 	/**
-	 * The id.
-	 */
+	  * The id.
+	  */
 	private String id;
 	/**
-	 * The name.
-	 */
+	  * The name.
+	  */
 	private String name;
 	/**
-	 * The pattern.
-	 */
+	  * The pattern.
+	  */
 	private String pattern; // Domain pattern (e.g., "*.ads.com", "tracker.example.com")
 	/**
-	 * The type.
-	 */
+	  * The type.
+	  */
 	private RuleType type; // BLOCK, ALLOW, REDIRECT
 	/**
-	 * The category.
-	 */
+	  * The category.
+	  */
 	private String category; // ads, tracking, malware, custom, etc.
 	/**
-	 * The redirectTo.
-	 */
+	  * The redirectTo.
+	  */
 	private String redirectTo; // For REDIRECT type
 	/**
-	 * The enabled.
-	 */
+	  * The enabled.
+	  */
 	private boolean enabled;
 	/**
-	 * The priority.
-	 */
+	  * The priority.
+	  */
 	private int priority; // Higher priority rules evaluated first
 	/**
-	 * The createdAt.
-	 */
+	  * The createdAt.
+	  */
 	private Instant createdAt;
 	/**
-	 * The updatedAt.
-	 */
+	  * The updatedAt.
+	  */
 	private Instant updatedAt;
 	
 	/**
-	 * Constructs a new FilterRule.
-	 */
+	  * Constructs a new FilterRule.
+	  */
 	public FilterRule() {
 		this.id = UUID.randomUUID().toString();
 		this.createdAt = Instant.now();
@@ -61,9 +61,9 @@ public class FilterRule {
 	}
 	
 	/**
-	 * Gets the Id.
-	 * @return the Id
-	 */
+	  * Gets the Id.
+	  * @return the Id
+	  */
 	public String getId() {
 		return id;
 	}
@@ -71,160 +71,164 @@ public class FilterRule {
 	// Getters and Setters
 	
 	/**
-	 * Sets the Id.
-	 * @param id the Id to set
-	 */
+	  * Sets the Id.
+	  * @param id the Id to set
+	  */
 	public void setId(String id) {
 		this.id = id;
 	}
 	
 	/**
-	 * Gets the Name.
-	 * @return the Name
-	 */
+	  * Gets the Name.
+	  * @return the Name
+	  */
 	public String getName() {
 		return name;
 	}
 	
 	/**
-	 * Sets the Name.
-	 * @param name the Name to set
-	 */
+	  * Sets the Name.
+	  * @param name the Name to set
+	  */
 	public void setName(String name) {
 		this.name = name;
 	}
 	
 	/**
-	 * Gets the Pattern.
-	 * @return the Pattern
-	 */
+	  * Gets the Pattern.
+	  * @return the Pattern
+	  */
 	public String getPattern() {
 		return pattern;
 	}
 	
 	/**
-	 * Sets the Pattern.
-	 * @param pattern the Pattern to set
-	 */
+	  * Sets the Pattern.
+	  * @param pattern the Pattern to set
+	  */
 	public void setPattern(String pattern) {
 		this.pattern = pattern;
 	}
 	
 	/**
-	 * Gets the Type.
-	 * @return the Type
-	 */
+	  * Gets the Type.
+	  * @return the Type
+	  */
 	public RuleType getType() {
 		return type;
 	}
 	
 	/**
-	 * Sets the Type.
-	 * @param type the Type to set
-	 */
+	  * Sets the Type.
+	  * @param type the Type to set
+	  */
 	public void setType(RuleType type) {
 		this.type = type;
 	}
 	
 	/**
-	 * Gets the Category.
-	 * @return the Category
-	 */
+	  * Gets the Category.
+	  * @return the Category
+	  */
 	public String getCategory() {
 		return category;
 	}
 	
 	/**
-	 * Sets the Category.
-	 * @param category the Category to set
-	 */
+	  * Sets the Category.
+	  * @param category the Category to set
+	  */
 	public void setCategory(String category) {
 		this.category = category;
 	}
 	
 	/**
-	 * Gets the RedirectTo.
-	 * @return the RedirectTo
-	 */
+	  * Gets the RedirectTo.
+	  * @return the RedirectTo
+	  */
 	public String getRedirectTo() {
 		return redirectTo;
 	}
 	
 	/**
-	 * Sets the RedirectTo.
-	 * @param redirectTo the RedirectTo to set
-	 */
+	  * Sets the RedirectTo.
+	  * @param redirectTo the RedirectTo to set
+	  */
 	public void setRedirectTo(String redirectTo) {
 		this.redirectTo = redirectTo;
 	}
 	
 	/**
-	 * Checks if Enabled.
-	 * @return true if Enabled, false otherwise
-	 */
+	  * Checks if Enabled.
+	  * @return true if Enabled, false otherwise
+	  */
 	public boolean isEnabled() {
 		return enabled;
 	}
 	
 	/**
-	 * Sets the Enabled.
-	 * @param enabled the Enabled to set
-	 */
+	  * Sets the Enabled.
+	  * @param enabled the Enabled to set
+	  */
 	public void setEnabled(boolean enabled) {
 		this.enabled = enabled;
 	}
 	
 	/**
-	 * Gets the Priority.
-	 * @return the Priority
-	 */
+	  * Gets the Priority.
+	  * @return the Priority
+	  */
 	public int getPriority() {
 		return priority;
 	}
 	
 	/**
-	 * Sets the Priority.
-	 * @param priority the Priority to set
-	 */
+	  * Sets the Priority.
+	  * @param priority the Priority to set
+	  */
 	public void setPriority(int priority) {
 		this.priority = priority;
 	}
 	
 	/**
-	 * Gets the CreatedAt.
-	 * @return the CreatedAt
-	 */
+	  * Gets the CreatedAt.
+	  * @return the CreatedAt
+	  */
 	public Instant getCreatedAt() {
 		return createdAt;
 	}
 	
 	/**
-	 * Sets the CreatedAt.
-	 * @param createdAt the CreatedAt to set
-	 */
+	  * Sets the CreatedAt.
+	  * @param createdAt the CreatedAt to set
+	  */
 	public void setCreatedAt(Instant createdAt) {
 		this.createdAt = createdAt;
 	}
 	
 	/**
-	 * Gets the UpdatedAt.
-	 * @return the UpdatedAt
-	 */
+	  * Gets the UpdatedAt.
+	  * @return the UpdatedAt
+	  */
 	public Instant getUpdatedAt() {
 		return updatedAt;
 	}
 	
 	/**
-	 * Sets the UpdatedAt.
-	 * @param updatedAt the UpdatedAt to set
-	 */
+	  * Sets the UpdatedAt.
+	  * @param updatedAt the UpdatedAt to set
+	  */
 	public void setUpdatedAt(Instant updatedAt) {
 		this.updatedAt = updatedAt;
 	}
 	
 	/**
-	 * toString method.
+	 * Returns a string representation of this FilterRule, including its id, name, pattern,
+	 * type, category, enabled status, and priority.
+	 *
+	 * @return a string representation of the FilterRule object
 	 */
+	@Override
 	public String toString() {
 		return "FilterRule{" + "id='" + id + '\'' + ", name='" + name + '\'' + ", pattern='" +
 				pattern + '\'' + ", type=" + type + ", category='" + category + '\'' +
@@ -232,13 +236,20 @@ public class FilterRule {
 	}
 	
 	/**
-	 * RuleType enum.
+	 * Enumeration of filter rule types.
 	 */
 	public enum RuleType {
 		/**
-	 * BLOCK constant.
+		 * Block access to matching domains.
 		 */
-
-		BLOCK, ALLOW, REDIRECT
+		BLOCK,
+		/**
+		 * Allow access to matching domains.
+		 */
+		ALLOW,
+		/**
+		 * Redirect matching domains to another address.
+		 */
+		REDIRECT
 	}
 }

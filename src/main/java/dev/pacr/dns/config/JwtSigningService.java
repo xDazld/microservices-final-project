@@ -24,46 +24,46 @@ import java.util.Base64;
 import java.util.Collection;
 
 /**
-	 * JWT Signing Service
- * <p>
- * Handles JWT token generation with manual signing using loaded private key.
- *
- * @author Patrick Rafferty
- */
+	  * JWT Signing Service
+  * <p>
+  * Handles JWT token generation with manual signing using loaded private key.
+  *
+  * @author Patrick Rafferty
+  */
 @ApplicationScoped
 public class JwtSigningService {
 	
 	/**
-	 * Logger instance
-	 */
+	  * Logger instance
+	  */
 	private static final Logger LOG = Logger.getLogger(JwtSigningService.class);
 	
 	/**
-	 * Private key location from configuration
-	 */
+	  * Private key location from configuration
+	  */
 	@ConfigProperty(name = "smallrye.jwt.sign.key.location", defaultValue = "classpath:keys" +
 			"/privateKey.pem")
 	String privateKeyLocation;
 	
 	/**
-	 * JWT expiration time in seconds (1 hour)
-	 */
+	  * JWT expiration time in seconds (1 hour)
+	  */
 	private static final long JWT_EXPIRATION_SECONDS = 3600;
 	
 	/**
-	 * Cached private key
-	 */
+	  * Cached private key
+	  */
 	private PrivateKey cachedPrivateKey;
 	
 	/**
-	 * Generate a JWT token with the provided claims.
-	 *
-	 * @param issuer   the token issuer
-	 * @param username the username (upn claim)
-	 * @param groups   the user groups/roles
-	 * @return the signed JWT token
-	 * @throws RuntimeException if token generation fails
-	 */
+	  * Generate a JWT token with the provided claims.
+	  *
+	  * @param issuer   the token issuer
+	  * @param username the username (upn claim)
+	  * @param groups   the user groups/roles
+	  * @return the signed JWT token
+	  * @throws RuntimeException if token generation fails
+	  */
 	public String generateToken(String issuer, String username, Collection<String> groups) {
 		try {
 			PrivateKey privateKey = getPrivateKey();
@@ -110,11 +110,11 @@ public class JwtSigningService {
 	}
 	
 	/**
-	 * Get the private key, loading and caching it if necessary.
-	 *
-	 * @return the loaded private key
-	 * @throws RuntimeException if loading or parsing fails
-	 */
+	  * Get the private key, loading and caching it if necessary.
+	  *
+	  * @return the loaded private key
+	  * @throws RuntimeException if loading or parsing fails
+	  */
 	private PrivateKey getPrivateKey() {
 		if (cachedPrivateKey != null) {
 			return cachedPrivateKey;
@@ -155,12 +155,12 @@ public class JwtSigningService {
 	}
 	
 	/**
-	 * Parse a PEM-formatted private key.
-	 *
-	 * @param keyContent the PEM key content
-	 * @return the parsed private key
-	 * @throws RuntimeException if parsing fails
-	 */
+	  * Parse a PEM-formatted private key.
+	  *
+	  * @param keyContent the PEM key content
+	  * @return the parsed private key
+	  * @throws RuntimeException if parsing fails
+	  */
 	private PrivateKey parsePemPrivateKey(String keyContent) {
 		try {
 			// Remove PEM headers and newlines

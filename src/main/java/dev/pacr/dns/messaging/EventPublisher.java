@@ -10,21 +10,21 @@ import org.jboss.logging.Logger;
 import java.util.Map;
 
 /**
-	 * Publisher for real-time events streamed to dashboard
- * <p>
- * Publishes metrics, logs, and alerts to RabbitMQ for WebSocket delivery to connected dashboard
- * clients
- */
+	  * Publisher for real-time events streamed to dashboard
+  * <p>
+  * Publishes metrics, logs, and alerts to RabbitMQ for WebSocket delivery to connected dashboard
+  * clients
+  */
 @ApplicationScoped
 public class EventPublisher {
 	
 	/**
-	 * The LOG.
-	 */
+	  * The LOG.
+	  */
 	private static final Logger LOG = Logger.getLogger(EventPublisher.class);
 	/**
-	 * The objectMapper.
-	 */
+	  * The objectMapper.
+	  */
 	private final ObjectMapper objectMapper = new ObjectMapper();
 	
 	@Inject
@@ -40,8 +40,8 @@ public class EventPublisher {
 	Emitter<String> statsEmitter;
 	
 	/**
-	 * Publish a metrics update event
-	 */
+	  * Publish a metrics update event
+	  */
 	public void publishMetricsUpdate(String metricName, double value) {
 		try {
 			Map<String, Object> event =
@@ -57,8 +57,8 @@ public class EventPublisher {
 	}
 	
 	/**
-	 * Publish a query log event
-	 */
+	  * Publish a query log event
+	  */
 	public void publishQueryLog(Map<String, Object> logEntry) {
 		try {
 			Map<String, Object> event = Map.of("type", "QUERY_LOG", "log", logEntry, "timestamp",
@@ -73,8 +73,8 @@ public class EventPublisher {
 	}
 	
 	/**
-	 * Publish a statistics update event
-	 */
+	  * Publish a statistics update event
+	  */
 	public void publishStatsUpdate(String statsType, Map<String, Object> stats) {
 		try {
 			Map<String, Object> event =
@@ -90,8 +90,8 @@ public class EventPublisher {
 	}
 	
 	/**
-	 * Publish a security alert event
-	 */
+	  * Publish a security alert event
+	  */
 	public void publishSecurityAlert(String alertType, String domain,
 									 Map<String, Object> details) {
 		try {
@@ -108,36 +108,36 @@ public class EventPublisher {
 	}
 	
 	/**
-	 * Publish a cache statistics update
-	 */
+	  * Publish a cache statistics update
+	  */
 	public void publishCacheStatsUpdate(Map<String, Object> cacheStats) {
 		publishStatsUpdate("cache", cacheStats);
 	}
 	
 	/**
-	 * Publish a security statistics update
-	 */
+	  * Publish a security statistics update
+	  */
 	public void publishSecurityStatsUpdate(Map<String, Object> securityStats) {
 		publishStatsUpdate("security", securityStats);
 	}
 	
 	/**
-	 * Publish a query count metric
-	 */
+	  * Publish a query count metric
+	  */
 	public void publishQueryCountMetric(double count) {
 		publishMetricsUpdate("dns.query.count", count);
 	}
 	
 	/**
-	 * Publish a filter check metric
-	 */
+	  * Publish a filter check metric
+	  */
 	public void publishFilterCheckMetric(double count) {
 		publishMetricsUpdate("dns.filter.checks", count);
 	}
 	
 	/**
-	 * Publish a cache hit rate metric
-	 */
+	  * Publish a cache hit rate metric
+	  */
 	public void publishCacheHitRateMetric(double rate) {
 		publishMetricsUpdate("dns.cache.hit.rate", rate);
 	}

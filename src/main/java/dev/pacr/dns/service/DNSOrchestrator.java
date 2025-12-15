@@ -14,16 +14,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
-	 * Orchestrator service that coordinates DNS resolution, filtering, and logging
- *
- * @author Patrick Rafferty
- */
+  * Orchestrator service that coordinates DNS resolution, filtering, and logging
+  *
+  * @author Patrick Rafferty
+  */
 @ApplicationScoped
 public class DNSOrchestrator {
 	
 	/**
-	 * Logger for this class
-	 */
+	  * Logger for this class
+	  */
 	private static final Logger LOG = Logger.getLogger(DNSOrchestrator.class);
 	
 	/** DNS Resolver service */
@@ -47,25 +47,25 @@ public class DNSOrchestrator {
 	SecurityService securityService;
 	
 	/**
-	 * Process a complete DNS query: filter, resolve, and log
-	 *
-	 * @param query the DNS query message
-	 * @return the DNS response message
-	 */
-@Timed(value = "dns.query.total", description = "Total time to process DNS query")
-	public {
+	  * Process a complete DNS query: filter, resolve, and log
+	  *
+	  * @param query the DNS query message
+	  * @return the DNS response message
+	  */
+	@Timed(value = "dns.query.total", description = "Total time to process DNS query")
+	public DnsMessage processQuery(DnsMessage query) {
 		return processQuery(query, "unknown");
 	}
 	
 	/**
-	 * Process a complete DNS query: filter, resolve, and log with client IP
-	 *
-	 * @param query the DNS query message
-	 * @param clientIp the client IP address for logging
-	 * @return the DNS response message
-	 */
-@Timed(value = "dns.query.total", description = "Total time to process DNS query")
-	public {
+	  * Process a complete DNS query: filter, resolve, and log with client IP
+	  *
+	  * @param query the DNS query message
+	  * @param clientIp the client IP address for logging
+	  * @return the DNS response message
+	  */
+	@Timed(value = "dns.query.total", description = "Total time to process DNS query")
+	public DnsMessage processQuery(DnsMessage query, String clientIp) {
 		String qname = query.getQname();
 		String queryType = query.getQtype() != null ? query.getQtype().toString() : "A";
 		LOG.infof("Processing DNS query for: %s (type=%s) from %s", qname, queryType, clientIp);
@@ -148,11 +148,11 @@ public class DNSOrchestrator {
 	}
 	
 	/**
-	 * Create a blocked response
-	 *
-	 * @param query the original DNS query
-	 * @return a DNS response indicating the domain is blocked
-	 */
+	  * Create a blocked response
+	  *
+	  * @param query the original DNS query
+	  * @return a DNS response indicating the domain is blocked
+	  */
 	private DnsMessage createBlockedResponse(DnsMessage query) {
 		// Return NXDOMAIN for blocked domains
 		return DnsMessageConverter.createResponse(query.getQname(), query.getQtype(),

@@ -13,26 +13,26 @@ import jakarta.ws.rs.ext.Provider;
 import org.jboss.logging.Logger;
 
 /**
-	 * JAX-RS filter for recording endpoint usage statistics
- * <p>
- * This filter intercepts all REST requests and responses to measure: - Response
- * time - HTTP status
- * codes - Request/response sizes
- * <p>
- * Statistics are recorded per endpoint and can be accessed via the admin
- * endpoint.
- */
+	  * JAX-RS filter for recording endpoint usage statistics
+  * <p>
+  * This filter intercepts all REST requests and responses to measure: - Response
+  * time - HTTP status
+  * codes - Request/response sizes
+  * <p>
+  * Statistics are recorded per endpoint and can be accessed via the admin
+  * endpoint.
+  */
 @Provider
 public class StatisticsFilter implements ContainerRequestFilter, ContainerResponseFilter {
 
 	/**
-	 * The LOG.
-	 */
+	  * The LOG.
+	  */
 	private static final Logger LOG = Logger.getLogger(StatisticsFilter.class);
 	// Thread-local storage for request start time
 	/**
-	 * The REQUEST_START_TIME.
-	 */
+	  * The REQUEST_START_TIME.
+	  */
 	private static final ThreadLocal<Long> REQUEST_START_TIME = new ThreadLocal<>();
 	@Inject
 	EndpointStatisticsService statisticsService;
@@ -42,7 +42,9 @@ public class StatisticsFilter implements ContainerRequestFilter, ContainerRespon
 	HttpServerResponse response;
 
 	/**
-	 * filter method.
+	 * Records the start time of the incoming request for later statistics calculation.
+	 *
+	 * @param requestContext the context of the incoming request
 	 */
 	public void filter(ContainerRequestContext requestContext) {
 		// Record the start time of the request
@@ -101,8 +103,8 @@ public class StatisticsFilter implements ContainerRequestFilter, ContainerRespon
 	}
 
 	/**
-	 * Estimate the size of the request body
-	 */
+	  * Estimate the size of the request body
+	  */
 	private long estimateRequestSize(ContainerRequestContext requestContext) {
 		try {
 			// Try to get Content-Length header
@@ -119,8 +121,8 @@ public class StatisticsFilter implements ContainerRequestFilter, ContainerRespon
 	}
 
 	/**
-	 * Estimate the size of the response body
-	 */
+	  * Estimate the size of the response body
+	  */
 	private long estimateResponseSize(ContainerResponseContext responseContext) {
 		try {
 			// Try to get Content-Length header if set

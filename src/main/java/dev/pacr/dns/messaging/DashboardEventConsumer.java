@@ -11,34 +11,37 @@ import org.jboss.logging.Logger;
 import java.util.concurrent.CompletionStage;
 
 /**
-	 * Consumer for dashboard event streams
- * <p>
- * Receives all event types from the unified dashboard events topic and broadcasts them to all
- * connected WebSocket dashboard clients for real-time updates.
- */
+	  * Consumer for dashboard event streams
+  * <p>
+  * Receives all event types from the unified dashboard events topic and broadcasts them to all
+  * connected WebSocket dashboard clients for real-time updates.
+  */
 @ApplicationScoped
 public class DashboardEventConsumer {
 	
 	/**
-	 * The LOG.
-	 */
+	  * The LOG.
+	  */
 	private static final Logger LOG = Logger.getLogger(DashboardEventConsumer.class);
 	/**
-	 * The objectMapper.
-	 */
+	  * The objectMapper.
+	  */
 	private final ObjectMapper objectMapper = new ObjectMapper();
 	
 	/**
-	 * Consume and broadcast all dashboard events
-	 * <p>
-	 * Unified consumer handles all event types: - METRICS_UPDATE: Query count, filter checks,
-     * cache
+	  * Consume and broadcast all dashboard events
+	  * <p>
+	  * Unified consumer handles all event types: - METRICS_UPDATE: Query count, filter checks,
+      * cache
 	 * hit rate - QUERY_LOG: Individual DNS query log entries - STATS_UPDATE: Cache and security
 	 * statistics - SECURITY_ALERT: Security threat notifications
 	 */
 	@Incoming("metrics-events-in")
 	/**
-	 * consumeEvent method.
+	 * Consumes and processes events from the metrics message queue.
+	 *
+	 * @param message the message containing the event payload
+	 * @return a completion stage that completes when the event is processed
 	 */
 	public CompletionStage<Void> consumeEvent(Message<String> message) {
 		String payload = message.getPayload();

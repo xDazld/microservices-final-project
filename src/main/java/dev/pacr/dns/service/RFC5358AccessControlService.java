@@ -14,39 +14,39 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
-	 * RFC 5358 Compliance Service - Prevents use of recursive nameservers in reflector attacks.
- * <p>
- * RFC 5358 (BCP 140) Best Current Practice recommendations: 1. Recursive nameservers SHOULD NOT
- * offer recursive service to external networks by default 2. Use IP address based authorization
- * through Access Control Lists (ACLs) 3. Restrict recursive service to only intended clients 4.
- * Separate recursive and authoritative services where practical
- * <p>
- * This service implements IP-based access control to prevent DNS amplification attacks where open
- * recursive nameservers are used as reflectors in DDoS attacks.
- *
- * @see <a href="https://tools.ietf.org/html/rfc5358">RFC 5358 - Preventing Use of Recursive
- * Nameservers in Reflector Attacks</a>
- */
+	  * RFC 5358 Compliance Service - Prevents use of recursive nameservers in reflector attacks.
+  * <p>
+  * RFC 5358 (BCP 140) Best Current Practice recommendations: 1. Recursive nameservers SHOULD NOT
+  * offer recursive service to external networks by default 2. Use IP address based authorization
+  * through Access Control Lists (ACLs) 3. Restrict recursive service to only intended clients 4.
+  * Separate recursive and authoritative services where practical
+  * <p>
+  * This service implements IP-based access control to prevent DNS amplification attacks where open
+  * recursive nameservers are used as reflectors in DDoS attacks.
+  *
+  * @see <a href="https://tools.ietf.org/html/rfc5358">RFC 5358 - Preventing Use of Recursive
+  * Nameservers in Reflector Attacks</a>
+  */
 @ApplicationScoped
 public class RFC5358AccessControlService {
 	
 	/**
-	 * The LOG.
-	 */
+	  * The LOG.
+	  */
 	private static final Logger LOG = Logger.getLogger(RFC5358AccessControlService.class);
 	
 	// RFC 5358 Section 4: IP address based authorization through ACLs
 	/**
-	 * The allowedNetworks.
-	 */
+	  * The allowedNetworks.
+	  */
 	private final Set<String> allowedNetworks = ConcurrentHashMap.newKeySet();
 	/**
-	 * The allowedHosts.
-	 */
+	  * The allowedHosts.
+	  */
 	private final Set<String> allowedHosts = ConcurrentHashMap.newKeySet();
 	/**
-	 * The deniedHosts.
-	 */
+	  * The deniedHosts.
+	  */
 	private final Set<String> deniedHosts = ConcurrentHashMap.newKeySet();
 	
 	@Inject
@@ -63,11 +63,11 @@ public class RFC5358AccessControlService {
 	List<String> configuredAllowedNetworks;
 	
 	/**
-	 * Initialize the access control service with configured networks.
-	 * <p>
-	 * RFC 5358 Section 4: "Use the IP source address of the DNS queries and filter them through an
-	 * Access Control List (ACL) to service only the intended clients."
-	 */
+	  * Initialize the access control service with configured networks.
+	  * <p>
+	  * RFC 5358 Section 4: "Use the IP source address of the DNS queries and filter them through an
+	  * Access Control List (ACL) to service only the intended clients."
+	  */
 	public void initialize() {
 		// Clear and reinitialize
 		allowedNetworks.clear();
@@ -103,15 +103,15 @@ public class RFC5358AccessControlService {
 	}
 	
 	/**
-	 * Check if a client IP address is authorized for recursive DNS queries.
-	 * <p>
-	 * RFC 5358 Section 4: "IP address based authorization. Use the IP source address of the DNS
-	 * queries and filter them through an Access Control List (ACL) to service only the intended
-	 * clients."
-	 *
-	 * @param clientIp IP address of the client making the DNS query
-	 * @return true if the client is authorized, false otherwise
-	 */
+	  * Check if a client IP address is authorized for recursive DNS queries.
+	  * <p>
+	  * RFC 5358 Section 4: "IP address based authorization. Use the IP source address of the DNS
+	  * queries and filter them through an Access Control List (ACL) to service only the intended
+	  * clients."
+	  *
+	  * @param clientIp IP address of the client making the DNS query
+	  * @return true if the client is authorized, false otherwise
+	  */
 	public boolean isAuthorized(String clientIp) {
 		// RFC 5358 Section 4: If recursion is disabled globally, deny all
 		if (!recursionEnabled) {
@@ -159,8 +159,8 @@ public class RFC5358AccessControlService {
 	}
 	
 	/**
-	 * Check if an IP address is within any of the allowed networks (CIDR ranges).
-	 */
+	  * Check if an IP address is within any of the allowed networks (CIDR ranges).
+	  */
 	private boolean isInAllowedNetwork(String clientIp) {
 		try {
 			InetAddress clientAddr = InetAddress.getByName(clientIp);
@@ -205,8 +205,8 @@ public class RFC5358AccessControlService {
 	}
 	
 	/**
-	 * Check if an IP address is within a CIDR range.
-	 */
+	  * Check if an IP address is within a CIDR range.
+	  */
 	private boolean isInCIDRRange(byte[] ip, byte[] network, int prefixLength) {
 		int bytes = prefixLength / 8;
 		int bits = prefixLength % 8;
@@ -228,106 +228,109 @@ public class RFC5358AccessControlService {
 	}
 	
 	/**
-	 * Add an IP network to the allowed list.
-	 *
-	 * @param network CIDR notation (e.g., "192.168.1.0/24") or single IP
-	 */
+	  * Add an IP network to the allowed list.
+	  *
+	  * @param network CIDR notation (e.g., "192.168.1.0/24") or single IP
+	  */
 	public void allowNetwork(String network) {
 		allowedNetworks.add(network);
 		LOG.infof("RFC 5358: Added allowed network: %s", network);
 	}
 	
 	/**
-	 * Remove an IP network from the allowed list.
-	 */
+	  * Remove an IP network from the allowed list.
+	  */
 	public void denyNetwork(String network) {
 		allowedNetworks.remove(network);
 		LOG.infof("RFC 5358: Removed allowed network: %s", network);
 	}
 	
 	/**
-	 * Add a specific IP address to the allowed list.
-	 */
+	  * Add a specific IP address to the allowed list.
+	  */
 	public void allowHost(String ip) {
 		allowedHosts.add(ip);
 		LOG.infof("RFC 5358: Added allowed host: %s", ip);
 	}
 	
 	/**
-	 * Add a specific IP address to the denied list.
-	 */
+	  * Add a specific IP address to the denied list.
+	  */
 	public void denyHost(String ip) {
 		deniedHosts.add(ip);
 		LOG.infof("RFC 5358: Added denied host: %s", ip);
 	}
 	
 	/**
-	 * Enable or disable recursion globally.
-	 * <p>
-	 * RFC 5358 Section 4: "In nameservers that do not need to be providing recursive service, for
-	 * instance servers that are meant to be authoritative only, turn recursion off completely."
-	 */
+	  * Enable or disable recursion globally.
+	  * <p>
+	  * RFC 5358 Section 4: "In nameservers that do not need to be providing recursive service, for
+	  * instance servers that are meant to be authoritative only, turn recursion off completely."
+	  */
 	public void setRecursionEnabled(boolean enabled) {
 		this.recursionEnabled = enabled;
 		LOG.infof("RFC 5358: Recursion %s", enabled ? "ENABLED" : "DISABLED");
 	}
 	
 	/**
-	 * Get allowed networks for administrative purposes.
-	 */
+	  * Get allowed networks for administrative purposes.
+	  */
 	public Set<String> getAllowedNetworks() {
 		return new HashSet<>(allowedNetworks);
 	}
 	
 	/**
-	 * Get allowed hosts for administrative purposes.
-	 */
+	  * Get allowed hosts for administrative purposes.
+	  */
 	public Set<String> getAllowedHosts() {
 		return new HashSet<>(allowedHosts);
 	}
 	
 	/**
-	 * Get denied hosts for administrative purposes.
-	 */
+	  * Get denied hosts for administrative purposes.
+	  */
 	public Set<String> getDeniedHosts() {
 		return new HashSet<>(deniedHosts);
 	}
 	
 	/**
-	 * Get RFC 5358 compliance status.
-	 */
+	  * Get RFC 5358 compliance status.
+	  */
 	public RFC5358Status getComplianceStatus() {
 		return new RFC5358Status(recursionEnabled, defaultDeny, allowedNetworks.size(),
 				allowedHosts.size(), deniedHosts.size());
 	}
 	
 	/**
-	 * RFC 5358 compliance status information.
-	 */
+	  * RFC 5358 compliance status information.
+	  */
 		public record RFC5358Status(boolean recursionEnabled, boolean defaultDeny, int allowedNetworkCount,
 									int allowedHostCount, int deniedHostCount) {
 		
 		/**
-	 * Check if configuration follows RFC 5358 best practices.
-		 */
+	  * Check if configuration follows RFC 5358 best practices.
+		  */
 			public boolean isCompliant() {
 				// RFC 5358: Recursion should be restricted (either disabled or with ACLs)
 				if (!recursionEnabled) {
 					return true; // Recursion disabled = fully compliant
 				}
-				
-				// If recursion enabled, should have ACLs (networks or default-deny)
-				return defaultDeny || allowedNetworkCount > 0;
-			}
 			
-			/**
-	 * toString method.
-			 */
-			public String toString() {
-				return String.format(
-						"RFC5358Status{recursion=%s, defaultDeny=%s, networks=%d, allowed=%d, " +
-								"denied=%d, compliant=%s}", recursionEnabled, defaultDeny,
-						allowedNetworkCount, allowedHostCount, deniedHostCount, isCompliant());
-			}
+			// If recursion enabled, should have ACLs (networks or default-deny)
+			return defaultDeny || allowedNetworkCount > 0;
 		}
+		
+		/**
+		 * Returns a string representation of the RFC 5358 compliance status.
+		 *
+		 * @return a string representation of the status object
+		 */
+		@Override
+		public String toString() {
+			return String.format(
+					"RFC5358Status{recursion=%s, defaultDeny=%s, networks=%d, allowed=%d, " +
+							"denied=%d, compliant=%s}", recursionEnabled, defaultDeny,
+					allowedNetworkCount, allowedHostCount, deniedHostCount, isCompliant());
+		}
+	}
 }

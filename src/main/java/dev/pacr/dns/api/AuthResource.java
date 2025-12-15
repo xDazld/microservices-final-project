@@ -17,21 +17,21 @@ import java.util.HashSet;
 import java.util.Map;
 
 /**
-	 * Authentication Resource
- * <p>
- * Handles user authentication and JWT token generation
- */
+	  * Authentication Resource
+  * <p>
+  * Handles user authentication and JWT token generation
+  */
 @Path("/api/v1/auth")
 @Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
 /**
-	 * AuthResource class.
- */
+  * AuthResource class.
+  */
+@Consumes(MediaType.APPLICATION_JSON)
 public class AuthResource {
 	
 	/**
-	 * The LOG.
-	 */
+	  * The LOG.
+	  */
 	private static final Logger LOG = Logger.getLogger(AuthResource.class);
 	
 	@Inject
@@ -41,17 +41,17 @@ public class AuthResource {
 	String issuer;
 	
 	/**
-	 * Login endpoint - generates JWT token for valid credentials
-	 *
-	 * @param request Login request with username and password
-	 * @return JWT token and user info
-	 */
+	  * Login endpoint - generates JWT token for valid credentials
+	  *
+	  * @param request Login request with username and password
+	  * @return JWT token and user info
+	  */
 	@POST
 	@Path("/login")
 	@PermitAll
 	/**
-	 * login method.
-	 */
+	  * login method.
+	  */
 	public Response login(LoginRequest request) {
 		LOG.infof("Login attempt for user: %s", request.username);
 		
@@ -89,11 +89,11 @@ public class AuthResource {
 	}
 	
 	/**
-	 * Validate user credentials
-	 * <p>
-	 * In production, this should query a database with hashed passwords For development, we use
-	 * hardcoded credentials
-	 */
+	  * Validate user credentials
+	  * <p>
+	  * In production, this should query a database with hashed passwords For development, we use
+	  * hardcoded credentials
+	  */
 	private UserInfo validateCredentials(String username, String password) {
 		// TODO: In production, replace with database lookup and password hash verification
 		
@@ -110,8 +110,8 @@ public class AuthResource {
 	}
 	
 	/**
-	 * Generate JWT token for authenticated user
-	 */
+	  * Generate JWT token for authenticated user
+	  */
 	private String generateToken(UserInfo userInfo) {
 		Collection<String> groups = new HashSet<>();
 		groups.add(userInfo.role);
@@ -120,22 +120,22 @@ public class AuthResource {
 	}
 	
 	/**
-	 * Login request model
-	 */
+	  * Login request model
+	  */
 	public static class LoginRequest {
 		/**
-	 * The username.
-		 */
+	  * The username.
+		  */
 		public String username;
 		/**
-	 * The password.
-		 */
+	  * The password.
+		  */
 		public String password;
 	}
 	
 	/**
-	 * User information model
-	 */
+	  * User information model
+	  */
 		private record UserInfo(String username, String role) {
 	}
 }

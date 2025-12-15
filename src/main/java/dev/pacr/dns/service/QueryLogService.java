@@ -14,31 +14,31 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
-	 * Service for storing and retrieving DNS query logs
- * <p>
- * Retrieves logs from the database (MongoDB) instead of maintaining an in-memory buffer.
- */
+	  * Service for storing and retrieving DNS query logs
+  * <p>
+  * Retrieves logs from the database (MongoDB) instead of maintaining an in-memory buffer.
+  */
 @ApplicationScoped
 public class QueryLogService {
     
     /**
-	 * The LOG.
-     */
+	  * The LOG.
+      */
 	private static final Logger LOG = Logger.getLogger(QueryLogService.class);
     /**
-	 * The DEFAULT_LIMIT.
-     */
+	  * The DEFAULT_LIMIT.
+      */
 	private static final int DEFAULT_LIMIT = 100;
     
     @Inject
     DNSLogRepository logRepository;
     
     /**
-	 * Log a DNS query (compat placeholder retained for API stability)
-     * <p>
-     * Note: Actual persistence is handled in DNSLoggingService.logQuery(). This method is kept to
-     * avoid breaking existing call sites; it will only log a debug message.
-     */
+	  * Log a DNS query (compat placeholder retained for API stability)
+      * <p>
+      * Note: Actual persistence is handled in DNSLoggingService.logQuery(). This method is kept to
+      * avoid breaking existing call sites; it will only log a debug message.
+      */
     public void logQuery(String domain, String queryType, String status, int rcode,
                          List<String> answers, String sourceIp) {
         LOG.debugf("QueryLogService.logQuery called (noop) for domain=%s, type=%s, status=%s",
@@ -47,11 +47,11 @@ public class QueryLogService {
     }
     
     /**
-	 * Get recent query logs
-     *
-     * @param limit Maximum number of entries to return
-     * @return List of recent query log entries
-     */
+	  * Get recent query logs
+      *
+      * @param limit Maximum number of entries to return
+      * @return List of recent query log entries
+      */
     public List<Map<String, Object>> getRecentQueries(int limit) {
         int effectiveLimit = limit > 0 ? limit : DEFAULT_LIMIT;
         try {
@@ -68,10 +68,10 @@ public class QueryLogService {
     }
     
     /**
-	 * Get all query logs
-     *
-     * @return List of all query log entries
-     */
+	  * Get all query logs
+      *
+      * @return List of all query log entries
+      */
     public List<Map<String, Object>> getAllQueries() {
         try {
             List<DNSLogEntry> entries = logRepository.findAll().list();
@@ -86,12 +86,12 @@ public class QueryLogService {
     }
     
     /**
-	 * Get query logs filtered by status
-     *
-     * @param status The status to filter by (ALLOWED, BLOCKED, THREAT, etc.)
-     * @param limit  Maximum number of entries to return
-     * @return List of query log entries with the specified status
-     */
+	  * Get query logs filtered by status
+      *
+      * @param status The status to filter by (ALLOWED, BLOCKED, THREAT, etc.)
+      * @param limit  Maximum number of entries to return
+      * @return List of query log entries with the specified status
+      */
     public List<Map<String, Object>> getQueriesByStatus(String status, int limit) {
         if (status == null || status.isBlank()) {
             return getRecentQueries(limit);
@@ -111,12 +111,12 @@ public class QueryLogService {
     }
     
     /**
-	 * Get query logs filtered by domain
-     *
-     * @param domain The domain to search for
-     * @param limit  Maximum number of entries to return
-     * @return List of query log entries for the specified domain
-     */
+	  * Get query logs filtered by domain
+      *
+      * @param domain The domain to search for
+      * @param limit  Maximum number of entries to return
+      * @return List of query log entries for the specified domain
+      */
     public List<Map<String, Object>> getQueriesByDomain(String domain, int limit) {
         if (domain == null || domain.isBlank()) {
             return getRecentQueries(limit);
@@ -137,10 +137,10 @@ public class QueryLogService {
     }
     
     /**
-	 * Get query statistics
-     *
-     * @return Map containing query statistics
-     */
+	  * Get query statistics
+      *
+      * @return Map containing query statistics
+      */
     public Map<String, Object> getQueryStats() {
         Map<String, Object> stats = new LinkedHashMap<>();
         try {
@@ -176,8 +176,8 @@ public class QueryLogService {
     }
     
     /**
-	 * Clear all query logs (from database)
-     */
+	  * Clear all query logs (from database)
+      */
     public void clearLogs() {
         try {
             logRepository.deleteAll();

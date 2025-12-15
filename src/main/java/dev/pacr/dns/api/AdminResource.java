@@ -23,19 +23,19 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
-	 * REST API endpoint for administrative functions and statistics
- */
+	  * REST API endpoint for administrative functions and statistics
+  */
 @Path("/api/v1/admin")
 @Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
 /**
-	 * AdminResource class.
- */
+  * AdminResource class.
+  */
+@Consumes(MediaType.APPLICATION_JSON)
 public class AdminResource {
 
 	/**
-	 * The LOG.
-	 */
+	  * The LOG.
+	  */
 	private static final Logger LOG = Logger.getLogger(AdminResource.class);
 
 	@Inject
@@ -54,15 +54,15 @@ public class AdminResource {
 	EndpointStatisticsService endpointStatisticsService;
 
 	/**
-	 * Get overall statistics
-	 */
+	  * Get overall statistics
+	  */
 	@GET
 	@Path("/stats")
 	@RolesAllowed({ "admin", "user" })
 	/**
-	 * Gets the Statistics.
-	 * @return the Statistics
-	 */
+	  * Gets the Statistics.
+	  * @return the Statistics
+	  */
 	public Response getStatistics() {
 		LOG.debug("Fetching overall statistics");
 
@@ -95,11 +95,11 @@ public class AdminResource {
 	}
 
 	/**
-	 * Sanitize numeric values to prevent JSON serialization errors Replaces NaN and
-	 * Infinite
-	 * values
-	 * with 0
-	 */
+	  * Sanitize numeric values to prevent JSON serialization errors Replaces NaN and
+	  * Infinite
+	  * values
+	  * with 0
+	  */
 	private Object sanitizeNumber(Object value) {
 		if (value instanceof Double d) {
 			if (d.isNaN() || d.isInfinite()) {
@@ -114,8 +114,8 @@ public class AdminResource {
 	}
 
 	/**
-	 * Sanitize a map of statistics to prevent JSON serialization errors
-	 */
+	  * Sanitize a map of statistics to prevent JSON serialization errors
+	  */
 	private Map<String, Object> sanitizeStats(Map<String, Object> stats) {
 		Map<String, Object> sanitized = new HashMap<>();
 		for (Map.Entry<String, Object> entry : stats.entrySet()) {
@@ -132,15 +132,15 @@ public class AdminResource {
 	}
 
 	/**
-	 * Get cache statistics
-	 */
+	  * Get cache statistics
+	  */
 	@GET
 	@Path("/cache/stats")
 	@RolesAllowed({ "admin", "user" })
 	/**
-	 * Gets the CacheStats.
-	 * @return the CacheStats
-	 */
+	  * Gets the CacheStats.
+	  * @return the CacheStats
+	  */
 	public Response getCacheStats() {
 		LOG.debug("Fetching cache statistics");
 
@@ -150,14 +150,14 @@ public class AdminResource {
 	}
 
 	/**
-	 * Clear expired cache entries
-	 */
+	  * Clear expired cache entries
+	  */
 	@POST
 	@Path("/cache/clear")
 	@RolesAllowed("admin")
 	/**
-	 * clearCache method.
-	 */
+	  * clearCache method.
+	  */
 	public Response clearCache() {
 		LOG.info("Clearing expired cache entries");
 
@@ -167,15 +167,15 @@ public class AdminResource {
 	}
 
 	/**
-	 * Get security threat statistics
-	 */
+	  * Get security threat statistics
+	  */
 	@GET
 	@Path("/security/stats")
 	@RolesAllowed({ "admin", "user" })
 	/**
-	 * Gets the SecurityStats.
-	 * @return the SecurityStats
-	 */
+	  * Gets the SecurityStats.
+	  * @return the SecurityStats
+	  */
 	public Response getSecurityStats() {
 		LOG.debug("Fetching security statistics");
 
@@ -185,14 +185,14 @@ public class AdminResource {
 	}
 
 	/**
-	 * Analyze a domain for potential threats
-	 */
+	  * Analyze a domain for potential threats
+	  */
 	@POST
 	@Path("/security/analyze")
 	@RolesAllowed("admin")
 	/**
-	 * analyzeDomain method.
-	 */
+	  * analyzeDomain method.
+	  */
 	public Response analyzeDomain(Map<String, String> request) {
 		String domain = request.get("domain");
 
@@ -209,14 +209,14 @@ public class AdminResource {
 	}
 
 	/**
-	 * Add a malicious domain to the threat database
-	 */
+	  * Add a malicious domain to the threat database
+	  */
 	@POST
 	@Path("/security/threats/domains")
 	@RolesAllowed("admin")
 	/**
-	 * addMaliciousDomain method.
-	 */
+	  * addMaliciousDomain method.
+	  */
 	public Response addMaliciousDomain(Map<String, String> request) {
 		String domain = request.get("domain");
 
@@ -233,8 +233,8 @@ public class AdminResource {
 	}
 
 	/**
-	 * Remove a domain from the threat database
-	 */
+	  * Remove a domain from the threat database
+	  */
 	@DELETE
 	@Path("/security/threats/domains/{domain}")
 	@RolesAllowed("admin")
@@ -247,15 +247,15 @@ public class AdminResource {
 	}
 
 	/**
-	 * Get all malicious domains
-	 */
+	  * Get all malicious domains
+	  */
 	@GET
 	@Path("/security/threats/domains")
 	@RolesAllowed({ "admin", "user" })
 	/**
-	 * Gets the MaliciousDomains.
-	 * @return the MaliciousDomains
-	 */
+	  * Gets the MaliciousDomains.
+	  * @return the MaliciousDomains
+	  */
 	public Response getMaliciousDomains() {
 		LOG.debug("Fetching all malicious domains");
 
@@ -265,28 +265,28 @@ public class AdminResource {
 	}
 
 	/**
-	 * Health check endpoint
-	 */
+	  * Health check endpoint
+	  */
 	@GET
 	@Path("/health")
 	/**
-	 * health method.
-	 */
+	  * health method.
+	  */
 	public Response health() {
 		return Response.ok(Map.of("status", "UP", "timestamp", java.time.Instant.now().toString()))
 				.build();
 	}
 
 	/**
-	 * RFC 5358: Get access control status and compliance information
-	 */
+	  * RFC 5358: Get access control status and compliance information
+	  */
 	@GET
 	@Path("/rfc5358/status")
 	@RolesAllowed({ "admin", "user" })
 	/**
-	 * Gets the RFC5358Status.
-	 * @return the RFC5358Status
-	 */
+	  * Gets the RFC5358Status.
+	  * @return the RFC5358Status
+	  */
 	public Response getRFC5358Status() {
 		LOG.debug("Fetching RFC 5358 compliance status");
 
@@ -306,15 +306,15 @@ public class AdminResource {
 	}
 
 	/**
-	 * RFC 5358: Get allowed networks
-	 */
+	  * RFC 5358: Get allowed networks
+	  */
 	@GET
 	@Path("/rfc5358/allowed-networks")
 	@RolesAllowed({ "admin", "user" })
 	/**
-	 * Gets the AllowedNetworks.
-	 * @return the AllowedNetworks
-	 */
+	  * Gets the AllowedNetworks.
+	  * @return the AllowedNetworks
+	  */
 	public Response getAllowedNetworks() {
 		LOG.debug("Fetching allowed networks");
 
@@ -324,14 +324,14 @@ public class AdminResource {
 	}
 
 	/**
-	 * RFC 5358: Add an allowed network
-	 */
+	  * RFC 5358: Add an allowed network
+	  */
 	@POST
 	@Path("/rfc5358/allowed-networks")
 	@RolesAllowed("admin")
 	/**
-	 * addAllowedNetwork method.
-	 */
+	  * addAllowedNetwork method.
+	  */
 	public Response addAllowedNetwork(Map<String, String> request) {
 		String network = request.get("network");
 
@@ -348,8 +348,8 @@ public class AdminResource {
 	}
 
 	/**
-	 * RFC 5358: Remove an allowed network
-	 */
+	  * RFC 5358: Remove an allowed network
+	  */
 	@DELETE
 	@Path("/rfc5358/allowed-networks/{network}")
 	@RolesAllowed("admin")
@@ -362,15 +362,15 @@ public class AdminResource {
 	}
 
 	/**
-	 * RFC 5358: Get allowed hosts
-	 */
+	  * RFC 5358: Get allowed hosts
+	  */
 	@GET
 	@Path("/rfc5358/allowed-hosts")
 	@RolesAllowed({ "admin", "user" })
 	/**
-	 * Gets the AllowedHosts.
-	 * @return the AllowedHosts
-	 */
+	  * Gets the AllowedHosts.
+	  * @return the AllowedHosts
+	  */
 	public Response getAllowedHosts() {
 		LOG.debug("Fetching allowed hosts");
 
@@ -380,14 +380,14 @@ public class AdminResource {
 	}
 
 	/**
-	 * RFC 5358: Add an allowed host
-	 */
+	  * RFC 5358: Add an allowed host
+	  */
 	@POST
 	@Path("/rfc5358/allowed-hosts")
 	@RolesAllowed("admin")
 	/**
-	 * addAllowedHost method.
-	 */
+	  * addAllowedHost method.
+	  */
 	public Response addAllowedHost(Map<String, String> request) {
 		String host = request.get("host");
 
@@ -403,15 +403,15 @@ public class AdminResource {
 	}
 
 	/**
-	 * RFC 5358: Get denied hosts
-	 */
+	  * RFC 5358: Get denied hosts
+	  */
 	@GET
 	@Path("/rfc5358/denied-hosts")
 	@RolesAllowed({ "admin", "user" })
 	/**
-	 * Gets the DeniedHosts.
-	 * @return the DeniedHosts
-	 */
+	  * Gets the DeniedHosts.
+	  * @return the DeniedHosts
+	  */
 	public Response getDeniedHosts() {
 		LOG.debug("Fetching denied hosts");
 
@@ -421,14 +421,14 @@ public class AdminResource {
 	}
 
 	/**
-	 * RFC 5358: Add a denied host
-	 */
+	  * RFC 5358: Add a denied host
+	  */
 	@POST
 	@Path("/rfc5358/denied-hosts")
 	@RolesAllowed("admin")
 	/**
-	 * addDeniedHost method.
-	 */
+	  * addDeniedHost method.
+	  */
 	public Response addDeniedHost(Map<String, String> request) {
 		String host = request.get("host");
 
@@ -444,15 +444,15 @@ public class AdminResource {
 	}
 
 	/**
-	 * RFC 5358: Enable or disable recursion globally
-	 */
+	  * RFC 5358: Enable or disable recursion globally
+	  */
 	@POST
 	@Path("/rfc5358/recursion")
 	@RolesAllowed("admin")
 	/**
-	 * Sets the Recursion.
-	 * @param request the Recursion to set
-	 */
+	  * Sets the Recursion.
+	  * @param request the Recursion to set
+	  */
 	public Response setRecursion(Map<String, Boolean> request) {
 		Boolean enabled = request.get("enabled");
 
@@ -469,35 +469,35 @@ public class AdminResource {
 	}
 
 	/**
-	 * Get endpoint usage statistics - All endpoints
-	 * <p>
-	 * Returns comprehensive statistics for all accessed endpoints including: -
-	 * Total requests per
-	 * endpoint - Success/failure rates - Average, min, max response times -
-	 * Request/response byte
-	 * counts - HTTP status code distribution
-	 */
+	  * Get endpoint usage statistics - All endpoints
+	  * <p>
+	  * Returns comprehensive statistics for all accessed endpoints including: -
+	  * Total requests per
+	  * endpoint - Success/failure rates - Average, min, max response times -
+	  * Request/response byte
+	  * counts - HTTP status code distribution
+	  */
 	@GET
 	@Path("/endpoints/statistics")
 	@RolesAllowed({ "admin", "user" })
 	/**
-	 * Gets the EndpointStatistics.
-	 * @return the EndpointStatistics
-	 */
+	  * Gets the EndpointStatistics.
+	  * @return the EndpointStatistics
+	  */
 	public Response getEndpointStatistics() {
 		LOG.debug("Fetching endpoint usage statistics");
 		return Response.ok(endpointStatisticsService.getAllStatistics()).build();
 	}
 
 	/**
-	 * Get endpoint usage statistics - Specific endpoint
-	 * <p>
-	 * Returns detailed statistics for a specific endpoint.
-	 *
-	 * @param method HTTP method (GET, POST, etc.)
-	 * @param path   API endpoint path
-	 * @return Endpoint statistics or 404 if endpoint has not been accessed
-	 */
+	  * Get endpoint usage statistics - Specific endpoint
+	  * <p>
+	  * Returns detailed statistics for a specific endpoint.
+	  *
+	  * @param method HTTP method (GET, POST, etc.)
+	  * @param path   API endpoint path
+	  * @return Endpoint statistics or 404 if endpoint has not been accessed
+	  */
 	@GET
 	@Path("/endpoints/statistics/{method}/{path: .*}")
 	@RolesAllowed({ "admin", "user" })
@@ -516,15 +516,15 @@ public class AdminResource {
 	}
 
 	/**
-	 * Get endpoint usage statistics - By path pattern
-	 * <p>
-	 * Returns statistics for all endpoints matching a pattern (e.g.,
-	 * "/api/v1/admin*"). Useful for
-	 * grouped statistics.
-	 *
-	 * @param pattern Path pattern to match (e.g., "/api/v1/dns")
-	 * @return List of matching endpoint statistics
-	 */
+	  * Get endpoint usage statistics - By path pattern
+	  * <p>
+	  * Returns statistics for all endpoints matching a pattern (e.g.,
+	  * "/api/v1/admin*"). Useful for
+	  * grouped statistics.
+	  *
+	  * @param pattern Path pattern to match (e.g., "/api/v1/dns")
+	  * @return List of matching endpoint statistics
+	  */
 	@GET
 	@Path("/endpoints/statistics-by-pattern")
 	@RolesAllowed({ "admin", "user" })
@@ -539,17 +539,17 @@ public class AdminResource {
 	}
 
 	/**
-	 * Get endpoint count - Total number of unique endpoints accessed
-	 *
-	 * @return Total count of unique endpoints that have been accessed
-	 */
+	  * Get endpoint count - Total number of unique endpoints accessed
+	  *
+	  * @return Total count of unique endpoints that have been accessed
+	  */
 	@GET
 	@Path("/endpoints/count")
 	@RolesAllowed({ "admin", "user" })
 	/**
-	 * Gets the EndpointCount.
-	 * @return the EndpointCount
-	 */
+	  * Gets the EndpointCount.
+	  * @return the EndpointCount
+	  */
 	public Response getEndpointCount() {
 		LOG.debug("Fetching total endpoint count");
 
@@ -560,19 +560,19 @@ public class AdminResource {
 	}
 
 	/**
-	 * Reset all endpoint statistics
-	 * <p>
-	 * Admin operation to reset all recorded endpoint statistics. Useful after
-	 * testing or
-	 * maintenance.
-	 */
+	  * Reset all endpoint statistics
+	  * <p>
+	  * Admin operation to reset all recorded endpoint statistics. Useful after
+	  * testing or
+	  * maintenance.
+	  */
 	@POST
 	@Path("/endpoints/statistics/reset")
 	@Consumes("*/*")
 	@RolesAllowed("admin")
 	/**
-	 * resetAllStatistics method.
-	 */
+	  * resetAllStatistics method.
+	  */
 	public Response resetAllStatistics() {
 		LOG.warn("Resetting all endpoint statistics");
 		endpointStatisticsService.resetStatistics();
@@ -581,13 +581,13 @@ public class AdminResource {
 	}
 
 	/**
-	 * Reset statistics for a specific endpoint
-	 * <p>
-	 * Admin operation to reset statistics for a specific endpoint.
-	 *
-	 * @param method HTTP method
-	 * @param path   API endpoint path
-	 */
+	  * Reset statistics for a specific endpoint
+	  * <p>
+	  * Admin operation to reset statistics for a specific endpoint.
+	  *
+	  * @param method HTTP method
+	  * @param path   API endpoint path
+	  */
 	@POST
 	@Path("/endpoints/statistics/reset/{method}/{path: .*}")
 	@RolesAllowed("admin")

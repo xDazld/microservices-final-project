@@ -23,30 +23,30 @@ import java.io.IOException;
 import java.util.Base64;
 
 /**
-	 * DNS over HTTP (DoH) endpoint compliant with RFC 8484 and RFC 5358
- *
- * This endpoint provides DNS resolution over HTTP with support for:
- * - GET requests with base64url encoded DNS messages
- * - POST requests with DNS wire format binary messages
- * - Media type: application/dns-message
- * - RFC 5358 access control to prevent use as reflector in DDoS attacks
- *
- * @author Patrick Rafferty
- * @see <a href="https://tools.ietf.org/html/rfc8484">RFC 8484 - DNS Queries over HTTPS (DoH)</a>
- * @see
- * <a href="https://tools.ietf.org/html/rfc5358">RFC 5358 - Preventing Use of Recursive Nameservers in Reflector Attacks</a>
- */
+	  * DNS over HTTP (DoH) endpoint compliant with RFC 8484 and RFC 5358
+  *
+  * This endpoint provides DNS resolution over HTTP with support for:
+  * - GET requests with base64url encoded DNS messages
+  * - POST requests with DNS wire format binary messages
+  * - Media type: application/dns-message
+  * - RFC 5358 access control to prevent use as reflector in DDoS attacks
+  *
+  * @author Patrick Rafferty
+  * @see <a href="https://tools.ietf.org/html/rfc8484">RFC 8484 - DNS Queries over HTTPS (DoH)</a>
+  * @see
+  * <a href="https://tools.ietf.org/html/rfc5358">RFC 5358 - Preventing Use of Recursive Nameservers in Reflector Attacks</a>
+  */
 @Path("/dns-query")
 /**
-	 * DNSQueryResource class.
- */
+	  * DNSQueryResource class.
+  */
 public class DNSQueryResource {
 	
 	/** RFC 8484 media type for DNS messages */
 	public static final String APPLICATION_DNS_MESSAGE = DNSConstants.APPLICATION_DNS_MESSAGE;
 	/**
-	 * Logger for this class
-	 */
+	  * Logger for this class
+	  */
 	private static final Logger LOG = Logger.getLogger(DNSQueryResource.class);
 	/** Minimum length of a valid DNS message in bytes */
 	private static final int MIN_DNS_MESSAGE_LENGTH = DNSConstants.MIN_DNS_MESSAGE_LENGTH;
@@ -70,28 +70,28 @@ public class DNSQueryResource {
 	private static final int FLAG_RESPONSE = DNSConstants.FLAG_RESPONSE;
 	
 	/**
-	 * DNS flag mask for RCODE (lower 4 bits)
-	 */
+	  * DNS flag mask for RCODE (lower 4 bits)
+	  */
 	private static final int RCODE_MASK = DNSConstants.RCODE_MASK;
 	
 	/**
-	 * DNS flag for QR bit (Query/Response)
-	 */
+	  * DNS flag for QR bit (Query/Response)
+	  */
 	private static final int FLAG_QR = DNSConstants.FLAG_QR;
 	
 	/**
-	 * DNS flag for RA bit (Recursion Available)
-	 */
+	  * DNS flag for RA bit (Recursion Available)
+	  */
 	private static final int FLAG_RA = DNSConstants.FLAG_RA;
 	
 	/**
-	 * Maximum length of a DNS label in bytes
-	 */
+	  * Maximum length of a DNS label in bytes
+	  */
 	private static final int MAX_DNS_LABEL_LENGTH = DNSConstants.MAX_DNS_LABEL_LENGTH;
 	
 	/**
-	 * Maximum length of a domain name in bytes (excluding null terminator)
-	 */
+	  * Maximum length of a domain name in bytes (excluding null terminator)
+	  */
 	private static final int MAX_DOMAIN_LENGTH = DNSConstants.MAX_DOMAIN_LENGTH;
 	
 	/** DNS Orchestrator service for processing DNS queries */
@@ -107,19 +107,19 @@ public class DNSQueryResource {
 	HttpServerRequest request;
 	
 	/**
-	 * Handle GET requests with base64url encoded DNS messages
-	 *
-	 * According to RFC 8484 Section 4.1.1, the DNS query is encoded with base64url
-	 * and passed as the "dns" query parameter.
-	 *
-	 * RFC 8484 Section 4.1 recommends using DNS ID of 0 in requests for HTTP cache
-	 * friendliness, since HTTP correlates request and response.
-	 *
-	 * RFC 5358: Access control is enforced to prevent use as reflector in amplification attacks.
-	 *
-	 * @param dnsParam base64url encoded DNS message
-	 * @return DNS response in wire format with application/dns-message media type
-	 */
+	  * Handle GET requests with base64url encoded DNS messages
+	  *
+	  * According to RFC 8484 Section 4.1.1, the DNS query is encoded with base64url
+	  * and passed as the "dns" query parameter.
+	  *
+	  * RFC 8484 Section 4.1 recommends using DNS ID of 0 in requests for HTTP cache
+	  * friendliness, since HTTP correlates request and response.
+	  *
+	  * RFC 5358: Access control is enforced to prevent use as reflector in amplification attacks.
+	  *
+	  * @param dnsParam base64url encoded DNS message
+	  * @return DNS response in wire format with application/dns-message media type
+	  */
 	@GET
 	@Produces(APPLICATION_DNS_MESSAGE)
 	public Response getQuery(@QueryParam("dns") String dnsParam) {
@@ -156,22 +156,22 @@ public class DNSQueryResource {
 	}
 	
 	/**
-	 * Handle POST requests with DNS wire format messages
-	 *
-	 * According to RFC 8484 Section 4.1, the DNS query is sent as the message body
-	 * with Content-Type: application/dns-message.
-	 *
-	 * RFC 5358: Access control is enforced to prevent use as reflector in amplification attacks.
-	 *
-	 * @param dnsMessage DNS query in wire format (binary)
-	 * @return DNS response in wire format with application/dns-message media type
-	 */
+	  * Handle POST requests with DNS wire format messages
+	  *
+	  * According to RFC 8484 Section 4.1, the DNS query is sent as the message body
+	  * with Content-Type: application/dns-message.
+	  *
+	  * RFC 5358: Access control is enforced to prevent use as reflector in amplification attacks.
+	  *
+	  * @param dnsMessage DNS query in wire format (binary)
+	  * @return DNS response in wire format with application/dns-message media type
+	  */
 	@POST
 	@Consumes(APPLICATION_DNS_MESSAGE)
 	@Produces(APPLICATION_DNS_MESSAGE)
 	/**
-	 * postQuery method.
-	 */
+	  * postQuery method.
+	  */
 	public Response postQuery(byte[] dnsMessage) {
 		String clientIp = getClientIpAddress();
 		
@@ -208,11 +208,11 @@ public class DNSQueryResource {
 	}
 	
 	/**
-	 * Extract client IP address from HTTP request.
-	 * <p>
-	 * RFC 5358 Section 4: Use the IP source address of DNS queries for ACL filtering. Handles
-	 * X-Forwarded-For header for proxied requests.
-	 */
+	  * Extract client IP address from HTTP request.
+	  * <p>
+	  * RFC 5358 Section 4: Use the IP source address of DNS queries for ACL filtering. Handles
+	  * X-Forwarded-For header for proxied requests.
+	  */
 	private String getClientIpAddress() {
 		// Check X-Forwarded-For header first (for proxied requests)
 		String xForwardedFor = request.getHeader("X-Forwarded-For");
@@ -231,19 +231,19 @@ public class DNSQueryResource {
 	}
 	
 	/**
-	 * Process a DNS wire format message and return the response
-	 * <p>
-	 * This method extracts the domain name from the DNS wire format message, processes it through
-	 * the DNS orchestrator, and returns the response.
-	 * <p>
-	 * According to RFC 8484 Section 4.2.1, the response should be sent as a 2xx HTTP status code
-	 * with application/dns-message media type, regardless of the DNS response code (SERVFAIL,
-	 * NXDOMAIN, etc).
-	 *
-	 * @param dnsMessage DNS query in wire format (binary)
-	 * @param clientIp IP address of the client (for logging and monitoring)
-	 * @return HTTP response with DNS wire format message
-	 */
+	  * Process a DNS wire format message and return the response
+	  * <p>
+	  * This method extracts the domain name from the DNS wire format message, processes it through
+	  * the DNS orchestrator, and returns the response.
+	  * <p>
+	  * According to RFC 8484 Section 4.2.1, the response should be sent as a 2xx HTTP status code
+	  * with application/dns-message media type, regardless of the DNS response code (SERVFAIL,
+	  * NXDOMAIN, etc).
+	  *
+	  * @param dnsMessage DNS query in wire format (binary)
+	  * @param clientIp IP address of the client (for logging and monitoring)
+	  * @return HTTP response with DNS wire format message
+	  */
 	private Response processDNSMessage(byte[] dnsMessage, String clientIp) {
 		try {
 			// Parse DNS wire format message to extract domain
@@ -464,16 +464,16 @@ public class DNSQueryResource {
 	}
 	
 	/**
-	 * Create a DNS error response message per RFC 1035 and RFC 8484
-	 * <p>
-	 * RFC 8484 Section 4.2.1 requires returning DNS errors as 2xx HTTP status codes with valid DNS
-	 * error messages, not HTTP error status codes.
-	 *
-	 * @param transactionId The transaction ID from the request
-	 * @param rcode         The DNS RCODE (response code): 0=NOERROR, 1=FORMERR, 2=SERVFAIL,
-	 *                      3=NXDOMAIN
-	 * @return DNS error response in wire format
-	 */
+	  * Create a DNS error response message per RFC 1035 and RFC 8484
+	  * <p>
+	  * RFC 8484 Section 4.2.1 requires returning DNS errors as 2xx HTTP status codes with valid DNS
+	  * error messages, not HTTP error status codes.
+	  *
+	  * @param transactionId The transaction ID from the request
+	  * @param rcode         The DNS RCODE (response code): 0=NOERROR, 1=FORMERR, 2=SERVFAIL,
+	  *                      3=NXDOMAIN
+	  * @return DNS error response in wire format
+	  */
 	private byte[] createDNSErrorResponse(int transactionId, int rcode) {
 		try {
 			java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
@@ -501,17 +501,17 @@ public class DNSQueryResource {
 	}
 	
 	/**
-	 * Create a DNS wire format response message
-	 *
-	 * This is a simplified implementation that creates a minimal valid DNS response.
-	 * In a production system, you would use a DNS library like dnsjava for proper encoding.
-	 *
-	 * @param transactionId The transaction ID from the request
-	 * @param domain The domain name
-	 * @param queryType The query type
-	 * @param response The RFC 8427 compliant DNS response
-	 * @return DNS response in wire format
-	 */
+	  * Create a DNS wire format response message
+	  *
+	  * This is a simplified implementation that creates a minimal valid DNS response.
+	  * In a production system, you would use a DNS library like dnsjava for proper encoding.
+	  *
+	  * @param transactionId The transaction ID from the request
+	  * @param domain The domain name
+	  * @param queryType The query type
+	  * @param response The RFC 8427 compliant DNS response
+	  * @return DNS response in wire format
+	  */
 	private byte[] createDNSResponseMessage(int transactionId, String domain, int queryType,
 											DnsMessage response) {
 		// This is a minimal DNS response header
@@ -568,15 +568,15 @@ public class DNSQueryResource {
 	}
 	
 	/**
-	 * Write a domain name in DNS wire format
-	 * <p>
-	 * DNS names are encoded as a series of labels, each prefixed with a length byte, terminated by
-	 * a zero-length label. Example: "example.com" becomes: 07 65 78 61 6d 70 6c 65 03 63 6f 6d 00
-	 *
-	 * @param dos    DataOutputStream to write to
-	 * @param domain Domain name to encode
-	 * @throws IOException if writing to the stream fails
-	 */
+	  * Write a domain name in DNS wire format
+	  * <p>
+	  * DNS names are encoded as a series of labels, each prefixed with a length byte, terminated by
+	  * a zero-length label. Example: "example.com" becomes: 07 65 78 61 6d 70 6c 65 03 63 6f 6d 00
+	  *
+	  * @param dos    DataOutputStream to write to
+	  * @param domain Domain name to encode
+	  * @throws IOException if writing to the stream fails
+	  */
 	private void writeDomainName(DataOutput dos, String domain) throws IOException {
 		String[] labels = domain.split("\\.");
 		for (String label : labels) {
@@ -589,24 +589,24 @@ public class DNSQueryResource {
 	}
 	
 	/**
-	 * Convert a DNS query type code to string representation
-	 *
-	 * @param type DNS query type code
-	 * @return String representation of the query type
-	 */
+	  * Convert a DNS query type code to string representation
+	  *
+	  * @param type DNS query type code
+	  * @return String representation of the query type
+	  */
 	private String getQueryTypeString(int type) {
 		return DNSConstants.getRecordTypeName(type);
 	}
 	
 	/**
-	 * Decode a base64url encoded string to bytes
-	 *
-	 * According to RFC 4648, base64url uses '-' and '_' instead of '+' and '/',
-	 * and padding ('=') is omitted.
-	 *
-	 * @param input Base64url encoded string
-	 * @return Decoded bytes
-	 */
+	  * Decode a base64url encoded string to bytes
+	  *
+	  * According to RFC 4648, base64url uses '-' and '_' instead of '+' and '/',
+	  * and padding ('=') is omitted.
+	  *
+	  * @param input Base64url encoded string
+	  * @return Decoded bytes
+	  */
 	private byte[] base64urlDecode(String input) {
 		// Add back the padding if needed
 		String paddedInput = input;

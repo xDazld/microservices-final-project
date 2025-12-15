@@ -17,34 +17,34 @@ import org.jboss.logging.Logger;
 import java.util.Map;
 
 /**
-	 * JSON-based DNS Query API for frontend consumption
- * <p>
- * This endpoint provides a simpler JSON-based interface for DNS queries, complementing the RFC 8484
- * compliant binary endpoint.
- */
+	  * JSON-based DNS Query API for frontend consumption
+  * <p>
+  * This endpoint provides a simpler JSON-based interface for DNS queries, complementing the RFC 8484
+  * compliant binary endpoint.
+  */
 @Path("/api/v1/dns")
 @Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
 /**
-	 * DNSJsonResource class.
- */
+  * DNSJsonResource class.
+  */
+@Consumes(MediaType.APPLICATION_JSON)
 public class DNSJsonResource {
 	
 	/**
-	 * The LOG.
-	 */
+	  * The LOG.
+	  */
 	private static final Logger LOG = Logger.getLogger(DNSJsonResource.class);
 	
 	@Inject
 	DNSOrchestrator orchestrator;
 	
 	/**
-	 * Perform a DNS query and return JSON response
-	 *
-	 * @param domain The domain name to query
-	 * @param type   The DNS record type (A, AAAA, MX, TXT, CNAME, NS, etc.)
-	 * @return JSON response with DNS resolution results in RFC 8427 format
-	 */
+	  * Perform a DNS query and return JSON response
+	  *
+	  * @param domain The domain name to query
+	  * @param type   The DNS record type (A, AAAA, MX, TXT, CNAME, NS, etc.)
+	  * @return JSON response with DNS resolution results in RFC 8427 format
+	  */
 	@GET
 	@Path("/query")
 	public Response query(@QueryParam("domain") String domain, @QueryParam("type") String type) {
@@ -78,16 +78,16 @@ public class DNSJsonResource {
 	}
 	
 	/**
-	 * Perform a DNS query using POST with JSON body
-	 *
-	 * @param request The DNS query request
-	 * @return JSON response with DNS resolution results in RFC 8427 format
-	 */
+	  * Perform a DNS query using POST with JSON body
+	  *
+	  * @param request The DNS query request
+	  * @return JSON response with DNS resolution results in RFC 8427 format
+	  */
 	@POST
 	@Path("/query")
 	/**
-	 * queryPost method.
-	 */
+	  * queryPost method.
+	  */
 	public Response queryPost(QueryRequest request) {
 		
 		if (request == null || request.domain == null || request.domain.isBlank()) {
@@ -120,16 +120,16 @@ public class DNSJsonResource {
 	}
 	
 	/**
-	 * Batch DNS query for multiple domains
-	 *
-	 * @param request The batch query request containing multiple domains
-	 * @return JSON response with all DNS resolution results in RFC 8427 format
-	 */
+	  * Batch DNS query for multiple domains
+	  *
+	  * @param request The batch query request containing multiple domains
+	  * @return JSON response with all DNS resolution results in RFC 8427 format
+	  */
 	@POST
 	@Path("/batch")
 	/**
-	 * batchQuery method.
-	 */
+	  * batchQuery method.
+	  */
 	public Response batchQuery(BatchQueryRequest request) {
 		
 		if (request == null || request.domains == null || request.domains.length == 0) {
@@ -164,30 +164,30 @@ public class DNSJsonResource {
 	}
 	
 	/**
-	 * Request class for POST queries
-	 */
+	  * Request class for POST queries
+	  */
 	public static class QueryRequest {
 		/**
-	 * The domain.
-		 */
+	  * The domain.
+		  */
 		public String domain;
 		/**
-	 * The type.
-		 */
+	  * The type.
+		  */
 		public String type;
 	}
 	
 	/**
-	 * Request class for batch queries
-	 */
+	  * Request class for batch queries
+	  */
 	public static class BatchQueryRequest {
 		/**
-	 * The domains.
-		 */
+	  * The domains.
+		  */
 		public String[] domains;
 		/**
-	 * The type.
-		 */
+	  * The type.
+		  */
 		public String type;
 	}
 }

@@ -17,51 +17,51 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 
 /**
-	 * JWT Key Generator
- * <p>
- * Automatically generates RSA key pairs for JWT signing on application startup if they don't
- * already exist.
- *
- * @author Patrick Rafferty
- */
+	  * JWT Key Generator
+  * <p>
+  * Automatically generates RSA key pairs for JWT signing on application startup if they don't
+  * already exist.
+  *
+  * @author Patrick Rafferty
+  */
 @ApplicationScoped
 public class JwtKeyGenerator {
 	
 	/**
-	 * Logger instance
-	 */
+	  * Logger instance
+	  */
 	private static final Logger LOG = Logger.getLogger(JwtKeyGenerator.class);
 	
 	/**
-	 * Directory to store keys
-	 */
+	  * Directory to store keys
+	  */
 	private static final String KEYS_DIR = "src/main/resources/keys";
 	
 	/**
-	 * Private key filename
-	 */
+	  * Private key filename
+	  */
 	private static final String PRIVATE_KEY_FILE = "privateKey.pem";
 	
 	/**
-	 * Public key filename
-	 */
+	  * Public key filename
+	  */
 	private static final String PUBLIC_KEY_FILE = "publicKey.pem";
 	
 	/**
-	 * RSA key size in bits
-	 */
+	  * RSA key size in bits
+	  */
 	private static final int RSA_KEY_SIZE = 2048;
 	
 	/**
-	 * PEM line length for key encoding
-	 */
+	  * PEM line length for key encoding
+	  */
 	private static final int PEM_LINE_LENGTH = 64;
 	
 	/**
-	 * Initialize JWT keys on application startup.
-	 *
-	 * @param ev The startup event
-	 */
+	  * Initialize JWT keys on application startup.
+	  *
+	  * @param ev The startup event
+	  */
 	void onStart(@Observes StartupEvent ev) {
 		try {
 			initializeKeys();
@@ -72,11 +72,11 @@ public class JwtKeyGenerator {
 	}
 	
 	/**
-	 * Initialize keys if they don't exist.
-	 *
-	 * @throws IOException              if file writing fails
-	 * @throws NoSuchAlgorithmException if RSA algorithm is not available
-	 */
+	  * Initialize keys if they don't exist.
+	  *
+	  * @throws IOException              if file writing fails
+	  * @throws NoSuchAlgorithmException if RSA algorithm is not available
+	  */
 	private void initializeKeys() throws IOException, NoSuchAlgorithmException {
 		Path keysPath = Paths.get(KEYS_DIR);
 		Path privateKeyPath = keysPath.resolve(PRIVATE_KEY_FILE);
@@ -114,11 +114,11 @@ public class JwtKeyGenerator {
 	}
 	
 	/**
-	 * Generate RSA 2048-bit key pair.
-	 *
-	 * @return the generated key pair
-	 * @throws NoSuchAlgorithmException if RSA algorithm is not available
-	 */
+	  * Generate RSA 2048-bit key pair.
+	  *
+	  * @return the generated key pair
+	  * @throws NoSuchAlgorithmException if RSA algorithm is not available
+	  */
 	private KeyPair generateKeyPair() throws NoSuchAlgorithmException {
 		KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
 		keyGen.initialize(RSA_KEY_SIZE);
@@ -126,12 +126,12 @@ public class JwtKeyGenerator {
 	}
 	
 	/**
-	 * Write private key to PEM file in PKCS#8 format.
-	 *
-	 * @param path       the path to write to
-	 * @param privateKey the private key to write
-	 * @throws IOException if writing fails
-	 */
+	  * Write private key to PEM file in PKCS#8 format.
+	  *
+	  * @param path       the path to write to
+	  * @param privateKey the private key to write
+	  * @throws IOException if writing fails
+	  */
 	private void writePrivateKeyFile(Path path, Key privateKey) throws IOException {
 		String encoded = Base64.getEncoder().encodeToString(privateKey.getEncoded());
 		StringBuilder pem = new StringBuilder();
@@ -151,12 +151,12 @@ public class JwtKeyGenerator {
 	}
 	
 	/**
-	 * Write public key to PEM file.
-	 *
-	 * @param path      the path to write to
-	 * @param publicKey the public key to write
-	 * @throws IOException if writing fails
-	 */
+	  * Write public key to PEM file.
+	  *
+	  * @param path      the path to write to
+	  * @param publicKey the public key to write
+	  * @throws IOException if writing fails
+	  */
 	private void writePublicKeyFile(Path path, Key publicKey) throws IOException {
 		String encoded = Base64.getEncoder().encodeToString(publicKey.getEncoded());
 		StringBuilder pem = new StringBuilder();

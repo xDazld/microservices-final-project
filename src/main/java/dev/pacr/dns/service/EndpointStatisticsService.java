@@ -12,43 +12,43 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
-	 * Service for recording and tracking endpoint usage statistics
- * <p>
- * This service maintains per-endpoint metrics including: - Total number of
- * requests - Total number
- * of successful responses - Total number of failed responses - Average response
- * time - Min/max
- * response times - HTTP status code distribution - Total bytes sent/received
- * <p>
- * Thread-safe for concurrent access.
- */
+	  * Service for recording and tracking endpoint usage statistics
+  * <p>
+  * This service maintains per-endpoint metrics including: - Total number of
+  * requests - Total number
+  * of successful responses - Total number of failed responses - Average response
+  * time - Min/max
+  * response times - HTTP status code distribution - Total bytes sent/received
+  * <p>
+  * Thread-safe for concurrent access.
+  */
 @ApplicationScoped
 public class EndpointStatisticsService {
 
 	/**
-	 * The LOG.
-	 */
+	  * The LOG.
+	  */
 	private static final Logger LOG = Logger.getLogger(EndpointStatisticsService.class);
 	// Endpoint statistics keyed by "METHOD ENDPOINT"
 	/**
-	 * The statistics.
-	 */
+	  * The statistics.
+	  */
 	private final Map<String, EndpointStatistics> statistics = new ConcurrentHashMap<>();
 	/**
-	 * The globalLock.
-	 */
+	  * The globalLock.
+	  */
 	private final ReentrantReadWriteLock globalLock = new ReentrantReadWriteLock();
 
 	/**
-	 * Record a request to an endpoint
-	 *
-	 * @param method         HTTP method (GET, POST, etc.)
-	 * @param endpoint       API endpoint path
-	 * @param responseTimeMs Response time in milliseconds
-	 * @param statusCode     HTTP status code
-	 * @param bytesIn        Bytes received in request
-	 * @param bytesOut       Bytes sent in response
-	 */
+	  * Record a request to an endpoint
+	  *
+	  * @param method         HTTP method (GET, POST, etc.)
+	  * @param endpoint       API endpoint path
+	  * @param responseTimeMs Response time in milliseconds
+	  * @param statusCode     HTTP status code
+	  * @param bytesIn        Bytes received in request
+	  * @param bytesOut       Bytes sent in response
+	  */
 	public void recordRequest(String method, String endpoint, long responseTimeMs, int statusCode,
 			long bytesIn, long bytesOut) {
 		String key = method + ' ' + endpoint;
@@ -60,12 +60,12 @@ public class EndpointStatisticsService {
 	}
 
 	/**
-	 * Get statistics for a specific endpoint
-	 *
-	 * @param method   HTTP method
-	 * @param endpoint API endpoint path
-	 * @return Statistics map or null if endpoint not accessed
-	 */
+	  * Get statistics for a specific endpoint
+	  *
+	  * @param method   HTTP method
+	  * @param endpoint API endpoint path
+	  * @return Statistics map or null if endpoint not accessed
+	  */
 	public Map<String, Object> getEndpointStatistics(String method, String endpoint) {
 		String key = method + ' ' + endpoint;
 		EndpointStatistics stats = statistics.get(key);
@@ -73,10 +73,10 @@ public class EndpointStatisticsService {
 	}
 
 	/**
-	 * Get all endpoint statistics
-	 *
-	 * @return Map of all endpoints and their statistics
-	 */
+	  * Get all endpoint statistics
+	  *
+	  * @return Map of all endpoints and their statistics
+	  */
 	public Map<String, Object> getAllStatistics() {
 		globalLock.readLock().lock();
 		try {
@@ -118,11 +118,11 @@ public class EndpointStatisticsService {
 	}
 
 	/**
-	 * Get statistics for a specific path pattern (useful for grouped stats)
-	 *
-	 * @param pathPattern Pattern to match endpoints (e.g., "/api/v1/dns*")
-	 * @return List of matching endpoint statistics
-	 */
+	  * Get statistics for a specific path pattern (useful for grouped stats)
+	  *
+	  * @param pathPattern Pattern to match endpoints (e.g., "/api/v1/dns*")
+	  * @return List of matching endpoint statistics
+	  */
 	public List<Map<String, Object>> getStatisticsByPattern(String pathPattern) {
 		List<Map<String, Object>> result = new ArrayList<>();
 
@@ -136,8 +136,8 @@ public class EndpointStatisticsService {
 	}
 
 	/**
-	 * Reset all statistics (for testing or maintenance)
-	 */
+	  * Reset all statistics (for testing or maintenance)
+	  */
 	public void resetStatistics() {
 		globalLock.writeLock().lock();
 		try {
@@ -149,11 +149,11 @@ public class EndpointStatisticsService {
 	}
 
 	/**
-	 * Reset statistics for a specific endpoint
-	 *
-	 * @param method   HTTP method
-	 * @param endpoint API endpoint path
-	 */
+	  * Reset statistics for a specific endpoint
+	  *
+	  * @param method   HTTP method
+	  * @param endpoint API endpoint path
+	  */
 	public void resetEndpointStatistics(String method, String endpoint) {
 		String key = method + ' ' + endpoint;
 		globalLock.writeLock().lock();
@@ -166,76 +166,82 @@ public class EndpointStatisticsService {
 	}
 
 	/**
-	 * Get count of unique endpoints tracked
-	 */
+	  * Get count of unique endpoints tracked
+	  */
 	public int getEndpointCount() {
 		return statistics.size();
 	}
 
 	/**
-	 * Statistics for a single endpoint
-	 */
+	  * Statistics for a single endpoint
+	  */
 	public static class EndpointStatistics {
 		/**
-	 * The endpoint.
-		 */
+	  * The endpoint.
+		  */
 	private final String endpoint;
 		/**
-	 * The method.
-		 */
+	  * The method.
+		  */
 	private final String method;
 		/**
-	 * The statusCodeCounts.
-		 */
+	  * The statusCodeCounts.
+		  */
 	private final Map<Integer, Long> statusCodeCounts = new ConcurrentHashMap<>();
 		/**
-	 * The lock.
-		 */
+	  * The lock.
+		  */
 	private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 		/**
-	 * The totalRequests.
-		 */
+	  * The totalRequests.
+		  */
 	private long totalRequests = 0;
 		/**
-	 * The successfulRequests.
-		 */
+	  * The successfulRequests.
+		  */
 	private long successfulRequests = 0;
 		/**
-	 * The failedRequests.
-		 */
+	  * The failedRequests.
+		  */
 	private long failedRequests = 0;
 		/**
-	 * The totalResponseTime.
-		 */
+	  * The totalResponseTime.
+		  */
 	private long totalResponseTime = 0; // milliseconds
 		/**
-	 * The minResponseTime.
-		 */
+	  * The minResponseTime.
+		  */
 	private long minResponseTime = Long.MAX_VALUE;
 		/**
-	 * The maxResponseTime.
-		 */
+	  * The maxResponseTime.
+		  */
 	private long maxResponseTime = 0;
 		/**
-	 * The totalBytesIn.
-		 */
+	  * The totalBytesIn.
+		  */
 	private long totalBytesIn = 0;
 		/**
-	 * The totalBytesOut.
-		 */
+	  * The totalBytesOut.
+		  */
 	private long totalBytesOut = 0;
 		/**
-	 * The lastAccessTime.
-		 */
+	  * The lastAccessTime.
+		  */
 	private Instant lastAccessTime;
 		/**
-	 * The createdTime.
-		 */
+	  * The createdTime.
+		  */
 	private final Instant createdTime;
 
 		/**
-	 * EndpointStatistics method.
+
+
+		 * Constructs a new EndpointStatistics.
+
+
 		 */
+
+
 		public EndpointStatistics(String endpoint, String method) {
 			this.endpoint = endpoint;
 			this.method = method;
@@ -244,12 +250,12 @@ public class EndpointStatisticsService {
 		}
 
 		/**
-	 * Records a request with response time, status code, and bytes transferred.
-		 * @param responseTimeMs the response time in milliseconds
-		 * @param statusCode the HTTP status code
-		 * @param bytesIn the bytes received
-		 * @param bytesOut the bytes sent
-		 */
+	  * Records a request with response time, status code, and bytes transferred.
+		  * @param responseTimeMs the response time in milliseconds
+		  * @param statusCode the HTTP status code
+		  * @param bytesIn the bytes received
+		  * @param bytesOut the bytes sent
+		  */
 		public void recordRequest(long responseTimeMs, int statusCode, long bytesIn,
 				long bytesOut) {
 			lock.writeLock().lock();
@@ -277,7 +283,9 @@ public class EndpointStatisticsService {
 		}
 
 		/**
-	 * toMap method.
+		 * Converts the endpoint statistics to a map representation for serialization.
+		 *
+		 * @return a map containing all statistics for this endpoint
 		 */
 		public Map<String, Object> toMap() {
 			lock.readLock().lock();
@@ -310,9 +318,9 @@ public class EndpointStatisticsService {
 
 		// Getters for internal use
 		/**
-	 * Gets the TotalRequests.
-		 * @return the TotalRequests
-		 */
+	  * Gets the TotalRequests.
+		  * @return the TotalRequests
+		  */
 		public long getTotalRequests() {
 			lock.readLock().lock();
 			try {
@@ -323,9 +331,9 @@ public class EndpointStatisticsService {
 		}
 
 		/**
-	 * Gets the AverageResponseTime.
-		 * @return the AverageResponseTime
-		 */
+	  * Gets the AverageResponseTime.
+		  * @return the AverageResponseTime
+		  */
 		public double getAverageResponseTime() {
 			lock.readLock().lock();
 			try {
@@ -336,9 +344,9 @@ public class EndpointStatisticsService {
 		}
 
 		/**
-	 * Gets the SuccessfulRequests.
-		 * @return the SuccessfulRequests
-		 */
+	  * Gets the SuccessfulRequests.
+		  * @return the SuccessfulRequests
+		  */
 		public long getSuccessfulRequests() {
 			lock.readLock().lock();
 			try {
@@ -349,9 +357,9 @@ public class EndpointStatisticsService {
 		}
 
 		/**
-	 * Gets the FailedRequests.
-		 * @return the FailedRequests
-		 */
+	  * Gets the FailedRequests.
+		  * @return the FailedRequests
+		  */
 		public long getFailedRequests() {
 			lock.readLock().lock();
 			try {

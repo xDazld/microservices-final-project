@@ -4,12 +4,12 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
-	 * RFC 8618 C-DNS Resource Record
- * <p>
- * Represents a DNS resource record in C-DNS format.
- *
- * @see <a href="https://tools.ietf.org/html/rfc8618">RFC 8618</a>
- */
+	  * RFC 8618 C-DNS Resource Record
+  * <p>
+  * Represents a DNS resource record in C-DNS format.
+  *
+  * @see <a href="https://tools.ietf.org/html/rfc8618">RFC 8618</a>
+  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class RR {
 	
@@ -28,13 +28,18 @@ public class RR {
 	// Constructors
 	
 	/**
-	 * Constructs a new RR.
+	 * Constructs a new empty RR (Resource Record).
 	 */
 	public RR() {
 	}
 	
 	/**
-	 * RR method.
+	 * Constructs a new RR (Resource Record) with the specified indices.
+	 *
+	 * @param nameIndex the index of the name in the name table
+	 * @param classtypeIndex the index of the class and type in the classtype table
+	 * @param ttl the time-to-live value for this resource record
+	 * @param rdataIndex the index of the resource data in the rdata table
 	 */
 	public RR(Integer nameIndex, Integer classtypeIndex, Long ttl, Integer rdataIndex) {
 		this.nameIndex = nameIndex;
@@ -46,65 +51,65 @@ public class RR {
 	// Getters and Setters
 	
 	/**
-	 * Gets the NameIndex.
-	 * @return the NameIndex
-	 */
+	  * Gets the NameIndex.
+	  * @return the NameIndex
+	  */
 	public Integer getNameIndex() {
 		return nameIndex;
 	}
 	
 	/**
-	 * Sets the NameIndex.
-	 * @param nameIndex the NameIndex to set
-	 */
+	  * Sets the NameIndex.
+	  * @param nameIndex the NameIndex to set
+	  */
 	public void setNameIndex(Integer nameIndex) {
 		this.nameIndex = nameIndex;
 	}
 	
 	/**
-	 * Gets the ClasstypeIndex.
-	 * @return the ClasstypeIndex
-	 */
+	  * Gets the ClasstypeIndex.
+	  * @return the ClasstypeIndex
+	  */
 	public Integer getClasstypeIndex() {
 		return classtypeIndex;
 	}
 	
 	/**
-	 * Sets the ClasstypeIndex.
-	 * @param classtypeIndex the ClasstypeIndex to set
-	 */
+	  * Sets the ClasstypeIndex.
+	  * @param classtypeIndex the ClasstypeIndex to set
+	  */
 	public void setClasstypeIndex(Integer classtypeIndex) {
 		this.classtypeIndex = classtypeIndex;
 	}
 	
 	/**
-	 * Gets the Ttl.
-	 * @return the Ttl
-	 */
+	  * Gets the Ttl.
+	  * @return the Ttl
+	  */
 	public Long getTtl() {
 		return ttl;
 	}
 	
 	/**
-	 * Sets the Ttl.
-	 * @param ttl the Ttl to set
-	 */
+	  * Sets the Ttl.
+	  * @param ttl the Ttl to set
+	  */
 	public void setTtl(Long ttl) {
 		this.ttl = ttl;
 	}
 	
 	/**
-	 * Gets the RdataIndex.
-	 * @return the RdataIndex
-	 */
+	  * Gets the RdataIndex.
+	  * @return the RdataIndex
+	  */
 	public Integer getRdataIndex() {
 		return rdataIndex;
 	}
 	
 	/**
-	 * Sets the RdataIndex.
-	 * @param rdataIndex the RdataIndex to set
-	 */
+	  * Sets the RdataIndex.
+	  * @param rdataIndex the RdataIndex to set
+	  */
 	public void setRdataIndex(Integer rdataIndex) {
 		this.rdataIndex = rdataIndex;
 	}

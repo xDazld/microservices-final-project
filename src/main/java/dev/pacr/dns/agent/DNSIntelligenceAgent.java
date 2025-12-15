@@ -10,17 +10,17 @@ import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
 
 /**
-	 * AI Agent for DNS intelligence and autonomous threat analysis
- * <p>
- * This agent uses LangChain4j to provide: - Autonomous threat analysis - Intelligent filter rule
- * recommendations - Pattern recognition in DNS queries - Security alert correlation
- */
+	  * AI Agent for DNS intelligence and autonomous threat analysis
+  * <p>
+  * This agent uses LangChain4j to provide: - Autonomous threat analysis - Intelligent filter rule
+  * recommendations - Pattern recognition in DNS queries - Security alert correlation
+  */
 @ApplicationScoped
 public class DNSIntelligenceAgent {
 	
 	/**
-	 * The LOG.
-	 */
+	  * The LOG.
+	  */
 	private static final Logger LOG = Logger.getLogger(DNSIntelligenceAgent.class);
 	
 	@Inject
@@ -33,8 +33,8 @@ public class DNSIntelligenceAgent {
 	DNSAssistant assistant;
 	
 	/**
-	 * Analyze a domain using AI-powered threat intelligence
-	 */
+	  * Analyze a domain using AI-powered threat intelligence
+	  */
 	public ThreatAnalysisResult analyzeDomainWithAI(String domain) {
 		LOG.infof("AI Agent analyzing domain: %s", domain);
 		
@@ -57,8 +57,8 @@ public class DNSIntelligenceAgent {
 	}
 	
 	/**
-	 * Get recommendations for new filter rules based on observed patterns
-	 */
+	  * Get recommendations for new filter rules based on observed patterns
+	  */
 	public FilterRuleRecommendation getFilterRecommendations(String[] recentDomains) {
 		LOG.info("Generating filter recommendations from observed patterns");
 		
@@ -84,8 +84,8 @@ public class DNSIntelligenceAgent {
 	}
 	
 	/**
-	 * Correlate security events and identify attack patterns
-	 */
+	  * Correlate security events and identify attack patterns
+	  */
 	public SecurityPatternAnalysis correlateSecurityEvents(String[] events) {
 		LOG.info("Correlating security events using AI");
 		
@@ -142,8 +142,8 @@ public class DNSIntelligenceAgent {
 	}
 	
 	/**
-	 * AI Assistant interface for DNS analysis
-	 */
+	  * AI Assistant interface for DNS analysis
+	  */
 @RegisterAiService(tools = DNSAnalysisTools.class)
 	public interface DNSAssistant {
 		
@@ -163,66 +163,66 @@ public class DNSIntelligenceAgent {
 	
 	// Result classes
 	/**
-	 * ThreatAnalysisResult class.
-	 */
+	  * ThreatAnalysisResult class.
+	  */
 	public static class ThreatAnalysisResult {
 		/**
-	 * The domain.
-		 */
+	  * The domain.
+		  */
 		public String domain;
 		/**
-	 * The aiAnalysis.
-		 */
+	  * The aiAnalysis.
+		  */
 		public String aiAnalysis;
 		/**
-	 * The threatLevel.
-		 */
+	  * The threatLevel.
+		  */
 		public String threatLevel;
 		/**
-	 * The confidence.
-		 */
+	  * The confidence.
+		  */
 		public double confidence;
 	}
 	
 	/**
-	 * FilterRuleRecommendation class.
-	 */
+	  * FilterRuleRecommendation class.
+	  */
 	public static class FilterRuleRecommendation {
 		/**
-	 * The recommendations.
-		 */
+	  * The recommendations.
+		  */
 		public String recommendations;
 		/**
-	 * The confidence.
-		 */
+	  * The confidence.
+		  */
 		public double confidence;
 	}
 	
 	/**
-	 * SecurityPatternAnalysis class.
-	 */
+	  * SecurityPatternAnalysis class.
+	  */
 	public static class SecurityPatternAnalysis {
 		/**
-	 * The eventsAnalyzed.
-		 */
+	  * The eventsAnalyzed.
+		  */
 		public int eventsAnalyzed;
 		/**
-	 * The patterns.
-		 */
+	  * The patterns.
+		  */
 		public String patterns;
 		/**
-	 * The attackType.
-		 */
+	  * The attackType.
+		  */
 		public String attackType;
 		/**
-	 * The confidence.
-		 */
+	  * The confidence.
+		  */
 		public double confidence;
 	}
 	
 	/**
-	 * Tools available to the AI agent
-	 */
+	  * Tools available to the AI agent
+	  */
 	@ApplicationScoped
 	public static class DNSAnalysisTools {
 		
@@ -234,8 +234,8 @@ public class DNSIntelligenceAgent {
 		
 		@Tool("Check if a domain matches existing filter rules")
 		/**
-	 * checkFilterMatch method.
-		 */
+	  * checkFilterMatch method.
+		  */
 		public String checkFilterMatch(CharSequence domain) {
 			boolean isBlocked = filterService.applyFilters(domain).isBlocked();
 			return isBlocked ? "Domain is currently blocked" : "Domain is allowed";
@@ -243,8 +243,8 @@ public class DNSIntelligenceAgent {
 		
 		@Tool("Check if a domain is in the malicious domain database")
 		/**
-	 * checkThreatDatabase method.
-		 */
+	  * checkThreatDatabase method.
+		  */
 		public String checkThreatDatabase(String domain) {
 			SecurityService.ThreatAnalysis analysis = securityService.analyzeDomain(domain);
 			return analysis.isMalicious ? "Domain is marked as malicious" :
@@ -253,9 +253,9 @@ public class DNSIntelligenceAgent {
 		
 		@Tool("Get statistics about filter rules")
 		/**
-	 * Gets the FilterStats.
-		 * @return the FilterStats
-		 */
+	  * Gets the FilterStats.
+		  * @return the FilterStats
+		  */
 		public String getFilterStats() {
 			return "Total filter rules: " + filterService.getAllRules().size();
 		}

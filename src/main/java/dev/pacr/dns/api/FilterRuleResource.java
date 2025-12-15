@@ -22,27 +22,27 @@ import java.util.List;
 import java.util.Map;
 
 /**
-	 * REST API endpoint for managing DNS filtering rules
- */
+	  * REST API endpoint for managing DNS filtering rules
+  */
 @Path("/api/v1/filters")
 @Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
 /**
-	 * FilterRuleResource class.
- */
+  * FilterRuleResource class.
+  */
+@Consumes(MediaType.APPLICATION_JSON)
 public class FilterRuleResource {
 	
 	/**
-	 * The LOG.
-	 */
+	  * The LOG.
+	  */
 	private static final Logger LOG = Logger.getLogger(FilterRuleResource.class);
 	
 	@Inject
 	DNSFilterService filterService;
 	
 	/**
-	 * Get all filter rules
-	 */
+	  * Get all filter rules
+	  */
 	@GET
 	@RolesAllowed({"admin", "user"})
 	public Response getAllRules(@QueryParam("category") String category) {
@@ -59,8 +59,8 @@ public class FilterRuleResource {
 	}
 	
 	/**
-	 * Get a specific filter rule
-	 */
+	  * Get a specific filter rule
+	  */
 	@GET
 	@Path("/{ruleId}")
 	@RolesAllowed({"admin", "user"})
@@ -77,13 +77,13 @@ public class FilterRuleResource {
 	}
 	
 	/**
-	 * Create a new filter rule
-	 */
+	  * Create a new filter rule
+	  */
 	@POST
 	@RolesAllowed("admin")
 	/**
-	 * createRule method.
-	 */
+	  * createRule method.
+	  */
 	public Response createRule(FilterRuleRequest request) {
 		LOG.infof("Creating new filter rule: %s", request.name);
 		
@@ -101,8 +101,8 @@ public class FilterRuleResource {
 	}
 	
 	/**
-	 * Update an existing filter rule
-	 */
+	  * Update an existing filter rule
+	  */
 	@PUT
 	@Path("/{ruleId}")
 	@RolesAllowed("admin")
@@ -136,8 +136,8 @@ public class FilterRuleResource {
 	}
 	
 	/**
-	 * Delete a filter rule
-	 */
+	  * Delete a filter rule
+	  */
 	@DELETE
 	@Path("/{ruleId}")
 	@RolesAllowed("admin")
@@ -156,8 +156,8 @@ public class FilterRuleResource {
 	}
 	
 	/**
-	 * Toggle rule enabled/disabled
-	 */
+	  * Toggle rule enabled/disabled
+	  */
 	@PATCH
 	@Path("/{ruleId}/toggle")
 	@RolesAllowed("admin")
@@ -178,15 +178,15 @@ public class FilterRuleResource {
 	}
 	
 	/**
-	 * Get filter statistics
-	 */
+	  * Get filter statistics
+	  */
 	@GET
 	@Path("/stats")
 	@RolesAllowed({"admin", "user"})
 	/**
-	 * Gets the FilterStats.
-	 * @return the FilterStats
-	 */
+	  * Gets the FilterStats.
+	  * @return the FilterStats
+	  */
 	public Response getFilterStats() {
 		LOG.debug("Fetching filter statistics");
 		
@@ -196,36 +196,36 @@ public class FilterRuleResource {
 	}
 	
 	/**
-	 * Request model for filter rule
-	 */
+	  * Request model for filter rule
+	  */
 	public static class FilterRuleRequest {
 		/**
-	 * The name.
-		 */
+	  * The name.
+		  */
 		public String name;
 		/**
-	 * The pattern.
-		 */
+	  * The pattern.
+		  */
 		public String pattern;
 		/**
-	 * The type.
-		 */
+	  * The type.
+		  */
 		public String type;
 		/**
-	 * The category.
-		 */
+	  * The category.
+		  */
 		public String category;
 		/**
-	 * The priority.
-		 */
+	  * The priority.
+		  */
 		public Integer priority;
 		/**
-	 * The enabled.
-		 */
+	  * The enabled.
+		  */
 		public Boolean enabled;
 		/**
-	 * The redirectTo.
-		 */
+	  * The redirectTo.
+		  */
 		public String redirectTo;
 	}
 }

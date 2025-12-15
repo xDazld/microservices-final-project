@@ -4,16 +4,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
-	 * Utility class to convert between RFC 8427 compliant models and wire format
- *
- * @see <a href="https://tools.ietf.org/html/rfc8427">RFC 8427</a>
- */
+	  * Utility class to convert between RFC 8427 compliant models and wire format
+  *
+  * @see <a href="https://tools.ietf.org/html/rfc8427">RFC 8427</a>
+  */
 public enum DnsMessageConverter {
 	;
 	
 	/**
-	 * Create an RFC 8427 compliant DNS query message
-	 */
+	  * Create an RFC 8427 compliant DNS query message
+	  */
 	public static DnsMessage createQuery(String qname, int qtype, int qclass) {
 		DnsMessage message = new DnsMessage();
 		message.setId(0); // RFC 8484 recommends 0 for DoH
@@ -31,8 +31,8 @@ public enum DnsMessageConverter {
 	}
 	
 	/**
-	 * Create an RFC 8427 compliant DNS response message
-	 */
+	  * Create an RFC 8427 compliant DNS response message
+	  */
 	public static DnsMessage createResponse(String qname, int qtype, int qclass, int rcode,
 											List<String> answers, long ttl) {
 		DnsMessage message = new DnsMessage();
@@ -75,8 +75,8 @@ public enum DnsMessageConverter {
 	}
 	
 	/**
-	 * Convert query type string to numeric code
-	 */
+	  * Convert query type string to numeric code
+	  */
 	public static int getQtypeCode(String type) {
 		return switch (type.toUpperCase()) {
 			case "A" -> 1;
@@ -94,8 +94,8 @@ public enum DnsMessageConverter {
 	}
 	
 	/**
-	 * Convert query type code to string
-	 */
+	  * Convert query type code to string
+	  */
 	public static String getQtypeString(int code) {
 		return switch (code) {
 			case 1 -> "A";

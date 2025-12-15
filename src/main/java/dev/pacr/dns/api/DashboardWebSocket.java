@@ -19,35 +19,35 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
-	 * WebSocket endpoint for real-time dashboard updates
- * <p>
- * Maintains persistent connections to dashboard clients and streams: - Metrics updates (query
- * count, cache hits, filters, threats) - Log entries (query logs, security alerts) - Statistics
- * (cache stats, security stats)
- */
+	  * WebSocket endpoint for real-time dashboard updates
+  * <p>
+  * Maintains persistent connections to dashboard clients and streams: - Metrics updates (query
+  * count, cache hits, filters, threats) - Log entries (query logs, security alerts) - Statistics
+  * (cache stats, security stats)
+  */
 @ServerEndpoint("/ws/dashboard")
-@ApplicationScoped
 /**
-	 * DashboardWebSocket class.
- */
+  * DashboardWebSocket class.
+  */
+@ApplicationScoped
 public class DashboardWebSocket {
 	
 	/**
-	 * The LOG.
-	 */
+	  * The LOG.
+	  */
 	private static final Logger LOG = Logger.getLogger(DashboardWebSocket.class);
 	/**
-	 * The SESSIONS.
-	 */
+	  * The SESSIONS.
+	  */
 	private static final Map<String, Session> SESSIONS = new ConcurrentHashMap<>();
 	/**
-	 * The objectMapper.
-	 */
+	  * The objectMapper.
+	  */
 	private final ObjectMapper objectMapper = new ObjectMapper();
 	
 	/**
-	 * Broadcast a message to all connected clients
-	 */
+	  * Broadcast a message to all connected clients
+	  */
 	public static void broadcast(Object message) {
 		Set<String> failedSessions = Collections.synchronizedSet(new HashSet<>());
 		SESSIONS.forEach((sessionId, session) -> {
@@ -70,8 +70,8 @@ public class DashboardWebSocket {
 	}
 	
 	/**
-	 * Send a message to a specific session
-	 */
+	  * Send a message to a specific session
+	  */
 	private static void sendMessage(Session session, Map<String, Object> message) {
 		try {
 			if (session.isOpen()) {
@@ -85,16 +85,16 @@ public class DashboardWebSocket {
 	}
 	
 	/**
-	 * Get the number of connected clients
-	 */
+	  * Get the number of connected clients
+	  */
 	public static int getConnectedClientCount() {
 		return SESSIONS.size();
 	}
 	
 	@OnOpen
 	/**
-	 * onOpen method.
-	 */
+	  * onOpen method.
+	  */
 	public void onOpen(Session session) {
 		String sessionId = session.getId();
 		SESSIONS.put(sessionId, session);
@@ -109,8 +109,8 @@ public class DashboardWebSocket {
 	
 	@OnClose
 	/**
-	 * onClose method.
-	 */
+	  * onClose method.
+	  */
 	public void onClose(Session session) {
 		String sessionId = session.getId();
 		SESSIONS.remove(sessionId);
@@ -120,8 +120,8 @@ public class DashboardWebSocket {
 	
 	@OnError
 	/**
-	 * onError method.
-	 */
+	  * onError method.
+	  */
 	public void onError(Session session, Throwable throwable) {
 		String sessionId = session.getId();
 		LOG.warnf(throwable, "Dashboard WebSocket error for session %s", sessionId);
@@ -135,8 +135,8 @@ public class DashboardWebSocket {
 	
 	@OnMessage
 	/**
-	 * onMessage method.
-	 */
+	  * onMessage method.
+	  */
 	public void onMessage(String message, Session session) {
 		try {
 			JsonNode json = objectMapper.readTree(message);
@@ -165,8 +165,8 @@ public class DashboardWebSocket {
 	}
 	
 	/**
-	 * Handle subscription requests
-	 */
+	  * Handle subscription requests
+	  */
 	private void handleSubscribe(JsonNode message, Session session) {
 		String channel = message.get("channel").asText();
 		LOG.infof("Session %s subscribed to channel: %s", session.getId(), channel);
@@ -174,8 +174,8 @@ public class DashboardWebSocket {
 	}
 	
 	/**
-	 * Handle unsubscription requests
-	 */
+	  * Handle unsubscription requests
+	  */
 	private void handleUnsubscribe(JsonNode message, Session session) {
 		String channel = message.get("channel").asText();
 		LOG.infof("Session %s unsubscribed from channel: %s", session.getId(), channel);

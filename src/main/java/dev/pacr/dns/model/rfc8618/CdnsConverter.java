@@ -7,34 +7,34 @@ import java.util.List;
 import java.util.Map;
 
 /**
-	 * Utility class to convert DNS transaction data to RFC 8618 C-DNS format
- * <p>
- * C-DNS is designed for efficient storage and analysis of DNS traffic.
- *
- * @see <a href="https://tools.ietf.org/html/rfc8618">RFC 8618</a>
- */
+	  * Utility class to convert DNS transaction data to RFC 8618 C-DNS format
+  * <p>
+  * C-DNS is designed for efficient storage and analysis of DNS traffic.
+  *
+  * @see <a href="https://tools.ietf.org/html/rfc8618">RFC 8618</a>
+  */
 public class CdnsConverter {
 	
 	/**
-	 * The ipAddressIndex.
-	 */
+	  * The ipAddressIndex.
+	  */
 	private final Map<String, Integer> ipAddressIndex = new HashMap<>();
 	/**
-	 * The nameIndex.
-	 */
+	  * The nameIndex.
+	  */
 	private final Map<String, Integer> nameIndex = new HashMap<>();
 	/**
-	 * The ipAddresses.
-	 */
+	  * The ipAddresses.
+	  */
 	private final List<String> ipAddresses = new ArrayList<>();
 	/**
-	 * The names.
-	 */
+	  * The names.
+	  */
 	private final List<String> names = new ArrayList<>();
 	
 	/**
-	 * Create a new C-DNS file structure
-	 */
+	  * Create a new C-DNS file structure
+	  */
 	public CdnsFile createCdnsFile() {
 		CdnsFile file = new CdnsFile();
 		
@@ -68,8 +68,8 @@ public class CdnsConverter {
 	}
 	
 	/**
-	 * Create a new block for the C-DNS file
-	 */
+	  * Create a new block for the C-DNS file
+	  */
 	public Block createBlock(Instant earliestTime) {
 		Block block = new Block();
 		
@@ -95,8 +95,8 @@ public class CdnsConverter {
 	}
 	
 	/**
-	 * Add a query/response transaction to a block
-	 */
+	  * Add a query/response transaction to a block
+	  */
 	public void addQueryResponse(Block block, String clientIp, String queryName, int qtype,
 								 int qclass, Instant timestamp, List<String> answers,
 								 long responseTimeMs) {

@@ -9,65 +9,65 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
-	 * RFC 9520 compliant negative caching service for DNS resolution failures.
- * <p>
- * This service implements the requirements from RFC 9520 "Negative Caching of DNS Resolution
- * Failures": - Caches resolution failures for at least 1 second (configurable) - Maximum cache
- * duration of 5 minutes (per RFC 9520 Section 3.2) - Implements exponential backoff for persistent
- * failures - Prevents resource exhaustion attacks - Handles various failure types: SERVFAIL,
- * REFUSED, timeouts, validation failures, etc.
- *
- * @see <a href="https://www.rfc-editor.org/rfc/rfc9520.html">RFC 9520</a>
- */
+	  * RFC 9520 compliant negative caching service for DNS resolution failures.
+  * <p>
+  * This service implements the requirements from RFC 9520 "Negative Caching of DNS Resolution
+  * Failures": - Caches resolution failures for at least 1 second (configurable) - Maximum cache
+  * duration of 5 minutes (per RFC 9520 Section 3.2) - Implements exponential backoff for persistent
+  * failures - Prevents resource exhaustion attacks - Handles various failure types: SERVFAIL,
+  * REFUSED, timeouts, validation failures, etc.
+  *
+  * @see <a href="https://www.rfc-editor.org/rfc/rfc9520.html">RFC 9520</a>
+  */
 @ApplicationScoped
 public class NegativeCacheService {
 	
 	/**
-	 * The LOG.
-	 */
+	  * The LOG.
+	  */
 	private static final Logger LOG = Logger.getLogger(NegativeCacheService.class);
 	
 	// RFC 9520 Section 3.2: Minimum cache duration is 1 second
 	/**
-	 * The MIN_CACHE_DURATION_SECONDS.
-	 */
+	  * The MIN_CACHE_DURATION_SECONDS.
+	  */
 	private static final long MIN_CACHE_DURATION_SECONDS = 1;
 	
 	// RFC 9520 Section 3.2: Maximum cache duration is 5 minutes (300 seconds)
 	/**
-	 * The MAX_CACHE_DURATION_SECONDS.
-	 */
+	  * The MAX_CACHE_DURATION_SECONDS.
+	  */
 	private static final long MAX_CACHE_DURATION_SECONDS = 300;
 	
 	// Initial backoff duration in seconds
 	/**
-	 * The INITIAL_BACKOFF_SECONDS.
-	 */
+	  * The INITIAL_BACKOFF_SECONDS.
+	  */
 	private static final long INITIAL_BACKOFF_SECONDS = 5;
 	
 	// Maximum number of cache entries to prevent resource exhaustion
 	/**
-	 * The MAX_CACHE_ENTRIES.
-	 */
+	  * The MAX_CACHE_ENTRIES.
+	  */
 	private static final int MAX_CACHE_ENTRIES = 10000;
 	
 	// Cache for resolution failures
 	/**
-	 * The failureCache.
-	 */
+	  * The failureCache.
+	  */
 	private final Map<String, FailureCacheEntry> failureCache = new ConcurrentHashMap<>();
 	
 	/**
-	 * Check if a query should be blocked due to cached resolution failure.
-	 * <p>
-	 * Per RFC 9520 Section 3.2: "When an incoming query matches a cached resolution failure, the
-	 * resolver MUST NOT send any corresponding outgoing queries until after the cache entries
-	 * expire."
-	 *
-	 * @param domain The domain name being queried
-	 * @param qtype  The query type
-	 * @return true if the query should be blocked (cached failure), false otherwise
-	 */
+	  * Check if a query should be blocked due to cached resolution failure.
+	  * <p>
+	  * Per RFC 9520 Section 3.2: "When an incoming query matches a cached resolution failure, the
+	  * resolver MUST NOT send any corresponding outgoing queries until after the cache entries
+	  * expire."
+	  *
+	  * @param domain The domain name being queried
+	  * @param qtype  The query type
+	  * @return true if the query should be blocked (cached failure), false otherwise
+	  */
 	public boolean isCachedFailure(String domain, int qtype) {
 		String cacheKey = getCacheKey(domain, qtype);
 		FailureCacheEntry entry = failureCache.get(cacheKey);
@@ -88,15 +88,15 @@ public class NegativeCacheService {
 	}
 	
 	/**
-	 * Cache a resolution failure.
-	 * <p>
-	 * Per RFC 9520 Section 3.2: "Resolvers MUST implement a cache for resolution failures."
-	 * Implements exponential backoff per RFC 9520 Section 3.2.
-	 *
-	 * @param domain      The domain name that failed
-	 * @param qtype       The query type
-	 * @param failureType The type of failure
-	 */
+	  * Cache a resolution failure.
+	  * <p>
+	  * Per RFC 9520 Section 3.2: "Resolvers MUST implement a cache for resolution failures."
+	  * Implements exponential backoff per RFC 9520 Section 3.2.
+	  *
+	  * @param domain      The domain name that failed
+	  * @param qtype       The query type
+	  * @param failureType The type of failure
+	  */
 	public void cacheFailure(String domain, int qtype, FailureType failureType) {
 		// RFC 9520 Section 3.2: Protection against resource exhaustion
 		if (failureCache.size() >= MAX_CACHE_ENTRIES) {
@@ -135,13 +135,13 @@ public class NegativeCacheService {
 	}
 	
 	/**
-	 * Calculate backoff duration using exponential backoff strategy. Per RFC 9520 Section 3.2:
-	 * "Resolvers SHOULD employ an exponential or linear backoff algorithm to increase the cache
-	 * duration for persistent resolution failures."
-	 *
-	 * @param retryCount Number of consecutive failures
-	 * @return Cache duration in seconds, bounded by MAX_CACHE_DURATION_SECONDS
-	 */
+	  * Calculate backoff duration using exponential backoff strategy. Per RFC 9520 Section 3.2:
+	  * "Resolvers SHOULD employ an exponential or linear backoff algorithm to increase the cache
+	  * duration for persistent resolution failures."
+	  *
+	  * @param retryCount Number of consecutive failures
+	  * @return Cache duration in seconds, bounded by MAX_CACHE_DURATION_SECONDS
+	  */
 	private long calculateBackoffDuration(int retryCount) {
 		// Exponential backoff: INITIAL * 2^retryCount
 		long duration = INITIAL_BACKOFF_SECONDS * (1L << Math.min(retryCount, 6)); // Cap at 2^6
@@ -151,10 +151,10 @@ public class NegativeCacheService {
 	}
 	
 	/**
-	 * Evict oldest cache entries to prevent resource exhaustion. Per RFC 9520 Section 3.2:
-	 * "resolvers SHOULD implement measures to mitigate resource exhaustion attacks on the failed
-	 * resolution cache."
-	 */
+	  * Evict oldest cache entries to prevent resource exhaustion. Per RFC 9520 Section 3.2:
+	  * "resolvers SHOULD implement measures to mitigate resource exhaustion attacks on the failed
+	  * resolution cache."
+	  */
 	private void evictOldestEntries() {
 		// Remove 10% of oldest entries
 		int toRemove = MAX_CACHE_ENTRIES / 10;
@@ -167,8 +167,8 @@ public class NegativeCacheService {
 	}
 	
 	/**
-	 * Clear expired cache entries. Should be called periodically by a cleanup task.
-	 */
+	  * Clear expired cache entries. Should be called periodically by a cleanup task.
+	  */
 	public void clearExpiredEntries() {
 		int initialSize = failureCache.size();
 		failureCache.entrySet().removeIf(entry -> entry.getValue().isExpired());
@@ -180,10 +180,10 @@ public class NegativeCacheService {
 	}
 	
 	/**
-	 * Get cache statistics for monitoring/admin purposes.
-	 *
-	 * @return Map containing cache statistics
-	 */
+	  * Get cache statistics for monitoring/admin purposes.
+	  *
+	  * @return Map containing cache statistics
+	  */
 	public Map<String, Object> getCacheStats() {
 		long expired = failureCache.values().stream().filter(FailureCacheEntry::isExpired).count();
 		long total = failureCache.size();
@@ -198,15 +198,15 @@ public class NegativeCacheService {
 	}
 	
 	/**
-	 * Generate cache key for a domain and query type.
-	 */
+	  * Generate cache key for a domain and query type.
+	  */
 	private String getCacheKey(String domain, int qtype) {
 		return domain.toLowerCase() + ':' + qtype;
 	}
 	
 	/**
-	 * Clear all cache entries (for testing or admin purposes).
-	 */
+	  * Clear all cache entries (for testing or admin purposes).
+	  */
 	public void clearAll() {
 		int size = failureCache.size();
 		failureCache.clear();
@@ -214,55 +214,47 @@ public class NegativeCacheService {
 	}
 	
 	/**
-	 * Types of resolution failures per RFC 9520
+	 * Types of resolution failures per RFC 9520.
 	 */
 	public enum FailureType {
 		/**
-	 * SERVFAIL constant.
+		 * Server failure (RFC 9520 Section 2.1).
 		 */
-
-		SERVFAIL,           // Server failure (Section 2.1)
+		SERVFAIL,
 		/**
-	 * REFUSED constant.
+		 * Query refused (RFC 9520 Section 2.2).
 		 */
-
-		REFUSED,            // Query refused (Section 2.2)
+		REFUSED,
 		/**
-	 * TIMEOUT constant.
+		 * Server timeout (RFC 9520 Section 2.3).
 		 */
-
-		TIMEOUT,            // Server timeout (Section 2.3)
+		TIMEOUT,
 		/**
-	 * UNREACHABLE constant.
+		 * Server unreachable (RFC 9520 Section 2.3).
 		 */
-
-		UNREACHABLE,        // Server unreachable (Section 2.3)
+		UNREACHABLE,
 		/**
-	 * DELEGATION_LOOP constant.
-		 */
-
-		DELEGATION_LOOP,    // Delegation loop detected (Section 2.4)
+	  * DELEGATION_LOOP constant.
+		  */
+	DELEGATION_LOOP,    // Delegation loop detected (Section 2.4)
 		/**
-	 * ALIAS_LOOP constant.
-		 */
-
-		ALIAS_LOOP,         // CNAME/DNAME loop detected (Section 2.5)
+	  * ALIAS_LOOP constant.
+		  */
+	ALIAS_LOOP,         // CNAME/DNAME loop detected (Section 2.5)
 		/**
-	 * DNSSEC_VALIDATION constant.
-		 */
-
-		DNSSEC_VALIDATION,  // DNSSEC validation failure (Section 2.6)
+	  * DNSSEC_VALIDATION constant.
+		  */
+	DNSSEC_VALIDATION,  // DNSSEC validation failure (Section 2.6)
 		/**
-	 * FORMERR constant.
-		 */
-
-		FORMERR,            // Format error (Section 2.7)
+	  * FORMERR constant.
+		  */
+	FORMERR,            // Format error (Section 2.7)
 		OTHER               // Other resolution failures
 	}
 	
 	/**
-	 * Internal class representing a cached failure entry.
-	 */
+	  * Internal class representing a cached failure entry.
+	  */
 	private static class FailureCacheEntry {
 		final String domain;
 		final int qtype;

@@ -19,22 +19,22 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
-	 * Service for logging DNS queries in RFC 8618 C-DNS format to RabbitMQ
- */
+	  * Service for logging DNS queries in RFC 8618 C-DNS format to RabbitMQ
+  */
 @ApplicationScoped
 public class DNSLoggingService {
     
     /**
-	 * The LOG.
-     */
+	  * The LOG.
+      */
 	private static final Logger LOG = Logger.getLogger(DNSLoggingService.class);
     /**
-	 * The objectMapper.
-     */
+	  * The objectMapper.
+      */
 	private final ObjectMapper objectMapper;
     /**
-	 * The cdnsConverter.
-     */
+	  * The cdnsConverter.
+      */
 	private final CdnsConverter cdnsConverter;
     
     @Inject
@@ -52,8 +52,8 @@ public class DNSLoggingService {
     Emitter<String> alertsEmitter;
     
     /**
-	 * Constructs a new DNSLoggingService.
-	 */
+	  * Constructs a new DNSLoggingService.
+	  */
 	public DNSLoggingService() {
         this.objectMapper = new ObjectMapper();
         this.objectMapper.registerModule(new JavaTimeModule());
@@ -61,8 +61,8 @@ public class DNSLoggingService {
     }
     
     /**
-	 * Log a DNS query and its response in RFC 8618 C-DNS format and persist to DB
-     */
+	  * Log a DNS query and its response in RFC 8618 C-DNS format and persist to DB
+      */
     public void logQuery(DnsMessage query, DnsMessage response, FilterResult filterResult) {
         try {
             // Extract answers from response
@@ -94,8 +94,8 @@ public class DNSLoggingService {
     }
     
     /**
-	 * Log a security alert and persist to DB
-     */
+	  * Log a security alert and persist to DB
+      */
     public void logSecurityAlert(String domain, String alertType, String description) {
         try {
             SecurityAlertEntry alert = new SecurityAlertEntry();

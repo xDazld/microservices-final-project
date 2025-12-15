@@ -4,12 +4,12 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
-	 * RFC 8618 C-DNS Block Statistics
- * <p>
- * Statistics about DNS traffic in this block.
- *
- * @see <a href="https://tools.ietf.org/html/rfc8618">RFC 8618</a>
- */
+	  * RFC 8618 C-DNS Block Statistics
+  * <p>
+  * Statistics about DNS traffic in this block.
+  *
+  * @see <a href="https://tools.ietf.org/html/rfc8618">RFC 8618</a>
+  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class BlockStatistics {
 	
@@ -34,105 +34,105 @@ public class BlockStatistics {
 	// Constructors
 	
 	/**
-	 * Constructs a new BlockStatistics.
-	 */
+	  * Constructs a new BlockStatistics.
+	  */
 	public BlockStatistics() {
 	}
 	
 	// Getters and Setters
 	
 	/**
-	 * Gets the ProcessedMessages.
-	 * @return the ProcessedMessages
-	 */
+	  * Gets the ProcessedMessages.
+	  * @return the ProcessedMessages
+	  */
 	public Long getProcessedMessages() {
 		return processedMessages;
 	}
 	
 	/**
-	 * Sets the ProcessedMessages.
-	 * @param processedMessages the ProcessedMessages to set
-	 */
+	  * Sets the ProcessedMessages.
+	  * @param processedMessages the ProcessedMessages to set
+	  */
 	public void setProcessedMessages(Long processedMessages) {
 		this.processedMessages = processedMessages;
 	}
 	
 	/**
-	 * Gets the QrDataItems.
-	 * @return the QrDataItems
-	 */
+	  * Gets the QrDataItems.
+	  * @return the QrDataItems
+	  */
 	public Long getQrDataItems() {
 		return qrDataItems;
 	}
 	
 	/**
-	 * Sets the QrDataItems.
-	 * @param qrDataItems the QrDataItems to set
-	 */
+	  * Sets the QrDataItems.
+	  * @param qrDataItems the QrDataItems to set
+	  */
 	public void setQrDataItems(Long qrDataItems) {
 		this.qrDataItems = qrDataItems;
 	}
 	
 	/**
-	 * Gets the UnmatchedQueries.
-	 * @return the UnmatchedQueries
-	 */
+	  * Gets the UnmatchedQueries.
+	  * @return the UnmatchedQueries
+	  */
 	public Long getUnmatchedQueries() {
 		return unmatchedQueries;
 	}
 	
 	/**
-	 * Sets the UnmatchedQueries.
-	 * @param unmatchedQueries the UnmatchedQueries to set
-	 */
+	  * Sets the UnmatchedQueries.
+	  * @param unmatchedQueries the UnmatchedQueries to set
+	  */
 	public void setUnmatchedQueries(Long unmatchedQueries) {
 		this.unmatchedQueries = unmatchedQueries;
 	}
 	
 	/**
-	 * Gets the UnmatchedResponses.
-	 * @return the UnmatchedResponses
-	 */
+	  * Gets the UnmatchedResponses.
+	  * @return the UnmatchedResponses
+	  */
 	public Long getUnmatchedResponses() {
 		return unmatchedResponses;
 	}
 	
 	/**
-	 * Sets the UnmatchedResponses.
-	 * @param unmatchedResponses the UnmatchedResponses to set
-	 */
+	  * Sets the UnmatchedResponses.
+	  * @param unmatchedResponses the UnmatchedResponses to set
+	  */
 	public void setUnmatchedResponses(Long unmatchedResponses) {
 		this.unmatchedResponses = unmatchedResponses;
 	}
 	
 	/**
-	 * Gets the DiscardedOpcode.
-	 * @return the DiscardedOpcode
-	 */
+	  * Gets the DiscardedOpcode.
+	  * @return the DiscardedOpcode
+	  */
 	public Long getDiscardedOpcode() {
 		return discardedOpcode;
 	}
 	
 	/**
-	 * Sets the DiscardedOpcode.
-	 * @param discardedOpcode the DiscardedOpcode to set
-	 */
+	  * Sets the DiscardedOpcode.
+	  * @param discardedOpcode the DiscardedOpcode to set
+	  */
 	public void setDiscardedOpcode(Long discardedOpcode) {
 		this.discardedOpcode = discardedOpcode;
 	}
 	
 	/**
-	 * Gets the MalformedItems.
-	 * @return the MalformedItems
-	 */
+	  * Gets the MalformedItems.
+	  * @return the MalformedItems
+	  */
 	public Long getMalformedItems() {
 		return malformedItems;
 	}
 	
 	/**
-	 * Sets the MalformedItems.
-	 * @param malformedItems the MalformedItems to set
-	 */
+	  * Sets the MalformedItems.
+	  * @param malformedItems the MalformedItems to set
+	  */
 	public void setMalformedItems(Long malformedItems) {
 		this.malformedItems = malformedItems;
 	}
