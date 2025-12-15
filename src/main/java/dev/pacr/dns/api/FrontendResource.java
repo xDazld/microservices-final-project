@@ -299,13 +299,14 @@ public class FrontendResource {
 		Map<String, Object> positiveCache = (Map<String, Object>) stats.get("positiveCache");
 		if (positiveCache != null) {
 			LOG.debugf("Positive cache stats: %s", positiveCache);
-			Object active = positiveCache.get("active");
+			Object cacheHits = positiveCache.get("cacheHits");
 			
 			// Publish cache stats update
 			eventPublisher.publishCacheStatsUpdate(stats);
 			
-			String result = active != null ? formatNumber(((Number) active).doubleValue()) : "0";
-			LOG.debugf("Cache hits returning: %s (active: %s)", result, active);
+			String result =
+					cacheHits != null ? formatNumber(((Number) cacheHits).doubleValue()) : "0";
+			LOG.debugf("Cache hits returning: %s (cacheHits: %s)", result, cacheHits);
 			return result;
 		}
 		LOG.debugf("Positive cache is null!");
