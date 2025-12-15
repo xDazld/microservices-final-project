@@ -1,5 +1,6 @@
 package dev.pacr.dns.api;
 
+import dev.pacr.dns.messaging.EventPublisher;
 import dev.pacr.dns.model.FilterRule;
 import dev.pacr.dns.service.DNSFilterService;
 import dev.pacr.dns.service.DNSResolver;
@@ -26,7 +27,7 @@ import java.util.Map;
  * Frontend UI Resource
  * <p>
  * Serves the web frontend using Qute templates and provides HTML fragment endpoints for HTMX
- * dynamic updates.
+ * dynamic updates. Publishes real-time metrics via event streaming to WebSocket clients.
  */
 @Path("/ui")
 public class FrontendResource {
@@ -68,6 +69,9 @@ public class FrontendResource {
 	
 	@Inject
 	MeterRegistry meterRegistry;
+	
+	@Inject
+	EventPublisher eventPublisher;
 	
 	// ============== Page Routes ==============
 	@GET
@@ -154,6 +158,15 @@ public class FrontendResource {
 		} else {
 			logs = queryLogService.getRecentQueries(limit);
 		}
+		
+		// Publish each log entry as a real-time event
+		logs.forEach(logEntry -> {
+			try {
+				eventPublisher.publishQueryLog(logEntry);
+			} catch (Exception e) {
+				LOG.warnf(e, "Failed to publish query log event");
+			}
+		});
 		
 		StringBuilder html = new StringBuilder();
 		html.append("<table class='log-table'>");
@@ -266,6 +279,10 @@ public class FrontendResource {
 		} catch (Exception e) {
 			LOG.warnf("Error retrieving query count metric: %s", e.getMessage());
 		}
+		
+		// Publish metrics update event for real-time dashboard updates
+		eventPublisher.publishQueryCountMetric(count);
+		
 		String result = formatNumber(count);
 		LOG.debugf("Query count endpoint returning: %s (raw: %f)", result, count);
 		return result;
@@ -282,6 +299,10 @@ public class FrontendResource {
 		if (positiveCache != null) {
 			LOG.debugf("Positive cache stats: %s", positiveCache);
 			Object active = positiveCache.get("active");
+			
+			// Publish cache stats update
+			eventPublisher.publishCacheStatsUpdate(stats);
+			
 			String result = active != null ? formatNumber(((Number) active).doubleValue()) : "0";
 			LOG.debugf("Cache hits returning: %s (active: %s)", result, active);
 			return result;
@@ -302,6 +323,10 @@ public class FrontendResource {
 		} catch (Exception e) {
 			LOG.warnf("Error retrieving blocked count metric: %s", e.getMessage());
 		}
+		
+		// Publish metrics update event for real-time dashboard updates
+		eventPublisher.publishFilterCheckMetric(count);
+		
 		String result = formatNumber(count);
 		LOG.debugf("Blocked count endpoint returning: %s (raw: %f)", result, count);
 		return result;
@@ -316,6 +341,9 @@ public class FrontendResource {
 		LOG.debugf("Threat stats: %s", stats);
 		Object domains = stats.get("maliciousDomains");
 		Object ips = stats.get("maliciousIPs");
+		
+		// Publish security stats update
+		eventPublisher.publishSecurityStatsUpdate(stats);
 		
 		double total = 0;
 		if (domains != null) {
