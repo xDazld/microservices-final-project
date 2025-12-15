@@ -155,7 +155,8 @@ public class DNSEventConsumer {
             if ("malware".equalsIgnoreCase(threatType) || "phishing".equalsIgnoreCase(threatType)) {
 
                 filterService.addRule("Auto-block: " + domain, domain,
-                        dev.pacr.dns.model.FilterRule.RuleType.BLOCK, threatType.toLowerCase(), 90
+                        dev.pacr.dns.storage.model.FilterRule.RuleType.BLOCK,
+                        threatType.toLowerCase(), 90
                 // High priority
                 );
 
@@ -184,7 +185,7 @@ public class DNSEventConsumer {
 
         // Create high-priority blocking rule
         filterService.addRule("Auto-block malware: " + domain, domain,
-                dev.pacr.dns.model.FilterRule.RuleType.BLOCK, "malware", 95);
+                dev.pacr.dns.storage.model.FilterRule.RuleType.BLOCK, "malware", 95);
 
         registry.counter("dns.autonomous.blocks", "reason", "malware").increment();
     }
@@ -213,7 +214,7 @@ public class DNSEventConsumer {
         securityService.addMaliciousDomain(domain);
 
         filterService.addRule("Auto-block phishing: " + domain, domain,
-                dev.pacr.dns.model.FilterRule.RuleType.BLOCK, "phishing", 90);
+                dev.pacr.dns.storage.model.FilterRule.RuleType.BLOCK, "phishing", 90);
 
         registry.counter("dns.autonomous.blocks", "reason", "phishing").increment();
     }

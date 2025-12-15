@@ -1,7 +1,7 @@
 package dev.pacr.dns.api;
 
-import dev.pacr.dns.model.FilterRule;
 import dev.pacr.dns.service.DNSFilterService;
+import dev.pacr.dns.storage.model.FilterRule;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
@@ -107,19 +107,15 @@ public class FilterRuleResource {
 		}
 		
 		FilterRule updatedRule = new FilterRule();
-		updatedRule.setName(request.name != null ? request.name : existingRule.getName());
-		updatedRule.setPattern(
-				request.pattern != null ? request.pattern : existingRule.getPattern());
-		updatedRule.setType(request.type != null ? FilterRule.RuleType.valueOf(request.type) :
-				existingRule.getType());
-		updatedRule.setCategory(
-				request.category != null ? request.category : existingRule.getCategory());
-		updatedRule.setPriority(
-				request.priority != null ? request.priority : existingRule.getPriority());
-		updatedRule.setEnabled(
-				request.enabled != null ? request.enabled : existingRule.isEnabled());
-		updatedRule.setRedirectTo(
-				request.redirectTo != null ? request.redirectTo : existingRule.getRedirectTo());
+		updatedRule.name = request.name != null ? request.name : existingRule.name;
+		updatedRule.pattern = request.pattern != null ? request.pattern : existingRule.pattern;
+		updatedRule.type = request.type != null ? FilterRule.RuleType.valueOf(request.type) :
+				existingRule.type;
+		updatedRule.category = request.category != null ? request.category : existingRule.category;
+		updatedRule.priority = request.priority != null ? request.priority : existingRule.priority;
+		updatedRule.enabled = request.enabled != null ? request.enabled : existingRule.enabled;
+		updatedRule.redirectTo =
+				request.redirectTo != null ? request.redirectTo : existingRule.redirectTo;
 		
 		FilterRule result = filterService.updateRule(ruleId, updatedRule);
 		

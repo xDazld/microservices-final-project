@@ -1,5 +1,6 @@
 package dev.pacr.dns.model;
 
+import dev.pacr.dns.storage.model.FilterRule;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -18,30 +19,30 @@ class FilterRuleTest {
 	void testCreateFilterRuleWithDefaults() {
 		FilterRule rule = new FilterRule();
 		
-		assertNotNull(rule.getId());
-		assertNotNull(rule.getCreatedAt());
-		assertNotNull(rule.getUpdatedAt());
-		assertTrue(rule.isEnabled());
-		assertEquals(0, rule.getPriority());
+		assertNotNull(rule.ruleId);
+		assertNotNull(rule.createdAt);
+		assertNotNull(rule.updatedAt);
+		assertTrue(rule.enabled);
+		assertEquals(0, rule.priority);
 	}
 	
 	@Test
 	void testFilterRuleGettersSetters() {
 		FilterRule rule = new FilterRule();
 		
-		rule.setName("Test Rule");
-		rule.setPattern("*.example.com");
-		rule.setType(FilterRule.RuleType.BLOCK);
-		rule.setCategory("ads");
-		rule.setPriority(100);
-		rule.setEnabled(false);
+		rule.name = "Test Rule";
+		rule.pattern = "*.example.com";
+		rule.type = FilterRule.RuleType.BLOCK;
+		rule.category = "ads";
+		rule.priority = 100;
+		rule.enabled = false;
 		
-		assertEquals("Test Rule", rule.getName());
-		assertEquals("*.example.com", rule.getPattern());
-		assertEquals(FilterRule.RuleType.BLOCK, rule.getType());
-		assertEquals("ads", rule.getCategory());
-		assertEquals(100, rule.getPriority());
-		assertFalse(rule.isEnabled());
+		assertEquals("Test Rule", rule.name);
+		assertEquals("*.example.com", rule.pattern);
+		assertEquals(FilterRule.RuleType.BLOCK, rule.type);
+		assertEquals("ads", rule.category);
+		assertEquals(100, rule.priority);
+		assertFalse(rule.enabled);
 	}
 	
 	@Test
@@ -49,110 +50,110 @@ class FilterRuleTest {
 		FilterRule rule1 = new FilterRule();
 		FilterRule rule2 = new FilterRule();
 		
-		assertNotEquals(rule1.getId(), rule2.getId());
+		assertNotEquals(rule1.ruleId, rule2.ruleId);
 	}
 	
 	@Test
 	void testFilterRuleRedirectTo() {
 		FilterRule rule = new FilterRule();
 		
-		rule.setType(FilterRule.RuleType.REDIRECT);
-		rule.setRedirectTo("127.0.0.1");
+		rule.type = FilterRule.RuleType.REDIRECT;
+		rule.redirectTo = "127.0.0.1";
 		
-		assertEquals(FilterRule.RuleType.REDIRECT, rule.getType());
-		assertEquals("127.0.0.1", rule.getRedirectTo());
+		assertEquals(FilterRule.RuleType.REDIRECT, rule.type);
+		assertEquals("127.0.0.1", rule.redirectTo);
 	}
 	
 	@Test
 	void testFilterRuleBlockType() {
 		FilterRule rule = new FilterRule();
-		rule.setType(FilterRule.RuleType.BLOCK);
+		rule.type = FilterRule.RuleType.BLOCK;
 		
-		assertEquals(FilterRule.RuleType.BLOCK, rule.getType());
+		assertEquals(FilterRule.RuleType.BLOCK, rule.type);
 	}
 	
 	@Test
 	void testFilterRuleAllowType() {
 		FilterRule rule = new FilterRule();
-		rule.setType(FilterRule.RuleType.ALLOW);
+		rule.type = FilterRule.RuleType.ALLOW;
 		
-		assertEquals(FilterRule.RuleType.ALLOW, rule.getType());
+		assertEquals(FilterRule.RuleType.ALLOW, rule.type);
 	}
 	
 	@Test
 	void testFilterRulePriority() {
 		FilterRule rule = new FilterRule();
 		
-		rule.setPriority(500);
-		assertEquals(500, rule.getPriority());
+		rule.priority = 500;
+		assertEquals(500, rule.priority);
 		
-		rule.setPriority(0);
-		assertEquals(0, rule.getPriority());
+		rule.priority = 0;
+		assertEquals(0, rule.priority);
 		
-		rule.setPriority(-1);
-		assertEquals(-1, rule.getPriority());
+		rule.priority = -1;
+		assertEquals(-1, rule.priority);
 	}
 	
 	@Test
 	void testFilterRuleToggleEnabled() {
 		FilterRule rule = new FilterRule();
 		
-		assertTrue(rule.isEnabled());
+		assertTrue(rule.enabled);
 		
-		rule.setEnabled(false);
-		assertFalse(rule.isEnabled());
+		rule.enabled = false;
+		assertFalse(rule.enabled);
 		
-		rule.setEnabled(true);
-		assertTrue(rule.isEnabled());
+		rule.enabled = true;
+		assertTrue(rule.enabled);
 	}
 	
 	@Test
 	void testFilterRuleCreatedAt() {
 		FilterRule rule = new FilterRule();
-		assertNotNull(rule.getCreatedAt());
+		assertNotNull(rule.createdAt);
 	}
 	
 	@Test
 	void testFilterRuleUpdatedAt() {
 		FilterRule rule = new FilterRule();
-		assertNotNull(rule.getUpdatedAt());
+		assertNotNull(rule.updatedAt);
 	}
 	
 	@Test
 	void testFilterRuleSetCreatedAt() {
 		FilterRule rule = new FilterRule();
-		rule.setCreatedAt(rule.getCreatedAt().minusSeconds(3600));
+		rule.createdAt = rule.createdAt.minusSeconds(3600);
 		
-		assertNotNull(rule.getCreatedAt());
+		assertNotNull(rule.createdAt);
 	}
 	
 	@Test
 	void testFilterRuleSetUpdatedAt() {
 		FilterRule rule = new FilterRule();
-		rule.setUpdatedAt(rule.getUpdatedAt().plusSeconds(3600));
+		rule.updatedAt = rule.updatedAt.plusSeconds(3600);
 		
-		assertNotNull(rule.getUpdatedAt());
+		assertNotNull(rule.updatedAt);
 	}
 	
 	@Test
 	void testFilterRuleCompleteSetup() {
 		FilterRule rule = new FilterRule();
-		rule.setId("rule-123");
-		rule.setName("Block Ads");
-		rule.setPattern("*.ads.com");
-		rule.setType(FilterRule.RuleType.BLOCK);
-		rule.setCategory("ads");
-		rule.setRedirectTo(null);
-		rule.setEnabled(true);
-		rule.setPriority(100);
+		rule.ruleId = "rule-123";
+		rule.name = "Block Ads";
+		rule.pattern = "*.ads.com";
+		rule.type = FilterRule.RuleType.BLOCK;
+		rule.category = "ads";
+		rule.redirectTo = null;
+		rule.enabled = true;
+		rule.priority = 100;
 		
-		assertEquals("rule-123", rule.getId());
-		assertEquals("Block Ads", rule.getName());
-		assertEquals("*.ads.com", rule.getPattern());
-		assertEquals(FilterRule.RuleType.BLOCK, rule.getType());
-		assertEquals("ads", rule.getCategory());
-		assertTrue(rule.isEnabled());
-		assertEquals(100, rule.getPriority());
+		assertEquals("rule-123", rule.ruleId);
+		assertEquals("Block Ads", rule.name);
+		assertEquals("*.ads.com", rule.pattern);
+		assertEquals(FilterRule.RuleType.BLOCK, rule.type);
+		assertEquals("ads", rule.category);
+		assertTrue(rule.enabled);
+		assertEquals(100, rule.priority);
 	}
 	
 	@Test
@@ -161,8 +162,8 @@ class FilterRuleTest {
 		
 		for (String category : categories) {
 			FilterRule rule = new FilterRule();
-			rule.setCategory(category);
-			assertEquals(category, rule.getCategory());
+			rule.category = category;
+			assertEquals(category, rule.category);
 		}
 	}
 	
@@ -170,26 +171,26 @@ class FilterRuleTest {
 	void testFilterRulePatternWithWildcards() {
 		FilterRule rule = new FilterRule();
 		
-		rule.setPattern("*.ads.com");
-		assertEquals("*.ads.com", rule.getPattern());
+		rule.pattern = "*.ads.com";
+		assertEquals("*.ads.com", rule.pattern);
 		
-		rule.setPattern("*.*.tracking.com");
-		assertEquals("*.*.tracking.com", rule.getPattern());
+		rule.pattern = "*.*.tracking.com";
+		assertEquals("*.*.tracking.com", rule.pattern);
 	}
 	
 	@Test
 	void testFilterRuleNullValues() {
 		FilterRule rule = new FilterRule();
 		
-		rule.setName(null);
-		rule.setPattern(null);
-		rule.setCategory(null);
-		rule.setRedirectTo(null);
+		rule.name = null;
+		rule.pattern = null;
+		rule.category = null;
+		rule.redirectTo = null;
 		
-		assertNull(rule.getName());
-		assertNull(rule.getPattern());
-		assertNull(rule.getCategory());
-		assertNull(rule.getRedirectTo());
+		assertNull(rule.name);
+		assertNull(rule.pattern);
+		assertNull(rule.category);
+		assertNull(rule.redirectTo);
 	}
 }
 

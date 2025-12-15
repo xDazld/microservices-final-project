@@ -1,11 +1,11 @@
 package dev.pacr.dns.api;
 
 import dev.pacr.dns.messaging.EventPublisher;
-import dev.pacr.dns.model.FilterRule;
 import dev.pacr.dns.service.DNSFilterService;
 import dev.pacr.dns.service.DNSResolver;
 import dev.pacr.dns.service.QueryLogService;
 import dev.pacr.dns.service.SecurityService;
+import dev.pacr.dns.storage.model.FilterRule;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.quarkus.qute.Template;
 import io.quarkus.qute.TemplateInstance;
@@ -438,9 +438,8 @@ public class FrontendResource {
 	@PermitAll
 	public String getFiltersSummary() {
 		List<FilterRule> rules = filterService.getAllRules();
-		long enabled = rules.stream().filter(FilterRule::isEnabled).count();
-		long blocked =
-				rules.stream().filter(r -> r.getType() == FilterRule.RuleType.BLOCK).count();
+		long enabled = rules.stream().filter(r -> r.enabled).count();
+		long blocked = rules.stream().filter(r -> r.type == FilterRule.RuleType.BLOCK).count();
 		
 		return "<div style='display: grid; gap: 15px;'>" +
 				"<div style='display: flex; justify-content: space-between;'>" +
@@ -508,37 +507,37 @@ public class FrontendResource {
 			// Status toggle
 			html.append("<td>");
 			html.append("<label class='toggle-switch'>");
-			html.append("<input type='checkbox' ").append(rule.isEnabled() ? "checked" : "");
-			html.append(" onchange=\"toggleRule('").append(rule.getId())
+			html.append("<input type='checkbox' ").append(rule.enabled ? "checked" : "");
+			html.append(" onchange=\"toggleRule('").append(rule.ruleId)
 					.append("', this.checked)\">");
 			html.append("<span class='toggle-slider'></span>");
 			html.append("</label>");
 			html.append("</td>");
 			
 			// Name
-			html.append("<td>").append(escapeHtml(rule.getName())).append("</td>");
+			html.append("<td>").append(escapeHtml(rule.name)).append("</td>");
 			
 			// Pattern
 			html.append("<td><code style='color: var(--secondary-color);'>")
-					.append(escapeHtml(rule.getPattern())).append("</code></td>");
+					.append(escapeHtml(rule.pattern)).append("</code></td>");
 			
 			// Type badge
-			html.append("<td><span class='badge badge-").append(getTypeBadgeClass(rule.getType()))
+			html.append("<td><span class='badge badge-").append(getTypeBadgeClass(rule.type))
 					.append("'>");
-			html.append(rule.getType()).append("</span></td>");
+			html.append(rule.type).append("</span></td>");
 			
 			// Category
-			html.append("<td>").append(escapeHtml(rule.getCategory())).append("</td>");
+			html.append("<td>").append(escapeHtml(rule.category)).append("</td>");
 			
 			// Priority
-			html.append("<td>").append(rule.getPriority()).append("</td>");
+			html.append("<td>").append(rule.priority).append("</td>");
 			
 			// Actions
 			html.append("<td class='actions'>");
 			html.append("<button class='btn btn-sm btn-secondary' onclick=\"openEditRuleModal('")
-					.append(rule.getId()).append("')\">Edit</button>");
+					.append(rule.ruleId).append("')\">Edit</button>");
 			html.append("<button class='btn btn-sm btn-danger' onclick=\"deleteRule('")
-					.append(rule.getId()).append("', '").append(escapeHtml(rule.getName()))
+					.append(rule.ruleId).append("', '").append(escapeHtml(rule.name))
 					.append("')\">Delete</button>");
 			html.append("</td>");
 			

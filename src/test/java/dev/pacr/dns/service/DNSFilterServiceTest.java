@@ -1,6 +1,7 @@
 package dev.pacr.dns.service;
 
 import dev.pacr.dns.model.FilterResult;
+import dev.pacr.dns.storage.model.FilterRule;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.BeforeEach;
@@ -56,17 +57,17 @@ class DNSFilterServiceTest {
 	
 	@Test
 	void testAddRule() {
-		var rule = filterService.addRule("Test", "test.com",
-				dev.pacr.dns.model.FilterRule.RuleType.BLOCK, "custom", 100);
+		var rule = filterService.addRule("Test", "test.com", FilterRule.RuleType.BLOCK, "custom",
+				100);
 		assertNotNull(rule);
-		assertEquals("Test", rule.getName());
+		assertEquals("Test", rule.name);
 	}
 	
 	@Test
 	void testDeleteRule() {
-		var rule = filterService.addRule("ToDelete", "delete.com",
-				dev.pacr.dns.model.FilterRule.RuleType.BLOCK, "custom", 100);
-		String ruleId = rule.getId();
+		var rule = filterService.addRule("ToDelete", "delete.com", FilterRule.RuleType.BLOCK,
+				"custom", 100);
+		String ruleId = rule.ruleId;
 		
 		filterService.deleteRule(ruleId);
 		// If no exception, deletion succeeded

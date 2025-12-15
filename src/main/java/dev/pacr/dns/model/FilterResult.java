@@ -1,5 +1,7 @@
 package dev.pacr.dns.model;
 
+import dev.pacr.dns.storage.model.FilterRule;
+
 /**
  * Result of applying filtering rules to a DNS query
  *
@@ -184,7 +186,7 @@ public class FilterResult {
 	@Override
 	public String toString() {
 		return "FilterResult{" + "blocked=" + blocked + ", reason='" + reason + '\'' +
-				", matchedRule=" + (matchedRule != null ? matchedRule.getName() : "none") +
+				", matchedRule=" + (matchedRule != null ? matchedRule.name : "none") +
 				", redirectTo='" + redirectTo + '\'' + ", action=" + action + '}';
 	}
 	
