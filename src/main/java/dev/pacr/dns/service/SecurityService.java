@@ -1,16 +1,19 @@
 package dev.pacr.dns.service;
 
+import dev.pacr.dns.storage.MaliciousDomainRepository;
+import dev.pacr.dns.storage.MaliciousIPRepository;
+import dev.pacr.dns.storage.model.MaliciousDomain;
+import dev.pacr.dns.storage.model.MaliciousIP;
 import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 /**
  * Security service for threat intelligence and malware detection
@@ -20,27 +23,38 @@ public class SecurityService {
 	
 	private static final Logger LOG = Logger.getLogger(SecurityService.class);
 	
-	// In-memory threat database (in production, use external threat intelligence
-	// APIs)
-	private final Set<String> maliciousDomains = ConcurrentHashMap.newKeySet();
-	private final Set<String> maliciousIPs = ConcurrentHashMap.newKeySet();
-	
 	@Inject
 	MeterRegistry registry;
+	
+	@Inject
+	MaliciousDomainRepository maliciousDomainRepository;
+	
+	@Inject
+	MaliciousIPRepository maliciousIPRepository;
 	
 	/**
 	 * Initialize with known malicious domains
 	 */
 	public void initializeThreatDatabase() {
-		// Example malicious domains (in production, integrate with real threat
-		// intelligence)
-		maliciousDomains.add("malware-test.com");
-		maliciousDomains.add("phishing-example.net");
-		maliciousDomains.add("trojan-site.org");
+		// Check if database already has entries
+		if (maliciousDomainRepository.getTotalCount() > 0 ||
+				maliciousIPRepository.getTotalCount() > 0) {
+			LOG.info("Threat database already initialized");
+			return;
+		}
+		
+		// Example malicious domains (in production, integrate with real threat intelligence)
+		maliciousDomainRepository.persist(
+				new MaliciousDomain("malware-test.com", "test", "Test malware domain"));
+		maliciousDomainRepository.persist(
+				new MaliciousDomain("phishing-example.net", "test", "Test phishing domain"));
+		maliciousDomainRepository.persist(
+				new MaliciousDomain("trojan-site.org", "test", "Test trojan domain"));
 		
 		// Example malicious IPs
-		maliciousIPs.add("198.51.100.1");
-		maliciousIPs.add("203.0.113.1");
+		maliciousIPRepository.persist(new MaliciousIP("198.51.100.1", "test", "Test malicious " +
+				"IP"));
+		maliciousIPRepository.persist(new MaliciousIP("203.0.113.1", "test", "Test malicious IP"));
 		
 		LOG.info("Threat database initialized");
 	}
@@ -60,7 +74,7 @@ public class SecurityService {
 		// Check resolved IPs against malicious IPs
 		if (resolvedAddresses != null) {
 			for (String ip : resolvedAddresses) {
-				if (maliciousIPs.contains(ip)) {
+				if (maliciousIPRepository.existsByIPAddress(ip)) {
 					LOG.warnf("Malicious IP detected: %s for domain: %s", ip, domain);
 					registry.counter("dns.security.threats.detected", "type", "malicious_ip")
 							.increment();
@@ -77,13 +91,14 @@ public class SecurityService {
 	 */
 	private boolean isDomainMalicious(String domain) {
 		// Direct match
-		if (maliciousDomains.contains(domain)) {
+		if (maliciousDomainRepository.existsByDomain(domain)) {
 			return true;
 		}
 		
-		// Check for subdomain matches
-		for (String maliciousDomain : maliciousDomains) {
-			if (domain.endsWith('.' + maliciousDomain)) {
+		// Check for subdomain matches - get all domains and check if any match
+		List<MaliciousDomain> maliciousDomains = maliciousDomainRepository.listAll();
+		for (MaliciousDomain maliciousDomain : maliciousDomains) {
+			if (domain.endsWith('.' + maliciousDomain.domain)) {
 				return true;
 			}
 		}
@@ -100,15 +115,17 @@ public class SecurityService {
 	 * Add a domain to the threat database
 	 */
 	public void addMaliciousDomain(String domain) {
-		maliciousDomains.add(domain);
-		LOG.infof("Added malicious domain: %s", domain);
+		if (!maliciousDomainRepository.existsByDomain(domain)) {
+			maliciousDomainRepository.persist(new MaliciousDomain(domain));
+			LOG.infof("Added malicious domain: %s", domain);
+		}
 	}
 	
 	/**
 	 * Remove a domain from the threat database
 	 */
 	public void removeMaliciousDomain(String domain) {
-		maliciousDomains.remove(domain);
+		maliciousDomainRepository.deleteByDomain(domain);
 		LOG.infof("Removed malicious domain: %s", domain);
 	}
 	
@@ -116,15 +133,17 @@ public class SecurityService {
 	 * Add an IP to the threat database
 	 */
 	public void addMaliciousIP(String ip) {
-		maliciousIPs.add(ip);
-		LOG.infof("Added malicious IP: %s", ip);
+		if (!maliciousIPRepository.existsByIPAddress(ip)) {
+			maliciousIPRepository.persist(new MaliciousIP(ip));
+			LOG.infof("Added malicious IP: %s", ip);
+		}
 	}
 	
 	/**
 	 * Remove an IP from the threat database
 	 */
 	public void removeMaliciousIP(String ip) {
-		maliciousIPs.remove(ip);
+		maliciousIPRepository.deleteByIPAddress(ip);
 		LOG.infof("Removed malicious IP: %s", ip);
 	}
 	
@@ -132,22 +151,25 @@ public class SecurityService {
 	 * Get all malicious domains
 	 */
 	public Set<String> getMaliciousDomains() {
-		return new HashSet<>(maliciousDomains);
+		return maliciousDomainRepository.listAll().stream().map(md -> md.domain)
+				.collect(Collectors.toSet());
 	}
 	
 	/**
 	 * Get all malicious IPs
 	 */
 	public Set<String> getMaliciousIPs() {
-		return new HashSet<>(maliciousIPs);
+		return maliciousIPRepository.listAll().stream().map(mi -> mi.ipAddress)
+				.collect(Collectors.toSet());
 	}
 	
 	/**
 	 * Get threat statistics
 	 */
 	public Map<String, Object> getThreatStats() {
-		return Map.of("maliciousDomains", maliciousDomains.size(), "maliciousIPs",
-				maliciousIPs.size());
+		return Map.of("maliciousDomains", maliciousDomainRepository.getTotalCount(),
+				"maliciousIPs",
+				maliciousIPRepository.getTotalCount());
 	}
 	
 	/**
