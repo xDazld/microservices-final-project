@@ -396,7 +396,7 @@ public class DNSQueryResource {
 					DnsMessageConverter.createQuery(domain.toString(), queryType, 1); // IN class
 			
 			// Process the query through the orchestrator
-			DnsMessage response = orchestrator.processQuery(query);
+			DnsMessage response = orchestrator.processQuery(query, clientIp);
 			
 			// Create a DNS wire format response
 			// For RFC 8484 compliance, we return a binary DNS message

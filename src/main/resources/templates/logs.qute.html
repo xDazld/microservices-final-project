@@ -1,0 +1,246 @@
+{#include layout.qute.html}
+    {#title}Query Logs - DNS Filtering Service{/title}
+
+    {#content}
+        <h1 style="margin-bottom: 30px; color: var(--primary-color);">DNS Query Logs</h1>
+
+        <!-- Filter Controls -->
+        <div class="card" style="margin-bottom: 30px;">
+            <div class="card-header">
+                <h2>🔍 Filter Options</h2>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                <div class="form-group">
+                    <label for="filter-status">Filter by Status</label>
+                    <select id="filter-status" class="form-control" onchange="filterLogs()">
+                        <option value="">All Status</option>
+                        <option value="ALLOWED">Allowed</option>
+                        <option value="BLOCKED">Blocked</option>
+                        <option value="THREAT">Threat Detected</option>
+                        <option value="ERROR">Error</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="filter-domain">Filter by Domain</label>
+                    <input type="text" id="filter-domain" class="form-control"
+                           placeholder="Enter domain (e.g., example.com)"
+                           onkeyup="filterLogs()">
+                </div>
+                <div class="form-group">
+                    <label for="log-limit">Limit Results</label>
+                    <select id="log-limit" class="form-control" onchange="filterLogs()">
+                        <option value="50">Last 50</option>
+                        <option value="100" selected>Last 100</option>
+                        <option value="500">Last 500</option>
+                        <option value="1000">All</option>
+                    </select>
+                </div>
+                <div class="form-group" style="align-self: flex-end;">
+                    <button type="button" class="btn btn-primary" onclick="refreshLogs()">
+                        🔄 Refresh
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="clearLogs()"
+                            style="margin-left: 10px;">
+                        Clear Logs
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Query Statistics -->
+        <div class="dashboard-grid" style="margin-bottom: 30px;">
+            <div class="card stat-card">
+                <div class="stat-value" id="log-total"
+                     hx-get="/ui/logs/stats/total"
+                     hx-trigger="load, every 30s"
+                     hx-swap="innerHTML">
+                    --
+                </div>
+                <div class="stat-label">Total Queries Logged</div>
+            </div>
+
+            <div class="card stat-card">
+                <div class="stat-value" id="log-blocked"
+                     hx-get="/ui/logs/stats/blocked"
+                     hx-trigger="load, every 30s"
+                     hx-swap="innerHTML">
+                    --
+                </div>
+                <div class="stat-label">Blocked Queries</div>
+            </div>
+
+            <div class="card stat-card">
+                <div class="stat-value" id="log-threats"
+                     hx-get="/ui/logs/stats/threats"
+                     hx-trigger="load, every 30s"
+                     hx-swap="innerHTML">
+                    --
+                </div>
+                <div class="stat-label">Threats Detected</div>
+            </div>
+
+            <div class="card stat-card">
+                <div class="stat-value" id="log-rate"
+                     hx-get="/ui/logs/stats/rate"
+                     hx-trigger="load, every 30s"
+                     hx-swap="innerHTML">
+                    --
+                </div>
+                <div class="stat-label">Block Rate</div>
+            </div>
+        </div>
+
+        <!-- Query Logs Table -->
+        <div class="card">
+            <div class="card-header">
+                <h2>📝 Recent Query Log</h2>
+                <small id="log-timestamp" style="color: var(--text-secondary);">Last updated: --</small>
+            </div>
+            <div id="query-logs-container"
+                 hx-get="/ui/logs/table?limit=100"
+                 hx-trigger="load, queryLogsRefresh from:body"
+                 hx-swap="innerHTML"
+                 style="overflow-x: auto;">
+                <div class="spinner"></div>
+                Loading query logs...
+            </div>
+        </div>
+
+        <style>
+            .log-table {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 0.9rem;
+            }
+
+            .log-table thead {
+                background-color: var(--bg-secondary);
+                position: sticky;
+                top: 0;
+            }
+
+            .log-table th {
+                padding: 12px;
+                text-align: left;
+                font-weight: 600;
+                border-bottom: 2px solid var(--border-color);
+                color: var(--primary-color);
+            }
+
+            .log-table td {
+                padding: 12px;
+                border-bottom: 1px solid var(--border-color);
+            }
+
+            .log-table tbody tr:hover {
+                background-color: var(--bg-hover);
+            }
+
+            .log-table tbody tr:nth-child(even) {
+                background-color: var(--bg-alternate);
+            }
+
+            .status-badge {
+                display: inline-block;
+                padding: 4px 8px;
+                border-radius: 4px;
+                font-size: 0.85rem;
+                font-weight: 600;
+                white-space: nowrap;
+            }
+
+            .status-allowed {
+                background-color: #d4edda;
+                color: #155724;
+            }
+
+            .status-blocked {
+                background-color: #f8d7da;
+                color: #721c24;
+            }
+
+            .status-threat {
+                background-color: #f5c6cb;
+                color: #721c24;
+                font-weight: bold;
+            }
+
+            .status-error {
+                background-color: #e2e3e5;
+                color: #383d41;
+            }
+
+            .domain-cell {
+                font-family: monospace;
+                word-break: break-all;
+            }
+
+            .answers-cell {
+                font-family: monospace;
+                font-size: 0.85rem;
+                max-width: 250px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+            .timestamp-cell {
+                font-size: 0.85rem;
+                color: var(--text-secondary);
+                white-space: nowrap;
+            }
+
+            #log-limit {
+                margin-top: 0;
+            }
+
+            .log-table tbody tr {
+                transition: background-color 0.2s ease;
+            }
+        </style>
+
+        <script>
+            function refreshLogs() {
+                const event = new Event('queryLogsRefresh');
+                document.body.dispatchEvent(event);
+                const opts = JSON.parse('{"target":"#query-logs-container","swap":"innerHTML"}');
+                htmx.ajax('GET', '/ui/logs/table?limit=' + document.getElementById('log-limit').value, opts);
+                updateTimestamp();
+            }
+
+            function filterLogs() {
+                const status = document.getElementById('filter-status').value;
+                const domain = document.getElementById('filter-domain').value;
+                const limit = document.getElementById('log-limit').value;
+
+                let url = '/ui/logs/table?limit=' + limit;
+                if (status) url += '&status=' + encodeURIComponent(status);
+                if (domain) url += '&domain=' + encodeURIComponent(domain);
+
+                const opts = JSON.parse('{"target":"#query-logs-container","swap":"innerHTML"}');
+                htmx.ajax('GET', url, opts);
+                updateTimestamp();
+            }
+
+            function clearLogs() {
+                if (confirm('Are you sure you want to clear all query logs?')) {
+                    fetch('/ui/logs/clear', { method: 'POST' })
+                        .then(() => refreshLogs())
+                        .catch(() => refreshLogs());
+                }
+            }
+
+            function updateTimestamp() {
+                const now = new Date();
+                const timeStr = now.toLocaleTimeString();
+                document.getElementById('log-timestamp').textContent = 'Last updated: ' + timeStr;
+            }
+
+            // Initialize timestamp on page load
+            document.addEventListener('DOMContentLoaded', updateTimestamp);
+
+            // Auto-refresh every 60 seconds
+            setInterval(refreshLogs, 60000);
+        </script>
+    {/content}
+{/include}

@@ -29,6 +29,9 @@ public class DNSOrchestrator {
 	DNSLoggingService loggingService;
 	
 	@Inject
+	QueryLogService queryLogService;
+	
+	@Inject
 	SecurityService securityService;
 	
 	/**
@@ -36,8 +39,17 @@ public class DNSOrchestrator {
 	 */
 	@Timed(value = "dns.query.total", description = "Total time to process DNS query")
 	public DnsMessage processQuery(DnsMessage query) {
+		return processQuery(query, "unknown");
+	}
+	
+	/**
+	 * Process a complete DNS query: filter, resolve, and log with client IP
+	 */
+	@Timed(value = "dns.query.total", description = "Total time to process DNS query")
+	public DnsMessage processQuery(DnsMessage query, String clientIp) {
 		String qname = query.getQname();
-		LOG.infof("Processing DNS query for: %s (type=%s)", qname, query.getQtype());
+		String queryType = query.getQtype() != null ? query.getQtype().toString() : "A";
+		LOG.infof("Processing DNS query for: %s (type=%s) from %s", qname, queryType, clientIp);
 		
 		// Step 1: Apply filtering rules
 		FilterResult filterResult = filterService.applyFilters(qname);
@@ -51,6 +63,7 @@ public class DNSOrchestrator {
 			
 			// Log the blocked query
 			loggingService.logQuery(query, response, filterResult);
+			queryLogService.logQuery(qname, queryType, "BLOCKED", 3, new ArrayList<>(), clientIp);
 			
 			return response;
 		}
@@ -82,7 +95,20 @@ public class DNSOrchestrator {
 				// Log security alert
 				loggingService.logSecurityAlert(qname, "MALWARE_DETECTED",
 						"Domain identified as malicious");
+				queryLogService.logQuery(qname, queryType, "THREAT", 3, new ArrayList<>(),
+						clientIp);
+			} else {
+				// Log allowed query with answers
+				queryLogService.logQuery(qname, queryType, "ALLOWED", response.getRcode(),
+						addresses, clientIp);
 			}
+		} else {
+			// Log allowed query (no answers or error)
+			String status =
+					response.getRcode() != null && response.getRcode() != 0 ? "ERROR" : "ALLOWED";
+			queryLogService.logQuery(qname, queryType, status,
+					response.getRcode() != null ? response.getRcode() : 0, new ArrayList<>(),
+					clientIp);
 		}
 		
 		// Step 6: Log the query

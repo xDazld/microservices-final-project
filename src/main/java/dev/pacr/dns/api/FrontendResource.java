@@ -3,6 +3,7 @@ package dev.pacr.dns.api;
 import dev.pacr.dns.model.FilterRule;
 import dev.pacr.dns.service.DNSFilterService;
 import dev.pacr.dns.service.DNSResolver;
+import dev.pacr.dns.service.QueryLogService;
 import dev.pacr.dns.service.SecurityService;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.quarkus.qute.Template;
@@ -11,6 +12,7 @@ import jakarta.annotation.security.PermitAll;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
@@ -50,6 +52,9 @@ public class FrontendResource {
 	Template login;
 	
 	@Inject
+	Template logs;
+	
+	@Inject
 	DNSResolver dnsResolver;
 	
 	@Inject
@@ -57,6 +62,9 @@ public class FrontendResource {
 	
 	@Inject
 	SecurityService securityService;
+	
+	@Inject
+	QueryLogService queryLogService;
 	
 	@Inject
 	MeterRegistry meterRegistry;
@@ -107,12 +115,141 @@ public class FrontendResource {
 	}
 	
 	@GET
+	@Path("/logs")
+	@Produces(MediaType.TEXT_HTML)
+	@PermitAll
+	public TemplateInstance getLogs() {
+		LOG.debug("Serving logs page");
+		return logs.data("active", "logs");
+	}
+	
+	@GET
 	@Path("/login")
 	@Produces(MediaType.TEXT_HTML)
 	@PermitAll
 	public TemplateInstance getLogin() {
 		LOG.debug("Serving login page");
 		return login.data("active", "login");
+	}
+	
+	// ============== Query Logs Endpoints ==============
+	
+	@GET
+	@Path("/logs/table")
+	@Produces(MediaType.TEXT_HTML)
+	@PermitAll
+	public String getLogsTable(@QueryParam("limit") int limit, @QueryParam("status") String status,
+							   @QueryParam("domain") String domain) {
+		LOG.debug("Fetching logs table");
+		
+		List<Map<String, Object>> logs;
+		if (limit <= 0) {
+			limit = 100;
+		}
+		
+		if (status != null && !status.isEmpty()) {
+			logs = queryLogService.getQueriesByStatus(status, limit);
+		} else if (domain != null && !domain.isEmpty()) {
+			logs = queryLogService.getQueriesByDomain(domain, limit);
+		} else {
+			logs = queryLogService.getRecentQueries(limit);
+		}
+		
+		StringBuilder html = new StringBuilder();
+		html.append("<table class='log-table'>");
+		html.append("<thead><tr>");
+		html.append("<th>Timestamp</th>");
+		html.append("<th>Domain</th>");
+		html.append("<th>Type</th>");
+		html.append("<th>Status</th>");
+		html.append("<th>Response Code</th>");
+		html.append("<th>Answers</th>");
+		html.append("<th>Source IP</th>");
+		html.append("</tr></thead>");
+		html.append("<tbody>");
+		
+		if (logs.isEmpty()) {
+			html.append("<tr><td colspan='7' style='text-align: center; padding: 20px;'>");
+			html.append("No query logs available</td></tr>");
+		} else {
+			for (Map<String, Object> log : logs) {
+				html.append("<tr>");
+				html.append("<td class='timestamp-cell'>")
+						.append(escapeHtml(log.get("timestamp").toString())).append("</td>");
+				html.append("<td class='domain-cell'>")
+						.append(escapeHtml(log.get("domain").toString())).append("</td>");
+				html.append("<td>").append(escapeHtml(log.get("queryType").toString()))
+						.append("</td>");
+				
+				String statusStr = log.get("status").toString();
+				String statusClass = "status-" + statusStr.toLowerCase();
+				html.append("<td><span class='status-badge ").append(statusClass).append("'>");
+				html.append(escapeHtml(statusStr)).append("</span></td>");
+				
+				html.append("<td>").append(log.get("rcode")).append("</td>");
+				
+				List<String> answers = (List<String>) log.get("answers");
+				String answersStr =
+						answers != null && !answers.isEmpty() ? String.join(", ", answers) : "--";
+				html.append("<td class='answers-cell' title='").append(escapeHtml(answersStr))
+						.append("'>");
+				html.append(escapeHtml(answersStr)).append("</td>");
+				
+				html.append("<td>").append(escapeHtml(log.get("sourceIp").toString()))
+						.append("</td>");
+				html.append("</tr>");
+			}
+		}
+		
+		html.append("</tbody></table>");
+		return html.toString();
+	}
+	
+	@GET
+	@Path("/logs/stats/total")
+	@Produces(MediaType.TEXT_HTML)
+	@PermitAll
+	public String getLogsTotalCount() {
+		Map<String, Object> stats = queryLogService.getQueryStats();
+		return formatNumber(((Number) stats.get("totalQueries")).doubleValue());
+	}
+	
+	@GET
+	@Path("/logs/stats/blocked")
+	@Produces(MediaType.TEXT_HTML)
+	@PermitAll
+	public String getLogsBlockedCount() {
+		Map<String, Object> stats = queryLogService.getQueryStats();
+		return formatNumber(((Number) stats.get("blockedQueries")).doubleValue());
+	}
+	
+	@GET
+	@Path("/logs/stats/threats")
+	@Produces(MediaType.TEXT_HTML)
+	@PermitAll
+	public String getLogsThreatsCount() {
+		Map<String, Object> stats = queryLogService.getQueryStats();
+		return formatNumber(((Number) stats.get("threatQueries")).doubleValue());
+	}
+	
+	@GET
+	@Path("/logs/stats/rate")
+	@Produces(MediaType.TEXT_HTML)
+	@PermitAll
+	public String getLogsBlockRate() {
+		Map<String, Object> stats = queryLogService.getQueryStats();
+		return stats.get("blockRate").toString();
+	}
+	
+	@POST
+	@Path("/logs/clear")
+	@Produces(MediaType.TEXT_HTML)
+	@RolesAllowed({"admin"})
+	public String clearQueryLogs() {
+		LOG.info("Clearing query logs");
+		queryLogService.clearLogs();
+		return "<div style='text-align: center; padding: 20px; color: var(--success-color);'>" +
+				"<strong>✓ Query logs cleared successfully</strong></div>";
 	}
 	
 	// ============== HTMX Fragment Endpoints ==============
