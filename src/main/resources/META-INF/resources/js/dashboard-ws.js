@@ -1,3 +1,7 @@
+/*global console, window */
+
+/* jshint esversion: 6, strict: false */
+
 /**
  * Dashboard WebSocket Client
  *
@@ -172,10 +176,14 @@ class DashboardWebSocketClient {
      */
     prependLogEntry(container, logEntry) {
         const table = container.querySelector('table');
-        if (!table) return;
+        if (!table) {
+            return;
+        }
 
         const tbody = table.querySelector('tbody');
-        if (!tbody) return;
+        if (!tbody) {
+            return;
+        }
 
         const row = document.createElement('tr');
         row.innerHTML = `
@@ -312,13 +320,13 @@ class DashboardWebSocketClient {
         if (isNaN(num) || !isFinite(num)) {
             return '0';
         }
-        if (num >= 1_000_000) {
-            return (num / 1_000_000).toFixed(1) + 'M';
+        if (num >= 1000000) {
+            return (num / 1000000).toFixed(1) + 'M';
         }
-        if (num >= 1_000) {
-            return (num / 1_000).toFixed(1) + 'K';
+        if (num >= 1000) {
+            return (num / 1000).toFixed(1) + 'K';
         }
-        return Math.floor(num).toString();
+        return Math.round(num).toString();
     }
 
     /**
@@ -335,7 +343,9 @@ class DashboardWebSocketClient {
      * Escape HTML to prevent XSS
      */
     escapeHtml(text) {
-        if (!text) return '';
+        if (!text) {
+            return '';
+        }
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;

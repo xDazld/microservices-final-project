@@ -1,3 +1,6 @@
+/*global window, formatNumber */
+/* jshint esversion: 6, strict: false */
+
 /**
  * DNS Shield - Entertainment Module
  * This module provides fun and interactive features for the frontend

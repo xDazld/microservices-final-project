@@ -1,3 +1,6 @@
+/*global console, confirm, htmx, window */
+/* jshint esversion: 11, strict: false */
+
 // DNS Filtering Service - Frontend JavaScript
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -19,6 +22,7 @@ function initializeApp() {
         if (isAuthenticated()) {
             // HTMX handles all dashboard stats loading via hx-trigger="load"
             // No need to manually call loadDashboardStats() as it conflicts with HTMX
+            void 0; // Explicit no-op
         } else {
             // Not authenticated and not on login page - redirect to login
             sessionStorage.setItem('redirect_after_login', window.location.pathname);
@@ -36,15 +40,21 @@ function updateAuthUI() {
     const logoutLink = document.getElementById('logout-link');
 
     if (isAuthenticated()) {
-        if (loginLink) loginLink.style.display = 'none';
+        if (loginLink) {
+            loginLink.style.display = 'none';
+        }
         if (logoutLink) {
             logoutLink.style.display = 'inline';
             const username = sessionStorage.getItem('username') || 'User';
             logoutLink.textContent = `Logout (${username})`;
         }
     } else {
-        if (loginLink) loginLink.style.display = 'inline';
-        if (logoutLink) logoutLink.style.display = 'none';
+        if (loginLink) {
+            loginLink.style.display = 'inline';
+        }
+        if (logoutLink) {
+            logoutLink.style.display = 'none';
+        }
     }
 }
 
@@ -146,14 +156,18 @@ function updateStatsDisplay(stats) {
     const blockedEl = document.getElementById('blocked-queries');
     const threatsEl = document.getElementById('threats-detected');
 
-    if (totalQueriesEl) totalQueriesEl.textContent = formatNumber(stats.totalQueries || 0);
+    if (totalQueriesEl) {
+        totalQueriesEl.textContent = formatNumber(stats.totalQueries || 0);
+    }
 
     // Cache hits comes from positive cache active count
     if (cacheHitsEl && stats.cache && stats.cache.positiveCache) {
         cacheHitsEl.textContent = formatNumber(stats.cache.positiveCache.active || 0);
     }
 
-    if (blockedEl) blockedEl.textContent = formatNumber(stats.filterChecks || 0);
+    if (blockedEl) {
+        blockedEl.textContent = formatNumber(stats.filterChecks || 0);
+    }
 
     // Threats is the sum of malicious domains and IPs
     if (threatsEl && stats.security) {
@@ -550,7 +564,9 @@ function triggerLogoAnimation() {
 function showAchievement(title, description) {
     const container = document.getElementById('alerts-container') || document.querySelector('main .container');
 
-    if (!container) return;
+    if (!container) {
+        return;
+    }
 
     const achievement = document.createElement('div');
     achievement.className = 'achievement-badge';
@@ -590,8 +606,7 @@ function initFunAnimations() {
                 '💫 Do it!',
                 '🎯 Let\'s go!'
             ];
-            const randomMsg = messages[Math.floor(Math.random() * messages.length)];
-            this.title = randomMsg;
+            this.title = messages[Math.floor(Math.random() * messages.length)];
         });
     });
 }
@@ -637,7 +652,7 @@ function triggerConfetti() {
 
         const startX = Math.random() * window.innerWidth;
         const endX = startX + (Math.random() - 0.5) * 300;
-        const duration = 2 + Math.random() * 1;
+        const duration = 2 + Math.random();
 
         confetti.animate([
             {
@@ -663,7 +678,8 @@ function triggerConfetti() {
 function playNotificationSound() {
     try {
         // Create a simple beep sound using Web Audio API
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        const audioContext = new AudioContextClass();
         const oscillator = audioContext.createOscillator();
         const gainNode = audioContext.createGain();
 
@@ -688,7 +704,9 @@ function playNotificationSound() {
  */
 async function showAlert(message, type = 'info') {
     const container = document.getElementById('alerts-container');
-    if (!container) return;
+    if (!container) {
+        return;
+    }
 
     const alert = document.createElement('div');
     alert.className = `alert alert-${type} scale-up`;

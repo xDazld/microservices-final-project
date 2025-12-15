@@ -1,3 +1,7 @@
+/*global console, window, LanguageModel */
+
+/* jshint esversion: 8, strict: false */
+
 /**
  * DNS Shield - Dashboard Interactive Functions
  */
