@@ -16,19 +16,37 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
 /**
- * DNS filtering service that applies filtering rules to domains
+ * DNS filtering service that applies filtering rules to domains.
+ * <p>
+ * This service provides DNS-based content filtering capabilities by applying configurable rules
+ * to domain names. It supports different rule types (BLOCK, ALLOW, REDIRECT) with priority-based
+ * evaluation and wildcard pattern matching.
+ * <p>
+ * Features:
+ * - In-memory rule storage with thread-safe operations
+ * - Regex pattern compilation for performance
+ * - Metrics collection for monitoring filter effectiveness
+ * - Priority-based rule evaluation
+ * <p>
+ * Rules are evaluated in descending priority order, with higher priority rules taking precedence.
+ *
+ * @author Patrick Rafferty
  */
 @ApplicationScoped
 public class DNSFilterService {
 	
+	/**
+	 * Logger for this class
+	 */
 	private static final Logger LOG = Logger.getLogger(DNSFilterService.class);
 	
-	// In-memory storage for filter rules (in production, use database)
+	/** In-memory storage for filter rules (in production, use database) */
 	private final Map<String, FilterRule> rules = new ConcurrentHashMap<>();
 	
-	// Compiled regex patterns for performance
+	/** Compiled regex patterns for performance optimization */
 	private final Map<String, Pattern> compiledPatterns = new ConcurrentHashMap<>();
 	
+	/** Micrometer registry for metrics collection */
 	@Inject
 	MeterRegistry registry;
 	

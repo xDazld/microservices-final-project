@@ -28,7 +28,7 @@ import java.util.Collection;
  * <p>
  * Handles JWT token generation with manual signing using loaded private key.
  *
- * @author DNS Shield Team
+ * @author Patrick Rafferty
  */
 @ApplicationScoped
 public class JwtSigningService {

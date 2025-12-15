@@ -29,6 +29,7 @@ import java.util.Base64;
  * - Media type: application/dns-message
  * - RFC 5358 access control to prevent use as reflector in DDoS attacks
  *
+ * @author Patrick Rafferty
  * @see <a href="https://tools.ietf.org/html/rfc8484">RFC 8484 - DNS Queries over HTTPS (DoH)</a>
  * @see
  * <a href="https://tools.ietf.org/html/rfc5358">RFC 5358 - Preventing Use of Recursive Nameservers in Reflector Attacks</a>
@@ -36,51 +37,106 @@ import java.util.Base64;
 @Path("/dns-query")
 public class DNSQueryResource {
 	
-	private static final Logger LOG = Logger.getLogger(DNSQueryResource.class);
-	
-	// RFC 8484 media type for DNS messages
+	/** RFC 8484 media type for DNS messages */
 	public static final String APPLICATION_DNS_MESSAGE = "application/dns-message";
-	
-	// DNS message structure constants
+	/**
+	 * Logger for this class
+	 */
+	private static final Logger LOG = Logger.getLogger(DNSQueryResource.class);
+	/** Minimum length of a valid DNS message in bytes */
 	private static final int MIN_DNS_MESSAGE_LENGTH = 12;
+	
+	/** Byte mask for bitwise operations */
 	private static final int BYTE_MASK = 0xFF;
+	
+	/** DNS compression mask for detecting compressed labels */
 	private static final int DNS_COMPRESSION_MASK = 0xC0;
 	
-	// DNS header field offsets
+	/** Offset of QDCOUNT field in DNS header */
 	private static final int QDCOUNT_OFFSET = 4;
-	private static final int QDCOUNT_LENGTH = 2;
+	
+	/** Length of DNS header in bytes */
 	private static final int DNS_HEADER_LENGTH = 12;
+	
+	/** Length of DNS query type field in bytes */
 	private static final int DNS_QUERYTYPE_LENGTH = 2;
-	private static final int DNS_CLASS_LENGTH = 2;
 	
-	// DNS flags for response
+	/** DNS response flag with QR bit set */
 	private static final int FLAG_RESPONSE = 0x8400;
-	private static final int FLAG_RESPONSE_NXDOMAIN = 0x8403;
-	private static final int FLAG_RESPONSE_SERVFAIL = 0x8402;
-	private static final int FLAG_RESPONSE_REFUSED = 0x8405;
-			// RFC 5358: REFUSED for unauthorized clients
 	
-	// DNS query type codes
+	/**
+	 * DNS flag mask for RCODE (lower 4 bits)
+	 */
+	private static final int RCODE_MASK = 0x0F;
+	
+	/**
+	 * DNS flag for QR bit (Query/Response)
+	 */
+	private static final int FLAG_QR = 0x8000;
+	
+	/**
+	 * DNS flag for RA bit (Recursion Available)
+	 */
+	private static final int FLAG_RA = 0x0400;
+	
+	/** DNS query type for A records */
 	private static final int QTYPE_A = 1;
+	
+	/** DNS query type for NS records */
 	private static final int QTYPE_NS = 2;
+	
+	/** DNS query type for CNAME records */
 	private static final int QTYPE_CNAME = 5;
+	
+	/** DNS query type for SOA records */
 	private static final int QTYPE_SOA = 6;
+	
+	/** DNS query type for PTR records */
 	private static final int QTYPE_PTR = 12;
+	
+	/** DNS query type for HINFO records */
 	private static final int QTYPE_HINFO = 13;
+	
+	/** DNS query type for MX records */
 	private static final int QTYPE_MX = 15;
+	
+	/** DNS query type for TXT records */
 	private static final int QTYPE_TXT = 16;
+	
+	/** DNS query type for AAAA records */
 	private static final int QTYPE_AAAA = 28;
+	
+	/** DNS query type for SRV records */
 	private static final int QTYPE_SRV = 33;
+	
+	/** DNS query type for OPT records */
 	private static final int QTYPE_OPT = 41;
+	
+	/** DNS query type for DNSKEY records */
 	private static final int QTYPE_DNSKEY = 48;
+	
+	/** DNS query type for CAA records */
 	private static final int QTYPE_CAA = 257;
 	
+	/**
+	 * Maximum length of a DNS label in bytes
+	 */
+	private static final int MAX_DNS_LABEL_LENGTH = 63;
+	
+	/**
+	 * Maximum length of a domain name in bytes (excluding null terminator)
+	 */
+	private static final int MAX_DOMAIN_LENGTH = 253;
+	
+	/** DNS Orchestrator service for processing DNS queries */
 	@Inject
 	DNSOrchestrator orchestrator;
 	
+	/** RFC 5358 access control service */
 	@Inject
 	RFC5358AccessControlService accessControl;
 	
+	/** HTTP server request context */
 	@Context
 	HttpServerRequest request;
 	
@@ -279,7 +335,7 @@ public class DNSQueryResource {
 					if (offset < dnsMessage.length - DNS_QUERYTYPE_LENGTH - 2) {
 						// Check if the next byte looks like a valid label length (1-63)
 						byte nextByte = dnsMessage[offset];
-						if (nextByte > 0 && nextByte <= 63) {
+						if (nextByte > 0 && nextByte <= MAX_DNS_LABEL_LENGTH) {
 							// This looks like another label following a zero byte - invalid!
 							LOG.warnf(
 									"Invalid domain: empty label detected (e.g., consecutive " +
@@ -303,7 +359,7 @@ public class DNSQueryResource {
 				}
 				
 				// Validate label length (RFC 1035: labels must be 1-63 octets)
-				if (length < 0 || length > 63) {
+				if (length < 0 || length > MAX_DNS_LABEL_LENGTH) {
 					LOG.warnf("Invalid label length: %d", length);
 					// RFC 8484 Section 4.2.1: Return DNS FORMERR with 2xx HTTP status
 					byte[] errorResponse = createDNSErrorResponse(transactionId, 1); // FORMERR
@@ -331,7 +387,7 @@ public class DNSQueryResource {
 			
 			// RFC 1035 validation: Check domain name length constraints
 			// Total domain length (including null terminator) must be <= 255 octets
-			if (domain.length() > 253) {  // 253 + null terminator = 254 octets max
+			if (domain.length() > MAX_DOMAIN_LENGTH) {  // 253 + null terminator = 254 octets max
 				LOG.warnf("Domain name exceeds maximum length of 255 characters: %s", domain);
 				// RFC 8484 Section 4.2.1: Return DNS FORMERR with 2xx HTTP status
 				byte[] errorResponse = createDNSErrorResponse(transactionId, 1); // FORMERR
@@ -345,7 +401,7 @@ public class DNSQueryResource {
 			// Valid DNS characters: a-z, A-Z, 0-9, hyphen (but not at start or end)
 			String[] labels = domain.toString().split("\\.");
 			for (String label : labels) {
-				if (label.length() > 63) {
+				if (label.length() > MAX_DNS_LABEL_LENGTH) {
 					LOG.warnf("Domain label exceeds maximum length of 63 characters: %s", label);
 					// RFC 8484 Section 4.2.1: Return DNS FORMERR with 2xx HTTP status
 					byte[] errorResponse = createDNSErrorResponse(transactionId, 1); // FORMERR
@@ -448,7 +504,7 @@ public class DNSQueryResource {
 			dos.writeShort(transactionId);
 			
 			// Flags: Response bit (0x8000) + RCODE
-			int flags = 0x8000 | (rcode & 0x0F);
+			int flags = FLAG_QR | (rcode & RCODE_MASK);
 			dos.writeShort(flags);
 			
 			// QDCOUNT, ANCOUNT, NSCOUNT, ARCOUNT all zero
@@ -495,9 +551,9 @@ public class DNSQueryResource {
 			int flags = FLAG_RESPONSE; // Response, recursion available
 			if (response.getRcode() != null) {
 				int rcode = response.getRcode();
-				flags = 0x8000 | (rcode & 0x0F); // Set QR bit and RCODE
+				flags = FLAG_QR | (rcode & RCODE_MASK); // Set QR bit and RCODE
 				if (rcode == 0) {
-					flags |= 0x0400; // Set RA (Recursion Available)
+					flags |= FLAG_RA; // Set RA (Recursion Available)
 				}
 			}
 			dos.writeShort(flags);

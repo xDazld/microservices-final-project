@@ -12,7 +12,7 @@ import org.jboss.logging.Logger;
  * This service performs periodic cleanup of expired cache entries for both positive and negative
  * caches as recommended by RFC 9520.
  *
- * @author DNS Shield Team
+ * @author Patrick Rafferty
  */
 @Startup
 @ApplicationScoped

@@ -22,7 +22,7 @@ import java.util.Base64;
  * Automatically generates RSA key pairs for JWT signing on application startup if they don't
  * already exist.
  *
- * @author DNS Shield Team
+ * @author Patrick Rafferty
  */
 @ApplicationScoped
 public class JwtKeyGenerator {

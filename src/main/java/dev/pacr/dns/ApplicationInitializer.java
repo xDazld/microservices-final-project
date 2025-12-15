@@ -10,24 +10,45 @@ import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
 
 /**
- * Application initialization service Runs on startup to initialize default data and configurations
+ * Application initialization service that runs on startup to initialize default data and
+ * configurations.
+ * <p>
+ * This service is responsible for setting up the DNS Shield application by:
+ * - Initializing RFC 5358 access control to prevent amplification attacks
+ * - Loading default filtering rules for DNS queries
+ * - Setting up threat database for security analysis
+ * <p>
+ * The initialization is performed during application startup using Quarkus's {@link StartupEvent}.
+ *
+ * @author Patrick Rafferty
  */
 @ApplicationScoped
 public class ApplicationInitializer {
 	
+	/**
+	 * Logger for this class
+	 */
 	private static final Logger LOG = Logger.getLogger(ApplicationInitializer.class);
 	
+	/** DNS filter service for managing filtering rules */
 	@Inject
 	DNSFilterService filterService;
 	
+	/** Security service for threat detection and analysis */
 	@Inject
 	SecurityService securityService;
 	
+	/** RFC 5358 access control service for preventing DDoS amplification attacks */
 	@Inject
 	RFC5358AccessControlService rfc5358AccessControl;
 	
 	/**
-	 * Initialize the application on startup
+	 * Initialize the application on startup.
+	 * <p>
+	 * This method is called automatically by Quarkus when the application starts up.
+	 * It performs all necessary initialization tasks in the correct order.
+	 *
+	 * @param event The startup event (provided by Quarkus CDI)
 	 */
 	void onStart(@Observes StartupEvent event) {
 		LOG.info("=================================================");
