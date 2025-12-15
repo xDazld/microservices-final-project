@@ -47,5 +47,5 @@ nb-configuration.xml
 
 # Performance test outputs
 performance-report-*.csv
-performance-dashboard-*.png
+performance-dashboard-*.svg
 
