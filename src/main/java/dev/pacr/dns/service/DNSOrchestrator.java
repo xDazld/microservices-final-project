@@ -5,6 +5,7 @@ import dev.pacr.dns.model.rfc8427.DnsMessage;
 import dev.pacr.dns.model.rfc8427.DnsMessageConverter;
 import io.micrometer.core.annotation.Timed;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
 
@@ -26,7 +27,7 @@ public class DNSOrchestrator {
 	DNSFilterService filterService;
 	
 	@Inject
-	DNSLoggingService loggingService;
+	Instance<DNSLoggingService> loggingService;
 	
 	@Inject
 	QueryLogService queryLogService;
@@ -61,8 +62,10 @@ public class DNSOrchestrator {
 			LOG.infof("Domain blocked: %s - %s", qname, filterResult.getReason());
 			response = createBlockedResponse(query, filterResult);
 			
-			// Log the blocked query
-			loggingService.logQuery(query, response, filterResult);
+			// Log the blocked query via streaming if available
+			if (loggingService.isResolvable()) {
+				loggingService.get().logQuery(query, response, filterResult);
+			}
 			queryLogService.logQuery(qname, queryType, "BLOCKED", 3, new ArrayList<>(), clientIp);
 			
 			return response;
@@ -92,9 +95,11 @@ public class DNSOrchestrator {
 				response.setAnswerRRs(new ArrayList<>());
 				response.setAncount(0);
 				
-				// Log security alert
-				loggingService.logSecurityAlert(qname, "MALWARE_DETECTED",
+				// Log security alert via streaming if available
+				if (loggingService.isResolvable()) {
+					loggingService.get().logSecurityAlert(qname, "MALWARE_DETECTED",
 						"Domain identified as malicious");
+				}
 				queryLogService.logQuery(qname, queryType, "THREAT", 3, new ArrayList<>(),
 						clientIp);
 			} else {
@@ -111,8 +116,10 @@ public class DNSOrchestrator {
 					clientIp);
 		}
 		
-		// Step 6: Log the query
-		loggingService.logQuery(query, response, filterResult);
+		// Log the query via streaming if available
+		if (loggingService.isResolvable()) {
+			loggingService.get().logQuery(query, response, filterResult);
+		}
 		
 		LOG.debugf("Query processing completed for: %s (rcode: %s)", qname, response.getRcode());
 		
