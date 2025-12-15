@@ -194,4 +194,5 @@ volumes:
 networks:
   dns-shield-network:
     driver: bridge
+    enable_ipv6: true
 
