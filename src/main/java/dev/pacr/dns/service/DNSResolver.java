@@ -69,6 +69,10 @@ public class DNSResolver {
 	@CacheName("dns-response-cache")
 	Cache dnsCache;
 	
+	// In-memory cache for stale data support and fast lookups (RFC 8767)
+	// This avoids blocking Redis calls while still supporting serve-stale functionality
+	private final Map<String, CachedResponse> inMemoryCache = new ConcurrentHashMap<>();
+	
 	// RFC 8767: Track last failure time for failure recheck timer
 	private final Map<String, Instant> lastFailureTime = new ConcurrentHashMap<>();
 	
@@ -116,29 +120,18 @@ public class DNSResolver {
 		}
 		
 		// Check positive cache for unexpired records
-		CachedResponse cachedResponse = null;
-		try {
-			// Try to get from cache - if key doesn't exist, throw exception to signal cache miss
-			Object cachedObj = dnsCache.get(cacheKey, k -> {
-				// This function is only called on cache miss
-				// We don't want to cache null, so we throw an exception to signal cache miss
-				throw new RuntimeException("Cache miss");
-			}).await().indefinitely();
-			cachedResponse =
-					cachedObj instanceof CachedResponse ? (CachedResponse) cachedObj : null;
-			if (cachedResponse != null) {
-				cacheHits.incrementAndGet();
-			}
-		} catch (RuntimeException e) {
-			// Cache miss - continue with fresh lookup
-			cacheMisses.incrementAndGet();
-			LOG.debugf("Cache miss for domain: %s", query.getQname());
-		}
+		// RFC 9520: Check negative cache FIRST, then positive cache
+		// Note: We maintain an in-memory cache to avoid blocking Redis calls
+		// This also supports RFC 8767 serve-stale functionality
+		CachedResponse cachedResponse = inMemoryCache.get(cacheKey);
 		
 		if (cachedResponse != null && !cachedResponse.isExpired()) {
+			cacheHits.incrementAndGet();
 			LOG.debugf("Cache hit for domain: %s", query.getQname());
 			return cachedResponse.response;
 		}
+		
+		cacheMisses.incrementAndGet();
 		
 		// RFC 8767 Section 5: Check failure recheck timer
 		// "no more frequently than every 30 seconds"
@@ -219,13 +212,16 @@ public class DNSResolver {
 					addresses, 300L // TTL 5 minutes
 			);
 			
-			// Cache the successful response using Quarkus Cache
+			// Cache the successful response in in-memory cache for RFC 8767 serve-stale
+			// and fast lookups. Don't block on Redis cache writes.
 			CachedResponse cachedResp = new CachedResponse(response);
-			dnsCache.get(cacheKey, k -> cachedResp).subscribe().with(item -> {
-				cacheWrites.incrementAndGet();
-				LOG.debugf("Cached response for %s", query.getQname());
-			}, failure -> LOG.warnf("Failed to cache response for %s: %s", query.getQname(),
-					failure.getMessage()));
+			inMemoryCache.put(cacheKey, cachedResp);
+			
+			// NOTE: We're NOT persisting to Redis cache during the query resolution
+			// to avoid connection pool pressure. Responses are cached in-memory for
+			// RFC 8767 serve-stale and fast repeat queries. Redis cache can be
+			// repopulated on demand if needed, but blocking on it would hurt performance.
+			cacheWrites.incrementAndGet();
 			
 			LOG.infof("Successfully resolved %s to %s", query.getQname(), addresses);
 			return response;

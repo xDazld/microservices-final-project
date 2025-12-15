@@ -62,27 +62,20 @@ public class NegativeCacheService {
 	 */
 	public boolean isCachedFailure(String domain, int qtype) {
 		String cacheKey = getCacheKey(domain, qtype);
-		FailureCacheEntry entry = null;
 		
-		try {
-			// Try to get from cache - throw exception on miss to avoid caching null
-			Object cachedObj = negativeCache.get(cacheKey, k -> {
-				throw new RuntimeException("Cache miss");
-			}).await().indefinitely();
-			entry = cachedObj instanceof FailureCacheEntry ? (FailureCacheEntry) cachedObj : null;
-		} catch (RuntimeException e) {
-			// Cache miss - no cached failure
-			return false;
-		}
+		// Try to get from the size tracker first (fast path - avoids Redis call in many cases)
+		FailureCacheEntry entry = sizeTracker.get(cacheKey);
 		
 		if (entry == null) {
 			return false;
 		}
 		
 		if (entry.isExpired()) {
-			// Clean up expired entry
-			negativeCache.invalidate(cacheKey).await().indefinitely();
-			sizeTracker.remove(cacheKey);
+			// Clean up expired entry asynchronously to avoid blocking
+			negativeCache.invalidate(cacheKey).subscribe()
+					.with(item -> sizeTracker.remove(cacheKey),
+							failure -> LOG.debugf("Failed to invalidate expired cache entry: %s",
+									failure.getMessage()));
 			return false;
 		}
 		
@@ -196,7 +189,11 @@ public class NegativeCacheService {
 		
 		sizeTracker.entrySet().removeIf(entry -> {
 			if (entry.getValue().isExpired()) {
-				negativeCache.invalidate(entry.getKey()).await().indefinitely();
+				// Invalidate asynchronously
+				negativeCache.invalidate(entry.getKey()).subscribe()
+						.with(item -> LOG.debugf("Cleared expired entry: %s", entry.getKey()),
+								failure -> LOG.warnf("Failed to clear expired entry: %s",
+										failure.getMessage()));
 				return true;
 			}
 			return false;
@@ -239,9 +236,11 @@ public class NegativeCacheService {
 	 */
 	public void clearAll() {
 		int size = sizeTracker.size();
-		negativeCache.invalidateAll().await().indefinitely();
+		negativeCache.invalidateAll().subscribe()
+				.with(item -> LOG.infof("Cleared all %d entries from failure cache", size),
+						failure -> LOG.warnf("Failed to clear all cache entries: %s",
+								failure.getMessage()));
 		sizeTracker.clear();
-		LOG.infof("Cleared all %d entries from failure cache", size);
 	}
 	
 	/**

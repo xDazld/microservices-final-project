@@ -68,10 +68,15 @@ public class DNSLoggingService {
             
             // Persist to database
             logRepository.saveLog(entry);
-            
-            // Also emit to RabbitMQ for streaming/monitoring
+			
+			// Also emit to RabbitMQ for streaming/monitoring (non-blocking)
             String jsonLog = objectMapper.writeValueAsString(entry);
-            logsEmitter.send(jsonLog);
+			try {
+				logsEmitter.send(jsonLog);
+			} catch (IllegalStateException e) {
+				// No subscribers downstream - this is ok, continue without failing
+				LOG.debugf("No downstream subscribers for DNS query logs: %s", e.getMessage());
+			}
             
             LOG.debugf("Logged DNS query: %s (rcode=%d)", query.getQname(), response.getRcode());
             
@@ -93,10 +98,15 @@ public class DNSLoggingService {
             
             // Persist to database
             alertRepository.save(alert);
-            
-            // Emit to RabbitMQ for streaming/monitoring
+			
+			// Emit to RabbitMQ for streaming/monitoring (non-blocking)
             String jsonAlert = objectMapper.writeValueAsString(alert);
-            alertsEmitter.send(jsonAlert);
+			try {
+				alertsEmitter.send(jsonAlert);
+			} catch (IllegalStateException e) {
+				// No subscribers downstream - this is ok, continue without failing
+				LOG.debugf("No downstream subscribers for security alerts: %s", e.getMessage());
+			}
             
             LOG.warnf("Security alert logged: %s - %s", alertType, domain);
             
