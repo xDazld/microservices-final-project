@@ -12,16 +12,34 @@ import java.util.Map;
  * C-DNS is designed for efficient storage and analysis of DNS traffic.
  *
  * @see <a href="https://tools.ietf.org/html/rfc8618">RFC 8618</a>
+ * @author Patrick Rafferty
  */
 public class CdnsConverter {
 	
+	/**
+	 * The ip address index.
+	 */
 	private final Map<String, Integer> ipAddressIndex = new HashMap<>();
+	
+	/**
+	 * The name index.
+	 */
 	private final Map<String, Integer> nameIndex = new HashMap<>();
+	
+	/**
+	 * The ip addresses.
+	 */
 	private final List<String> ipAddresses = new ArrayList<>();
+	
+	/**
+	 * The names.
+	 */
 	private final List<String> names = new ArrayList<>();
 	
 	/**
 	 * Create a new C-DNS file structure
+	 *
+	 * @return a new C-DNS file structure
 	 */
 	public CdnsFile createCdnsFile() {
 		CdnsFile file = new CdnsFile();
@@ -57,6 +75,9 @@ public class CdnsConverter {
 	
 	/**
 	 * Create a new block for the C-DNS file
+	 *
+	 * @param earliestTime the earliest time
+	 * @return a new block
 	 */
 	public Block createBlock(Instant earliestTime) {
 		Block block = new Block();
@@ -84,6 +105,15 @@ public class CdnsConverter {
 	
 	/**
 	 * Add a query/response transaction to a block
+	 *
+	 * @param block the block
+	 * @param clientIp the client ip
+	 * @param queryName the query name
+	 * @param qtype the qtype
+	 * @param qclass the qclass
+	 * @param timestamp the timestamp
+	 * @param answers the answers
+	 * @param responseTimeMs the response time ms
 	 */
 	public void addQueryResponse(Block block, String clientIp, String queryName, int qtype,
 								 int qclass, Instant timestamp, List<String> answers,
@@ -135,6 +165,13 @@ public class CdnsConverter {
 		stats.setQrDataItems(stats.getQrDataItems() + 1);
 	}
 	
+	/**
+	 * Get or create ip index.
+	 *
+	 * @param tables the tables
+	 * @param ip the ip
+	 * @return the int
+	 */
 	private int getOrCreateIpIndex(BlockTables tables, String ip) {
 		List<String> ipList = tables.getIpAddress();
 		int index = ipList.indexOf(ip);
@@ -145,6 +182,13 @@ public class CdnsConverter {
 		return index;
 	}
 	
+	/**
+	 * Get or create name index.
+	 *
+	 * @param tables the tables
+	 * @param name the name
+	 * @return the int
+	 */
 	private int getOrCreateNameIndex(BlockTables tables, String name) {
 		List<String> nameList = tables.getNameRdata();
 		int index = nameList.indexOf(name);
@@ -155,6 +199,14 @@ public class CdnsConverter {
 		return index;
 	}
 	
+	/**
+	 * Get or create class type index.
+	 *
+	 * @param tables the tables
+	 * @param type the type
+	 * @param rclass the rclass
+	 * @return the int
+	 */
 	private int getOrCreateClassTypeIndex(BlockTables tables, int type, int rclass) {
 		List<ClassType> classtypes = tables.getClasstype();
 		if (classtypes == null) {

@@ -24,31 +24,53 @@ import java.util.Map;
 
 /**
  * REST API endpoint for administrative functions and statistics
+ *
+ * @author Patrick Rafferty
  */
 @Path("/api/v1/admin")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class AdminResource {
-
+	
+	/**
+	 * The log.
+	 */
 	private static final Logger LOG = Logger.getLogger(AdminResource.class);
-
+	
+	/**
+	 * The dns resolver.
+	 */
 	@Inject
 	DNSResolver dnsResolver;
-
+	
+	/**
+	 * The security service.
+	 */
 	@Inject
 	SecurityService securityService;
-
+	
+	/**
+	 * The rfc5358 access control.
+	 */
 	@Inject
 	RFC5358AccessControlService rfc5358AccessControl;
-
+	
+	/**
+	 * The meter registry.
+	 */
 	@Inject
 	MeterRegistry meterRegistry;
-
+	
+	/**
+	 * The endpoint statistics service.
+	 */
 	@Inject
 	EndpointStatisticsService endpointStatisticsService;
 
 	/**
 	 * Get overall statistics
+	 *
+	 * @return the response
 	 */
 	@GET
 	@Path("/stats")
@@ -89,6 +111,9 @@ public class AdminResource {
 	 * Infinite
 	 * values
 	 * with 0
+	 *
+	 * @param value the value
+	 * @return the object
 	 */
 	private Object sanitizeNumber(Object value) {
 		if (value instanceof Double d) {
@@ -105,6 +130,9 @@ public class AdminResource {
 
 	/**
 	 * Sanitize a map of statistics to prevent JSON serialization errors
+	 *
+	 * @param stats the stats
+	 * @return the map
 	 */
 	private Map<String, Object> sanitizeStats(Map<String, Object> stats) {
 		Map<String, Object> sanitized = new HashMap<>();
@@ -123,6 +151,8 @@ public class AdminResource {
 
 	/**
 	 * Get cache statistics
+	 *
+	 * @return the response
 	 */
 	@GET
 	@Path("/cache/stats")

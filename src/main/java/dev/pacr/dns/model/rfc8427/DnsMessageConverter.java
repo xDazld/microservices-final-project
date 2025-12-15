@@ -7,12 +7,18 @@ import java.util.List;
  * Utility class to convert between RFC 8427 compliant models and wire format
  *
  * @see <a href="https://tools.ietf.org/html/rfc8427">RFC 8427</a>
+ * @author Patrick Rafferty
  */
 public enum DnsMessageConverter {
 	;
 	
 	/**
 	 * Create an RFC 8427 compliant DNS query message
+	 *
+	 * @param qname the qname
+	 * @param qtype the qtype
+	 * @param qclass the qclass
+	 * @return the dns message
 	 */
 	public static DnsMessage createQuery(String qname, int qtype, int qclass) {
 		DnsMessage message = new DnsMessage();
@@ -32,6 +38,14 @@ public enum DnsMessageConverter {
 	
 	/**
 	 * Create an RFC 8427 compliant DNS response message
+	 *
+	 * @param qname the qname
+	 * @param qtype the qtype
+	 * @param qclass the qclass
+	 * @param rcode the rcode
+	 * @param answers the answers
+	 * @param ttl the ttl
+	 * @return the dns message
 	 */
 	public static DnsMessage createResponse(String qname, int qtype, int qclass, int rcode,
 											List<String> answers, long ttl) {
@@ -76,6 +90,9 @@ public enum DnsMessageConverter {
 	
 	/**
 	 * Convert query type string to numeric code
+	 *
+	 * @param type the type
+	 * @return the int
 	 */
 	public static int getQtypeCode(String type) {
 		return switch (type.toUpperCase()) {
@@ -95,6 +112,9 @@ public enum DnsMessageConverter {
 	
 	/**
 	 * Convert query type code to string
+	 *
+	 * @param code the code
+	 * @return the string
 	 */
 	public static String getQtypeString(int code) {
 		return switch (code) {
