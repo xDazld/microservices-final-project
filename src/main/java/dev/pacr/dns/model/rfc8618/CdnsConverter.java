@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Utility class to convert DNS transaction data to RFC 8618 C-DNS format
+	 * Utility class to convert DNS transaction data to RFC 8618 C-DNS format
  * <p>
  * C-DNS is designed for efficient storage and analysis of DNS traffic.
  *
@@ -15,9 +15,21 @@ import java.util.Map;
  */
 public class CdnsConverter {
 	
+	/**
+	 * The ipAddressIndex.
+	 */
 	private final Map<String, Integer> ipAddressIndex = new HashMap<>();
+	/**
+	 * The nameIndex.
+	 */
 	private final Map<String, Integer> nameIndex = new HashMap<>();
+	/**
+	 * The ipAddresses.
+	 */
 	private final List<String> ipAddresses = new ArrayList<>();
+	/**
+	 * The names.
+	 */
 	private final List<String> names = new ArrayList<>();
 	
 	/**

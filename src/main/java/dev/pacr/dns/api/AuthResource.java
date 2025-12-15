@@ -17,15 +17,21 @@ import java.util.HashSet;
 import java.util.Map;
 
 /**
- * Authentication Resource
+	 * Authentication Resource
  * <p>
  * Handles user authentication and JWT token generation
  */
 @Path("/api/v1/auth")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+/**
+	 * AuthResource class.
+ */
 public class AuthResource {
 	
+	/**
+	 * The LOG.
+	 */
 	private static final Logger LOG = Logger.getLogger(AuthResource.class);
 	
 	@Inject
@@ -43,6 +49,9 @@ public class AuthResource {
 	@POST
 	@Path("/login")
 	@PermitAll
+	/**
+	 * login method.
+	 */
 	public Response login(LoginRequest request) {
 		LOG.infof("Login attempt for user: %s", request.username);
 		
@@ -114,7 +123,13 @@ public class AuthResource {
 	 * Login request model
 	 */
 	public static class LoginRequest {
+		/**
+	 * The username.
+		 */
 		public String username;
+		/**
+	 * The password.
+		 */
 		public String password;
 	}
 	

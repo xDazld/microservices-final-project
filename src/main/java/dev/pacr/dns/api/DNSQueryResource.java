@@ -23,7 +23,7 @@ import java.io.IOException;
 import java.util.Base64;
 
 /**
- * DNS over HTTP (DoH) endpoint compliant with RFC 8484 and RFC 5358
+	 * DNS over HTTP (DoH) endpoint compliant with RFC 8484 and RFC 5358
  *
  * This endpoint provides DNS resolution over HTTP with support for:
  * - GET requests with base64url encoded DNS messages
@@ -37,6 +37,9 @@ import java.util.Base64;
  * <a href="https://tools.ietf.org/html/rfc5358">RFC 5358 - Preventing Use of Recursive Nameservers in Reflector Attacks</a>
  */
 @Path("/dns-query")
+/**
+	 * DNSQueryResource class.
+ */
 public class DNSQueryResource {
 	
 	/** RFC 8484 media type for DNS messages */
@@ -166,6 +169,9 @@ public class DNSQueryResource {
 	@POST
 	@Consumes(APPLICATION_DNS_MESSAGE)
 	@Produces(APPLICATION_DNS_MESSAGE)
+	/**
+	 * postQuery method.
+	 */
 	public Response postQuery(byte[] dnsMessage) {
 		String clientIp = getClientIpAddress();
 		

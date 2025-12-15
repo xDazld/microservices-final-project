@@ -10,7 +10,7 @@ import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
 
 /**
- * Application initialization service that runs on startup to initialize default data and
+	 * Application initialization service that runs on startup to initialize default data and
  * configurations.
  * <p>
  * This service is responsible for setting up the DNS Shield application by:
@@ -23,6 +23,9 @@ import org.jboss.logging.Logger;
  * @author Patrick Rafferty
  */
 @ApplicationScoped
+/**
+	 * ApplicationInitializer class.
+ */
 public class ApplicationInitializer {
 	
 	/**

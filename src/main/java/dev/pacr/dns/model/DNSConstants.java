@@ -1,7 +1,7 @@
 package dev.pacr.dns.model;
 
 /**
- * DNS protocol constants and enumerations
+	 * DNS protocol constants and enumerations
  * <p>
  * This class centralizes DNS-related constants used throughout the application for better
  * maintainability and type safety.

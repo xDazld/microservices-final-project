@@ -10,15 +10,24 @@ import org.jboss.logging.Logger;
 import java.util.Map;
 
 /**
- * Publisher for real-time events streamed to dashboard
+	 * Publisher for real-time events streamed to dashboard
  * <p>
  * Publishes metrics, logs, and alerts to RabbitMQ for WebSocket delivery to connected dashboard
  * clients
  */
 @ApplicationScoped
+/**
+	 * EventPublisher class.
+ */
 public class EventPublisher {
 	
+	/**
+	 * The LOG.
+	 */
 	private static final Logger LOG = Logger.getLogger(EventPublisher.class);
+	/**
+	 * The objectMapper.
+	 */
 	private final ObjectMapper objectMapper = new ObjectMapper();
 	
 	@Inject

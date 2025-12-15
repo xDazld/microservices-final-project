@@ -19,7 +19,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * WebSocket endpoint for real-time dashboard updates
+	 * WebSocket endpoint for real-time dashboard updates
  * <p>
  * Maintains persistent connections to dashboard clients and streams: - Metrics updates (query
  * count, cache hits, filters, threats) - Log entries (query logs, security alerts) - Statistics
@@ -27,10 +27,22 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @ServerEndpoint("/ws/dashboard")
 @ApplicationScoped
+/**
+	 * DashboardWebSocket class.
+ */
 public class DashboardWebSocket {
 	
+	/**
+	 * The LOG.
+	 */
 	private static final Logger LOG = Logger.getLogger(DashboardWebSocket.class);
+	/**
+	 * The SESSIONS.
+	 */
 	private static final Map<String, Session> SESSIONS = new ConcurrentHashMap<>();
+	/**
+	 * The objectMapper.
+	 */
 	private final ObjectMapper objectMapper = new ObjectMapper();
 	
 	/**
@@ -80,6 +92,9 @@ public class DashboardWebSocket {
 	}
 	
 	@OnOpen
+	/**
+	 * onOpen method.
+	 */
 	public void onOpen(Session session) {
 		String sessionId = session.getId();
 		SESSIONS.put(sessionId, session);
@@ -93,6 +108,9 @@ public class DashboardWebSocket {
 	}
 	
 	@OnClose
+	/**
+	 * onClose method.
+	 */
 	public void onClose(Session session) {
 		String sessionId = session.getId();
 		SESSIONS.remove(sessionId);
@@ -101,6 +119,9 @@ public class DashboardWebSocket {
 	}
 	
 	@OnError
+	/**
+	 * onError method.
+	 */
 	public void onError(Session session, Throwable throwable) {
 		String sessionId = session.getId();
 		LOG.warnf(throwable, "Dashboard WebSocket error for session %s", sessionId);
@@ -113,6 +134,9 @@ public class DashboardWebSocket {
 	}
 	
 	@OnMessage
+	/**
+	 * onMessage method.
+	 */
 	public void onMessage(String message, Session session) {
 		try {
 			JsonNode json = objectMapper.readTree(message);

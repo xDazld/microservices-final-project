@@ -5,9 +5,12 @@ import io.quarkus.mongodb.panache.PanacheMongoRepositoryBase;
 import jakarta.enterprise.context.ApplicationScoped;
 
 /**
- * Repository for persisting DNS logs to MongoDB
+	 * Repository for persisting DNS logs to MongoDB
  */
 @ApplicationScoped
+/**
+	 * DNSLogRepository class.
+ */
 public class DNSLogRepository implements PanacheMongoRepositoryBase<DNSLogEntry, String> {
 	
 	/**

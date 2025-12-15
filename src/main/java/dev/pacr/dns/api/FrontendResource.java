@@ -24,14 +24,20 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Frontend UI Resource
+	 * Frontend UI Resource
  * <p>
  * Serves the web frontend using Qute templates and provides HTML fragment endpoints for HTMX
  * dynamic updates. Publishes real-time metrics via event streaming to WebSocket clients.
  */
 @Path("/ui")
+/**
+	 * FrontendResource class.
+ */
 public class FrontendResource {
 	
+	/**
+	 * The LOG.
+	 */
 	private static final Logger LOG = Logger.getLogger(FrontendResource.class);
 	
 	@Inject
@@ -77,6 +83,10 @@ public class FrontendResource {
 	@GET
 	@Produces(MediaType.TEXT_HTML)
 	@PermitAll
+	/**
+	 * Gets the Dashboard.
+	 * @return the Dashboard
+	 */
 	public TemplateInstance getDashboard() {
 		LOG.debug("Serving dashboard page");
 		return dashboard.data("active", "dashboard");
@@ -86,6 +96,10 @@ public class FrontendResource {
 	@Path("/filters")
 	@Produces(MediaType.TEXT_HTML)
 	@PermitAll
+	/**
+	 * Gets the Filters.
+	 * @return the Filters
+	 */
 	public TemplateInstance getFilters() {
 		LOG.debug("Serving filters page");
 		return filters.data("active", "filters");
@@ -95,6 +109,10 @@ public class FrontendResource {
 	@Path("/query")
 	@Produces(MediaType.TEXT_HTML)
 	@PermitAll
+	/**
+	 * Gets the Query.
+	 * @return the Query
+	 */
 	public TemplateInstance getQuery() {
 		LOG.debug("Serving query page");
 		return query.data("active", "query");
@@ -104,6 +122,10 @@ public class FrontendResource {
 	@Path("/agent")
 	@Produces(MediaType.TEXT_HTML)
 	@PermitAll
+	/**
+	 * Gets the Agent.
+	 * @return the Agent
+	 */
 	public TemplateInstance getAgent() {
 		LOG.debug("Serving agent page");
 		return agent.data("active", "agent");
@@ -113,6 +135,10 @@ public class FrontendResource {
 	@Path("/admin")
 	@Produces(MediaType.TEXT_HTML)
 	@PermitAll
+	/**
+	 * Gets the Admin.
+	 * @return the Admin
+	 */
 	public TemplateInstance getAdmin() {
 		LOG.debug("Serving admin page");
 		return admin.data("active", "admin");
@@ -122,6 +148,10 @@ public class FrontendResource {
 	@Path("/logs")
 	@Produces(MediaType.TEXT_HTML)
 	@PermitAll
+	/**
+	 * Gets the Logs.
+	 * @return the Logs
+	 */
 	public TemplateInstance getLogs() {
 		LOG.debug("Serving logs page");
 		return logs.data("active", "logs");
@@ -131,6 +161,10 @@ public class FrontendResource {
 	@Path("/login")
 	@Produces(MediaType.TEXT_HTML)
 	@PermitAll
+	/**
+	 * Gets the Login.
+	 * @return the Login
+	 */
 	public TemplateInstance getLogin() {
 		LOG.debug("Serving login page");
 		return login.data("active", "login");
@@ -222,6 +256,10 @@ public class FrontendResource {
 	@Path("/logs/stats/total")
 	@Produces(MediaType.TEXT_HTML)
 	@PermitAll
+	/**
+	 * Gets the LogsTotalCount.
+	 * @return the LogsTotalCount
+	 */
 	public String getLogsTotalCount() {
 		Map<String, Object> stats = queryLogService.getQueryStats();
 		return formatNumber(((Number) stats.get("totalQueries")).doubleValue());
@@ -231,6 +269,10 @@ public class FrontendResource {
 	@Path("/logs/stats/blocked")
 	@Produces(MediaType.TEXT_HTML)
 	@PermitAll
+	/**
+	 * Gets the LogsBlockedCount.
+	 * @return the LogsBlockedCount
+	 */
 	public String getLogsBlockedCount() {
 		Map<String, Object> stats = queryLogService.getQueryStats();
 		return formatNumber(((Number) stats.get("blockedQueries")).doubleValue());
@@ -240,6 +282,10 @@ public class FrontendResource {
 	@Path("/logs/stats/threats")
 	@Produces(MediaType.TEXT_HTML)
 	@PermitAll
+	/**
+	 * Gets the LogsThreatsCount.
+	 * @return the LogsThreatsCount
+	 */
 	public String getLogsThreatsCount() {
 		Map<String, Object> stats = queryLogService.getQueryStats();
 		return formatNumber(((Number) stats.get("threatQueries")).doubleValue());
@@ -249,6 +295,10 @@ public class FrontendResource {
 	@Path("/logs/stats/rate")
 	@Produces(MediaType.TEXT_HTML)
 	@PermitAll
+	/**
+	 * Gets the LogsBlockRate.
+	 * @return the LogsBlockRate
+	 */
 	public String getLogsBlockRate() {
 		Map<String, Object> stats = queryLogService.getQueryStats();
 		return stats.get("blockRate").toString();
@@ -258,6 +308,9 @@ public class FrontendResource {
 	@Path("/logs/clear")
 	@Produces(MediaType.TEXT_HTML)
 	@RolesAllowed({"admin"})
+	/**
+	 * clearQueryLogs method.
+	 */
 	public String clearQueryLogs() {
 		LOG.info("Clearing query logs");
 		queryLogService.clearLogs();
@@ -271,6 +324,10 @@ public class FrontendResource {
 	@Path("/stats/queries")
 	@Produces(MediaType.TEXT_HTML)
 	@PermitAll
+	/**
+	 * Gets the QueryCount.
+	 * @return the QueryCount
+	 */
 	public String getQueryCount() {
 		double count = 0;
 		try {
@@ -292,6 +349,10 @@ public class FrontendResource {
 	@Path("/stats/cache-hits")
 	@Produces(MediaType.TEXT_HTML)
 	@PermitAll
+	/**
+	 * Gets the CacheHits.
+	 * @return the CacheHits
+	 */
 	public String getCacheHits() {
 		Map<String, Object> stats = dnsResolver.getCacheStats();
 		LOG.debugf("Cache stats structure: %s", stats);
@@ -315,6 +376,10 @@ public class FrontendResource {
 	@Path("/stats/blocked")
 	@Produces(MediaType.TEXT_HTML)
 	@PermitAll
+	/**
+	 * Gets the BlockedCount.
+	 * @return the BlockedCount
+	 */
 	public String getBlockedCount() {
 		double count = 0;
 		try {
@@ -336,6 +401,10 @@ public class FrontendResource {
 	@Path("/stats/threats")
 	@Produces(MediaType.TEXT_HTML)
 	@PermitAll
+	/**
+	 * Gets the ThreatsCount.
+	 * @return the ThreatsCount
+	 */
 	public String getThreatsCount() {
 		Map<String, Object> stats = securityService.getThreatStats();
 		LOG.debugf("Threat stats: %s", stats);
@@ -363,6 +432,10 @@ public class FrontendResource {
 	@Path("/stats/cache")
 	@Produces(MediaType.TEXT_HTML)
 	@RolesAllowed({"admin", "user"})
+	/**
+	 * Gets the CacheStats.
+	 * @return the CacheStats
+	 */
 	public String getCacheStats() {
 		Map<String, Object> stats = dnsResolver.getCacheStats();
 		StringBuilder html = new StringBuilder();
@@ -387,6 +460,10 @@ public class FrontendResource {
 	@Path("/stats/cache-rate")
 	@Produces(MediaType.TEXT_HTML)
 	@PermitAll
+	/**
+	 * Gets the CacheRate.
+	 * @return the CacheRate
+	 */
 	public String getCacheRate() {
 		Map<String, Object> stats = dnsResolver.getCacheStats();
 		Map<String, Object> positiveCache = (Map<String, Object>) stats.get("positiveCache");
@@ -411,6 +488,10 @@ public class FrontendResource {
 	@Path("/stats/security")
 	@Produces(MediaType.TEXT_HTML)
 	@RolesAllowed({"admin", "user"})
+	/**
+	 * Gets the SecurityStats.
+	 * @return the SecurityStats
+	 */
 	public String getSecurityStats() {
 		Map<String, Object> stats = securityService.getThreatStats();
 		StringBuilder html = new StringBuilder();
@@ -435,6 +516,10 @@ public class FrontendResource {
 	@Path("/stats/filters")
 	@Produces(MediaType.TEXT_HTML)
 	@PermitAll
+	/**
+	 * Gets the FiltersSummary.
+	 * @return the FiltersSummary
+	 */
 	public String getFiltersSummary() {
 		List<FilterRule> rules = filterService.getAllRules();
 		long enabled = rules.stream().filter(FilterRule::isEnabled).count();
@@ -459,6 +544,10 @@ public class FrontendResource {
 	@Path("/stats/system")
 	@Produces(MediaType.TEXT_HTML)
 	@RolesAllowed("admin")
+	/**
+	 * Gets the SystemInfo.
+	 * @return the SystemInfo
+	 */
 	public String getSystemInfo() {
 		Runtime runtime = Runtime.getRuntime();
 		long maxMemory = runtime.maxMemory() / (1024 * 1024);

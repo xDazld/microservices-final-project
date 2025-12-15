@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Utility class to convert between RFC 8427 compliant models and wire format
+	 * Utility class to convert between RFC 8427 compliant models and wire format
  *
  * @see <a href="https://tools.ietf.org/html/rfc8427">RFC 8427</a>
  */

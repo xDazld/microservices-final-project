@@ -16,7 +16,7 @@ import org.jboss.logging.Logger;
 import java.util.concurrent.CompletionStage;
 
 /**
- * RabbitMQ message consumer for processing DNS query logs and security alerts
+	 * RabbitMQ message consumer for processing DNS query logs and security alerts
  * <p>
  * This service consumes messages from RabbitMQ topics and performs: - Real-time
  * analytics on DNS
@@ -25,10 +25,19 @@ import java.util.concurrent.CompletionStage;
  * correlation
  */
 @ApplicationScoped
+/**
+	 * DNSEventConsumer class.
+ */
 public class DNSEventConsumer {
 
-    private static final Logger LOG = Logger.getLogger(DNSEventConsumer.class);
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    /**
+	 * The LOG.
+     */
+	private static final Logger LOG = Logger.getLogger(DNSEventConsumer.class);
+    /**
+	 * The objectMapper.
+     */
+	private final ObjectMapper objectMapper = new ObjectMapper();
     @Inject
     DNSIntelligenceAgent agent;
     @Inject
@@ -39,13 +48,16 @@ public class DNSEventConsumer {
     MeterRegistry registry;
 
     /**
-     * Consume and analyze DNS query logs
+	 * Consume and analyze DNS query logs
      * <p>
      * This consumer processes query logs in real-time to: - Detect suspicious
      * patterns - Update
      * threat intelligence - Generate analytics
      */
     @Incoming("dns-query-logs-in")
+    /**
+	 * processQueryLog method.
+     */
     public CompletionStage<Void> processQueryLog(Message<String> message) {
         String payload = message.getPayload();
 
@@ -87,7 +99,7 @@ public class DNSEventConsumer {
     }
 
     /**
-     * Consume and respond to security alerts
+	 * Consume and respond to security alerts
      * <p>
      * This consumer handles security alerts and takes autonomous actions: -
      * Automatic blocking of
@@ -95,6 +107,9 @@ public class DNSEventConsumer {
      * critical threats
      */
     @Incoming("dns-security-alerts-in")
+    /**
+	 * processSecurityAlert method.
+     */
     public CompletionStage<Void> processSecurityAlert(Message<String> message) {
         String payload = message.getPayload();
 
@@ -135,9 +150,12 @@ public class DNSEventConsumer {
     }
 
     /**
-     * Consume threat intelligence updates from external sources
+	 * Consume threat intelligence updates from external sources
      */
     @Incoming("threat-intelligence-updates")
+    /**
+	 * processThreatIntelligence method.
+     */
     public CompletionStage<Void> processThreatIntelligence(Message<String> message) {
         String payload = message.getPayload();
 
@@ -174,7 +192,7 @@ public class DNSEventConsumer {
     }
 
     /**
-     * Handle malware alerts - autonomous blocking
+	 * Handle malware alerts - autonomous blocking
      */
     private void handleMalwareAlert(String domain) {
         LOG.warnf("Autonomous response: Blocking malware domain: %s", domain);
@@ -190,7 +208,7 @@ public class DNSEventConsumer {
     }
 
     /**
-     * Handle DGA alerts - pattern-based blocking
+	 * Handle DGA alerts - pattern-based blocking
      */
     private void handleDGAAlert(String domain) {
         LOG.warnf("DGA pattern detected: %s", domain);
@@ -205,7 +223,7 @@ public class DNSEventConsumer {
     }
 
     /**
-     * Handle phishing alerts
+	 * Handle phishing alerts
      */
     private void handlePhishingAlert(String domain) {
         LOG.warnf("Phishing domain detected: %s", domain);
@@ -219,7 +237,7 @@ public class DNSEventConsumer {
     }
 
     /**
-     * Simple DGA detection heuristic
+	 * Simple DGA detection heuristic
      */
     private boolean isDGAPattern(String domain) {
         // Check for long random-looking strings

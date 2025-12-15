@@ -14,11 +14,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Orchestrator service that coordinates DNS resolution, filtering, and logging
+	 * Orchestrator service that coordinates DNS resolution, filtering, and logging
  *
  * @author Patrick Rafferty
  */
 @ApplicationScoped
+/**
+	 * DNSOrchestrator class.
+ */
 public class DNSOrchestrator {
 	
 	/**
@@ -53,6 +56,9 @@ public class DNSOrchestrator {
 	 * @return the DNS response message
 	 */
 	@Timed(value = "dns.query.total", description = "Total time to process DNS query")
+	/**
+	 * processQuery method.
+	 */
 	public DnsMessage processQuery(DnsMessage query) {
 		return processQuery(query, "unknown");
 	}
@@ -65,6 +71,9 @@ public class DNSOrchestrator {
 	 * @return the DNS response message
 	 */
 	@Timed(value = "dns.query.total", description = "Total time to process DNS query")
+	/**
+	 * processQuery method.
+	 */
 	public DnsMessage processQuery(DnsMessage query, String clientIp) {
 		String qname = query.getQname();
 		String queryType = query.getQtype() != null ? query.getQtype().toString() : "A";

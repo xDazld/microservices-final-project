@@ -16,7 +16,7 @@ import org.jboss.logging.Logger;
 import java.util.Map;
 
 /**
- * REST API endpoint for AI Agent operations
+	 * REST API endpoint for AI Agent operations
  * <p>
  * This endpoint exposes the AI-powered DNS intelligence agent for autonomous threat analysis and
  * security operations
@@ -24,8 +24,14 @@ import java.util.Map;
 @Path("/api/v1/agent")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+/**
+	 * AgentResource class.
+ */
 public class AgentResource {
 	
+	/**
+	 * The LOG.
+	 */
 	private static final Logger LOG = Logger.getLogger(AgentResource.class);
 	
 	@Inject
@@ -56,6 +62,9 @@ public class AgentResource {
 	@POST
 	@Path("/analyze")
 	@RolesAllowed({"admin", "user"})
+	/**
+	 * analyzeDomain method.
+	 */
 	public Response analyzeDomain(Map<String, String> request) {
 		String domain = request.get("domain");
 		
@@ -77,6 +86,9 @@ public class AgentResource {
 	@POST
 	@Path("/recommend-filters")
 	@RolesAllowed("admin")
+	/**
+	 * recommendFilters method.
+	 */
 	public Response recommendFilters(Map<String, String[]> request) {
 		String[] domains = request.get("domains");
 		
@@ -99,6 +111,9 @@ public class AgentResource {
 	@POST
 	@Path("/correlate-events")
 	@RolesAllowed("admin")
+	/**
+	 * correlateEvents method.
+	 */
 	public Response correlateEvents(Map<String, String[]> request) {
 		String[] events = request.get("events");
 		
@@ -121,6 +136,10 @@ public class AgentResource {
 	@GET
 	@Path("/status")
 	@RolesAllowed({"admin", "user"})
+	/**
+	 * Gets the AgentStatus.
+	 * @return the AgentStatus
+	 */
 	public Response getAgentStatus() {
 		return Response.ok(Map.of("status", "active", "capabilities",
 						new String[] {"threat_analysis", "filter_recommendations",

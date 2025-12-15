@@ -11,15 +11,24 @@ import org.jboss.logging.Logger;
 import java.util.concurrent.CompletionStage;
 
 /**
- * Consumer for dashboard event streams
+	 * Consumer for dashboard event streams
  * <p>
  * Receives all event types from the unified dashboard events topic and broadcasts them to all
  * connected WebSocket dashboard clients for real-time updates.
  */
 @ApplicationScoped
+/**
+	 * DashboardEventConsumer class.
+ */
 public class DashboardEventConsumer {
 	
+	/**
+	 * The LOG.
+	 */
 	private static final Logger LOG = Logger.getLogger(DashboardEventConsumer.class);
+	/**
+	 * The objectMapper.
+	 */
 	private final ObjectMapper objectMapper = new ObjectMapper();
 	
 	/**
@@ -31,6 +40,9 @@ public class DashboardEventConsumer {
 	 * statistics - SECURITY_ALERT: Security threat notifications
 	 */
 	@Incoming("metrics-events-in")
+	/**
+	 * consumeEvent method.
+	 */
 	public CompletionStage<Void> consumeEvent(Message<String> message) {
 		String payload = message.getPayload();
 		

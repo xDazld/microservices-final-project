@@ -14,21 +14,30 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * Service for storing and retrieving DNS query logs
+	 * Service for storing and retrieving DNS query logs
  * <p>
  * Retrieves logs from the database (MongoDB) instead of maintaining an in-memory buffer.
  */
 @ApplicationScoped
+/**
+	 * QueryLogService class.
+ */
 public class QueryLogService {
     
-    private static final Logger LOG = Logger.getLogger(QueryLogService.class);
-    private static final int DEFAULT_LIMIT = 100;
+    /**
+	 * The LOG.
+     */
+	private static final Logger LOG = Logger.getLogger(QueryLogService.class);
+    /**
+	 * The DEFAULT_LIMIT.
+     */
+	private static final int DEFAULT_LIMIT = 100;
     
     @Inject
     DNSLogRepository logRepository;
     
     /**
-     * Log a DNS query (compat placeholder retained for API stability)
+	 * Log a DNS query (compat placeholder retained for API stability)
      * <p>
      * Note: Actual persistence is handled in DNSLoggingService.logQuery(). This method is kept to
      * avoid breaking existing call sites; it will only log a debug message.
@@ -41,7 +50,7 @@ public class QueryLogService {
     }
     
     /**
-     * Get recent query logs
+	 * Get recent query logs
      *
      * @param limit Maximum number of entries to return
      * @return List of recent query log entries
@@ -62,7 +71,7 @@ public class QueryLogService {
     }
     
     /**
-     * Get all query logs
+	 * Get all query logs
      *
      * @return List of all query log entries
      */
@@ -80,7 +89,7 @@ public class QueryLogService {
     }
     
     /**
-     * Get query logs filtered by status
+	 * Get query logs filtered by status
      *
      * @param status The status to filter by (ALLOWED, BLOCKED, THREAT, etc.)
      * @param limit  Maximum number of entries to return
@@ -105,7 +114,7 @@ public class QueryLogService {
     }
     
     /**
-     * Get query logs filtered by domain
+	 * Get query logs filtered by domain
      *
      * @param domain The domain to search for
      * @param limit  Maximum number of entries to return
@@ -131,7 +140,7 @@ public class QueryLogService {
     }
     
     /**
-     * Get query statistics
+	 * Get query statistics
      *
      * @return Map containing query statistics
      */
@@ -170,7 +179,7 @@ public class QueryLogService {
     }
     
     /**
-     * Clear all query logs (from database)
+	 * Clear all query logs (from database)
      */
     public void clearLogs() {
         try {

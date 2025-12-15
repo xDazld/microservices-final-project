@@ -23,13 +23,19 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * REST API endpoint for administrative functions and statistics
+	 * REST API endpoint for administrative functions and statistics
  */
 @Path("/api/v1/admin")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+/**
+	 * AdminResource class.
+ */
 public class AdminResource {
 
+	/**
+	 * The LOG.
+	 */
 	private static final Logger LOG = Logger.getLogger(AdminResource.class);
 
 	@Inject
@@ -53,6 +59,10 @@ public class AdminResource {
 	@GET
 	@Path("/stats")
 	@RolesAllowed({ "admin", "user" })
+	/**
+	 * Gets the Statistics.
+	 * @return the Statistics
+	 */
 	public Response getStatistics() {
 		LOG.debug("Fetching overall statistics");
 
@@ -127,6 +137,10 @@ public class AdminResource {
 	@GET
 	@Path("/cache/stats")
 	@RolesAllowed({ "admin", "user" })
+	/**
+	 * Gets the CacheStats.
+	 * @return the CacheStats
+	 */
 	public Response getCacheStats() {
 		LOG.debug("Fetching cache statistics");
 
@@ -141,6 +155,9 @@ public class AdminResource {
 	@POST
 	@Path("/cache/clear")
 	@RolesAllowed("admin")
+	/**
+	 * clearCache method.
+	 */
 	public Response clearCache() {
 		LOG.info("Clearing expired cache entries");
 
@@ -155,6 +172,10 @@ public class AdminResource {
 	@GET
 	@Path("/security/stats")
 	@RolesAllowed({ "admin", "user" })
+	/**
+	 * Gets the SecurityStats.
+	 * @return the SecurityStats
+	 */
 	public Response getSecurityStats() {
 		LOG.debug("Fetching security statistics");
 
@@ -169,6 +190,9 @@ public class AdminResource {
 	@POST
 	@Path("/security/analyze")
 	@RolesAllowed("admin")
+	/**
+	 * analyzeDomain method.
+	 */
 	public Response analyzeDomain(Map<String, String> request) {
 		String domain = request.get("domain");
 
@@ -190,6 +214,9 @@ public class AdminResource {
 	@POST
 	@Path("/security/threats/domains")
 	@RolesAllowed("admin")
+	/**
+	 * addMaliciousDomain method.
+	 */
 	public Response addMaliciousDomain(Map<String, String> request) {
 		String domain = request.get("domain");
 
@@ -225,6 +252,10 @@ public class AdminResource {
 	@GET
 	@Path("/security/threats/domains")
 	@RolesAllowed({ "admin", "user" })
+	/**
+	 * Gets the MaliciousDomains.
+	 * @return the MaliciousDomains
+	 */
 	public Response getMaliciousDomains() {
 		LOG.debug("Fetching all malicious domains");
 
@@ -238,6 +269,9 @@ public class AdminResource {
 	 */
 	@GET
 	@Path("/health")
+	/**
+	 * health method.
+	 */
 	public Response health() {
 		return Response.ok(Map.of("status", "UP", "timestamp", java.time.Instant.now().toString()))
 				.build();
@@ -249,6 +283,10 @@ public class AdminResource {
 	@GET
 	@Path("/rfc5358/status")
 	@RolesAllowed({ "admin", "user" })
+	/**
+	 * Gets the RFC5358Status.
+	 * @return the RFC5358Status
+	 */
 	public Response getRFC5358Status() {
 		LOG.debug("Fetching RFC 5358 compliance status");
 
@@ -273,6 +311,10 @@ public class AdminResource {
 	@GET
 	@Path("/rfc5358/allowed-networks")
 	@RolesAllowed({ "admin", "user" })
+	/**
+	 * Gets the AllowedNetworks.
+	 * @return the AllowedNetworks
+	 */
 	public Response getAllowedNetworks() {
 		LOG.debug("Fetching allowed networks");
 
@@ -287,6 +329,9 @@ public class AdminResource {
 	@POST
 	@Path("/rfc5358/allowed-networks")
 	@RolesAllowed("admin")
+	/**
+	 * addAllowedNetwork method.
+	 */
 	public Response addAllowedNetwork(Map<String, String> request) {
 		String network = request.get("network");
 
@@ -322,6 +367,10 @@ public class AdminResource {
 	@GET
 	@Path("/rfc5358/allowed-hosts")
 	@RolesAllowed({ "admin", "user" })
+	/**
+	 * Gets the AllowedHosts.
+	 * @return the AllowedHosts
+	 */
 	public Response getAllowedHosts() {
 		LOG.debug("Fetching allowed hosts");
 
@@ -336,6 +385,9 @@ public class AdminResource {
 	@POST
 	@Path("/rfc5358/allowed-hosts")
 	@RolesAllowed("admin")
+	/**
+	 * addAllowedHost method.
+	 */
 	public Response addAllowedHost(Map<String, String> request) {
 		String host = request.get("host");
 
@@ -356,6 +408,10 @@ public class AdminResource {
 	@GET
 	@Path("/rfc5358/denied-hosts")
 	@RolesAllowed({ "admin", "user" })
+	/**
+	 * Gets the DeniedHosts.
+	 * @return the DeniedHosts
+	 */
 	public Response getDeniedHosts() {
 		LOG.debug("Fetching denied hosts");
 
@@ -370,6 +426,9 @@ public class AdminResource {
 	@POST
 	@Path("/rfc5358/denied-hosts")
 	@RolesAllowed("admin")
+	/**
+	 * addDeniedHost method.
+	 */
 	public Response addDeniedHost(Map<String, String> request) {
 		String host = request.get("host");
 
@@ -390,6 +449,10 @@ public class AdminResource {
 	@POST
 	@Path("/rfc5358/recursion")
 	@RolesAllowed("admin")
+	/**
+	 * Sets the Recursion.
+	 * @param request the Recursion to set
+	 */
 	public Response setRecursion(Map<String, Boolean> request) {
 		Boolean enabled = request.get("enabled");
 
@@ -417,6 +480,10 @@ public class AdminResource {
 	@GET
 	@Path("/endpoints/statistics")
 	@RolesAllowed({ "admin", "user" })
+	/**
+	 * Gets the EndpointStatistics.
+	 * @return the EndpointStatistics
+	 */
 	public Response getEndpointStatistics() {
 		LOG.debug("Fetching endpoint usage statistics");
 		return Response.ok(endpointStatisticsService.getAllStatistics()).build();
@@ -479,6 +546,10 @@ public class AdminResource {
 	@GET
 	@Path("/endpoints/count")
 	@RolesAllowed({ "admin", "user" })
+	/**
+	 * Gets the EndpointCount.
+	 * @return the EndpointCount
+	 */
 	public Response getEndpointCount() {
 		LOG.debug("Fetching total endpoint count");
 
@@ -499,6 +570,9 @@ public class AdminResource {
 	@Path("/endpoints/statistics/reset")
 	@Consumes("*/*")
 	@RolesAllowed("admin")
+	/**
+	 * resetAllStatistics method.
+	 */
 	public Response resetAllStatistics() {
 		LOG.warn("Resetting all endpoint statistics");
 		endpointStatisticsService.resetStatistics();

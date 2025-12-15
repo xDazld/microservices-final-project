@@ -12,7 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
- * Service for recording and tracking endpoint usage statistics
+	 * Service for recording and tracking endpoint usage statistics
  * <p>
  * This service maintains per-endpoint metrics including: - Total number of
  * requests - Total number
@@ -23,11 +23,23 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * Thread-safe for concurrent access.
  */
 @ApplicationScoped
+/**
+	 * EndpointStatisticsService class.
+ */
 public class EndpointStatisticsService {
 
+	/**
+	 * The LOG.
+	 */
 	private static final Logger LOG = Logger.getLogger(EndpointStatisticsService.class);
 	// Endpoint statistics keyed by "METHOD ENDPOINT"
+	/**
+	 * The statistics.
+	 */
 	private final Map<String, EndpointStatistics> statistics = new ConcurrentHashMap<>();
+	/**
+	 * The globalLock.
+	 */
 	private final ReentrantReadWriteLock globalLock = new ReentrantReadWriteLock();
 
 	/**
@@ -167,21 +179,66 @@ public class EndpointStatisticsService {
 	 * Statistics for a single endpoint
 	 */
 	public static class EndpointStatistics {
-		private final String endpoint;
-		private final String method;
-		private final Map<Integer, Long> statusCodeCounts = new ConcurrentHashMap<>();
-		private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
-		private long totalRequests = 0;
-		private long successfulRequests = 0;
-		private long failedRequests = 0;
-		private long totalResponseTime = 0; // milliseconds
-		private long minResponseTime = Long.MAX_VALUE;
-		private long maxResponseTime = 0;
-		private long totalBytesIn = 0;
-		private long totalBytesOut = 0;
-		private Instant lastAccessTime;
-		private final Instant createdTime;
+		/**
+	 * The endpoint.
+		 */
+	private final String endpoint;
+		/**
+	 * The method.
+		 */
+	private final String method;
+		/**
+	 * The statusCodeCounts.
+		 */
+	private final Map<Integer, Long> statusCodeCounts = new ConcurrentHashMap<>();
+		/**
+	 * The lock.
+		 */
+	private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+		/**
+	 * The totalRequests.
+		 */
+	private long totalRequests = 0;
+		/**
+	 * The successfulRequests.
+		 */
+	private long successfulRequests = 0;
+		/**
+	 * The failedRequests.
+		 */
+	private long failedRequests = 0;
+		/**
+	 * The totalResponseTime.
+		 */
+	private long totalResponseTime = 0; // milliseconds
+		/**
+	 * The minResponseTime.
+		 */
+	private long minResponseTime = Long.MAX_VALUE;
+		/**
+	 * The maxResponseTime.
+		 */
+	private long maxResponseTime = 0;
+		/**
+	 * The totalBytesIn.
+		 */
+	private long totalBytesIn = 0;
+		/**
+	 * The totalBytesOut.
+		 */
+	private long totalBytesOut = 0;
+		/**
+	 * The lastAccessTime.
+		 */
+	private Instant lastAccessTime;
+		/**
+	 * The createdTime.
+		 */
+	private final Instant createdTime;
 
+		/**
+	 * EndpointStatistics method.
+		 */
 		public EndpointStatistics(String endpoint, String method) {
 			this.endpoint = endpoint;
 			this.method = method;
@@ -189,6 +246,13 @@ public class EndpointStatisticsService {
 			this.lastAccessTime = Instant.now();
 		}
 
+		/**
+	 * Records a request with response time, status code, and bytes transferred.
+		 * @param responseTimeMs the response time in milliseconds
+		 * @param statusCode the HTTP status code
+		 * @param bytesIn the bytes received
+		 * @param bytesOut the bytes sent
+		 */
 		public void recordRequest(long responseTimeMs, int statusCode, long bytesIn,
 				long bytesOut) {
 			lock.writeLock().lock();
@@ -215,6 +279,9 @@ public class EndpointStatisticsService {
 			}
 		}
 
+		/**
+	 * toMap method.
+		 */
 		public Map<String, Object> toMap() {
 			lock.readLock().lock();
 			try {
@@ -245,6 +312,10 @@ public class EndpointStatisticsService {
 		}
 
 		// Getters for internal use
+		/**
+	 * Gets the TotalRequests.
+		 * @return the TotalRequests
+		 */
 		public long getTotalRequests() {
 			lock.readLock().lock();
 			try {
@@ -254,6 +325,10 @@ public class EndpointStatisticsService {
 			}
 		}
 
+		/**
+	 * Gets the AverageResponseTime.
+		 * @return the AverageResponseTime
+		 */
 		public double getAverageResponseTime() {
 			lock.readLock().lock();
 			try {
@@ -263,6 +338,10 @@ public class EndpointStatisticsService {
 			}
 		}
 
+		/**
+	 * Gets the SuccessfulRequests.
+		 * @return the SuccessfulRequests
+		 */
 		public long getSuccessfulRequests() {
 			lock.readLock().lock();
 			try {
@@ -272,6 +351,10 @@ public class EndpointStatisticsService {
 			}
 		}
 
+		/**
+	 * Gets the FailedRequests.
+		 * @return the FailedRequests
+		 */
 		public long getFailedRequests() {
 			lock.readLock().lock();
 			try {

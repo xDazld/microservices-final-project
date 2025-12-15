@@ -24,13 +24,16 @@ import java.util.Base64;
 import java.util.Collection;
 
 /**
- * JWT Signing Service
+	 * JWT Signing Service
  * <p>
  * Handles JWT token generation with manual signing using loaded private key.
  *
  * @author Patrick Rafferty
  */
 @ApplicationScoped
+/**
+	 * JwtSigningService class.
+ */
 public class JwtSigningService {
 	
 	/**

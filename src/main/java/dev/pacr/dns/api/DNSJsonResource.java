@@ -17,7 +17,7 @@ import org.jboss.logging.Logger;
 import java.util.Map;
 
 /**
- * JSON-based DNS Query API for frontend consumption
+	 * JSON-based DNS Query API for frontend consumption
  * <p>
  * This endpoint provides a simpler JSON-based interface for DNS queries, complementing the RFC 8484
  * compliant binary endpoint.
@@ -25,8 +25,14 @@ import java.util.Map;
 @Path("/api/v1/dns")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+/**
+	 * DNSJsonResource class.
+ */
 public class DNSJsonResource {
 	
+	/**
+	 * The LOG.
+	 */
 	private static final Logger LOG = Logger.getLogger(DNSJsonResource.class);
 	
 	@Inject
@@ -79,6 +85,9 @@ public class DNSJsonResource {
 	 */
 	@POST
 	@Path("/query")
+	/**
+	 * queryPost method.
+	 */
 	public Response queryPost(QueryRequest request) {
 		
 		if (request == null || request.domain == null || request.domain.isBlank()) {
@@ -118,6 +127,9 @@ public class DNSJsonResource {
 	 */
 	@POST
 	@Path("/batch")
+	/**
+	 * batchQuery method.
+	 */
 	public Response batchQuery(BatchQueryRequest request) {
 		
 		if (request == null || request.domains == null || request.domains.length == 0) {
@@ -155,7 +167,13 @@ public class DNSJsonResource {
 	 * Request class for POST queries
 	 */
 	public static class QueryRequest {
+		/**
+	 * The domain.
+		 */
 		public String domain;
+		/**
+	 * The type.
+		 */
 		public String type;
 	}
 	
@@ -163,7 +181,13 @@ public class DNSJsonResource {
 	 * Request class for batch queries
 	 */
 	public static class BatchQueryRequest {
+		/**
+	 * The domains.
+		 */
 		public String[] domains;
+		/**
+	 * The type.
+		 */
 		public String type;
 	}
 }

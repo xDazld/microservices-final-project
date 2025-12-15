@@ -13,7 +13,7 @@ import jakarta.ws.rs.ext.Provider;
 import org.jboss.logging.Logger;
 
 /**
- * JAX-RS filter for recording endpoint usage statistics
+	 * JAX-RS filter for recording endpoint usage statistics
  * <p>
  * This filter intercepts all REST requests and responses to measure: - Response
  * time - HTTP status
@@ -23,10 +23,19 @@ import org.jboss.logging.Logger;
  * endpoint.
  */
 @Provider
+/**
+	 * StatisticsFilter class.
+ */
 public class StatisticsFilter implements ContainerRequestFilter, ContainerResponseFilter {
 
+	/**
+	 * The LOG.
+	 */
 	private static final Logger LOG = Logger.getLogger(StatisticsFilter.class);
 	// Thread-local storage for request start time
+	/**
+	 * The REQUEST_START_TIME.
+	 */
 	private static final ThreadLocal<Long> REQUEST_START_TIME = new ThreadLocal<>();
 	@Inject
 	EndpointStatisticsService statisticsService;
@@ -35,7 +44,9 @@ public class StatisticsFilter implements ContainerRequestFilter, ContainerRespon
 	@Context
 	HttpServerResponse response;
 
-	@Override
+	/**
+	 * filter method.
+	 */
 	public void filter(ContainerRequestContext requestContext) {
 		// Record the start time of the request
 		REQUEST_START_TIME.set(System.currentTimeMillis());
@@ -44,6 +55,11 @@ public class StatisticsFilter implements ContainerRequestFilter, ContainerRespon
 				requestContext.getUriInfo().getPath());
 	}
 
+	/**
+	 * Filters the container request and response.
+	 * @param requestContext the request context
+	 * @param responseContext the response context
+	 */
 	@Override
 	public void filter(ContainerRequestContext requestContext,
 			ContainerResponseContext responseContext) {

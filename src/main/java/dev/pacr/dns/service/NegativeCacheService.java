@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * RFC 9520 compliant negative caching service for DNS resolution failures.
+	 * RFC 9520 compliant negative caching service for DNS resolution failures.
  * <p>
  * This service implements the requirements from RFC 9520 "Negative Caching of DNS Resolution
  * Failures": - Caches resolution failures for at least 1 second (configurable) - Maximum cache
@@ -20,23 +20,44 @@ import java.util.concurrent.ConcurrentHashMap;
  * @see <a href="https://www.rfc-editor.org/rfc/rfc9520.html">RFC 9520</a>
  */
 @ApplicationScoped
+/**
+	 * NegativeCacheService class.
+ */
 public class NegativeCacheService {
 	
+	/**
+	 * The LOG.
+	 */
 	private static final Logger LOG = Logger.getLogger(NegativeCacheService.class);
 	
 	// RFC 9520 Section 3.2: Minimum cache duration is 1 second
+	/**
+	 * The MIN_CACHE_DURATION_SECONDS.
+	 */
 	private static final long MIN_CACHE_DURATION_SECONDS = 1;
 	
 	// RFC 9520 Section 3.2: Maximum cache duration is 5 minutes (300 seconds)
+	/**
+	 * The MAX_CACHE_DURATION_SECONDS.
+	 */
 	private static final long MAX_CACHE_DURATION_SECONDS = 300;
 	
 	// Initial backoff duration in seconds
+	/**
+	 * The INITIAL_BACKOFF_SECONDS.
+	 */
 	private static final long INITIAL_BACKOFF_SECONDS = 5;
 	
 	// Maximum number of cache entries to prevent resource exhaustion
+	/**
+	 * The MAX_CACHE_ENTRIES.
+	 */
 	private static final int MAX_CACHE_ENTRIES = 10000;
 	
 	// Cache for resolution failures
+	/**
+	 * The failureCache.
+	 */
 	private final Map<String, FailureCacheEntry> failureCache = new ConcurrentHashMap<>();
 	
 	/**
@@ -199,13 +220,45 @@ public class NegativeCacheService {
 	 * Types of resolution failures per RFC 9520
 	 */
 	public enum FailureType {
+		/**
+	 * SERVFAIL constant.
+		 */
+
 		SERVFAIL,           // Server failure (Section 2.1)
+		/**
+	 * REFUSED constant.
+		 */
+
 		REFUSED,            // Query refused (Section 2.2)
+		/**
+	 * TIMEOUT constant.
+		 */
+
 		TIMEOUT,            // Server timeout (Section 2.3)
+		/**
+	 * UNREACHABLE constant.
+		 */
+
 		UNREACHABLE,        // Server unreachable (Section 2.3)
+		/**
+	 * DELEGATION_LOOP constant.
+		 */
+
 		DELEGATION_LOOP,    // Delegation loop detected (Section 2.4)
+		/**
+	 * ALIAS_LOOP constant.
+		 */
+
 		ALIAS_LOOP,         // CNAME/DNAME loop detected (Section 2.5)
+		/**
+	 * DNSSEC_VALIDATION constant.
+		 */
+
 		DNSSEC_VALIDATION,  // DNSSEC validation failure (Section 2.6)
+		/**
+	 * FORMERR constant.
+		 */
+
 		FORMERR,            // Format error (Section 2.7)
 		OTHER               // Other resolution failures
 	}

@@ -16,7 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
 /**
- * DNS filtering service that applies filtering rules to domains.
+	 * DNS filtering service that applies filtering rules to domains.
  * <p>
  * This service provides DNS-based content filtering capabilities by applying configurable rules
  * to domain names. It supports different rule types (BLOCK, ALLOW, REDIRECT) with priority-based
@@ -33,6 +33,9 @@ import java.util.regex.Pattern;
  * @author Patrick Rafferty
  */
 @ApplicationScoped
+/**
+	 * DNSFilterService class.
+ */
 public class DNSFilterService {
 	
 	/**
@@ -79,6 +82,9 @@ public class DNSFilterService {
 	 * Apply filtering rules to a domain
 	 */
 	@Counted(value = "dns.filter.checks", description = "Number of filter checks performed")
+	/**
+	 * applyFilters method.
+	 */
 	public FilterResult applyFilters(CharSequence domain) {
 		LOG.debugf("Applying filters to domain: %s", domain);
 		

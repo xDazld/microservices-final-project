@@ -17,7 +17,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 
 /**
- * JWT Key Generator
+	 * JWT Key Generator
  * <p>
  * Automatically generates RSA key pairs for JWT signing on application startup if they don't
  * already exist.
@@ -25,6 +25,9 @@ import java.util.Base64;
  * @author Patrick Rafferty
  */
 @ApplicationScoped
+/**
+	 * JwtKeyGenerator class.
+ */
 public class JwtKeyGenerator {
 	
 	/**

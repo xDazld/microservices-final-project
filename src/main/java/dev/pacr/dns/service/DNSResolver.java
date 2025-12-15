@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Core DNS resolution service that handles DNS queries.
+	 * Core DNS resolution service that handles DNS queries.
  * RFC 9520 compliant with negative caching for resolution failures.
  * RFC 8767 compliant with serve-stale for improved DNS resiliency.
  *
@@ -32,37 +32,67 @@ import java.util.concurrent.ConcurrentHashMap;
  * @see <a href="https://www.rfc-editor.org/rfc/rfc8767.html">RFC 8767</a>
  */
 @ApplicationScoped
+/**
+	 * DNSResolver class.
+ */
 public class DNSResolver {
 	
+	/**
+	 * The LOG.
+	 */
 	private static final Logger LOG = Logger.getLogger(DNSResolver.class);
+	/**
+	 * The CACHE_TTL_SECONDS.
+	 */
 	private static final long CACHE_TTL_SECONDS = 300; // 5 minutes
 	
 	// RFC 8767 Section 5: Maximum stale timer - recommended 1-3 days
 	// "The suggested value is between 1 and 3 days"
+	/**
+	 * The MAX_STALE_SECONDS.
+	 */
 	private static final long MAX_STALE_SECONDS = 86400; // 1 day (24 hours)
 	
 	// RFC 8767 Section 5: Client response timer
 	// "recommended value of 1.8 seconds as being just under a common timeout value of 2 seconds"
+	/**
+	 * The CLIENT_RESPONSE_TIMEOUT_MS.
+	 */
 	private static final long CLIENT_RESPONSE_TIMEOUT_MS = 1800; // 1.8 seconds
 	
 	// RFC 8767 Section 5: Failure recheck timer
 	// "Attempts to refresh from non-responsive or otherwise failing authoritative nameservers
 	// are recommended to be done no more frequently than every 30 seconds"
+	/**
+	 * The FAILURE_RECHECK_SECONDS.
+	 */
 	private static final long FAILURE_RECHECK_SECONDS = 30;
 	
 	// RFC 8767 Section 4: TTL to set on stale records in response
 	// "RECOMMENDED value of 30 seconds"
+	/**
+	 * The STALE_RESPONSE_TTL.
+	 */
 	private static final long STALE_RESPONSE_TTL = 30;
 	
 	// RFC 9520 Section 3.1: Maximum retry limit
 	// "A resolver MUST NOT retry a given query to a server address over a given DNS transport
 	// more than twice (i.e., three queries in total)"
+	/**
+	 * The MAX_RETRIES.
+	 */
 	private static final int MAX_RETRIES = 2; // 2 retries = 3 total queries
 	
 	// Simple in-memory cache for DNS responses
+	/**
+	 * The cache.
+	 */
 	private final Map<String, CachedResponse> cache = new ConcurrentHashMap<>();
 	
 	// RFC 8767: Track last failure time for failure recheck timer
+	/**
+	 * The lastFailureTime.
+	 */
 	private final Map<String, Instant> lastFailureTime = new ConcurrentHashMap<>();
 	
 	@Inject
@@ -83,6 +113,9 @@ public class DNSResolver {
 	 */
 	@Timed(value = "dns.query.resolution", description = "Time taken to resolve DNS query")
 	@Counted(value = "dns.query.count", description = "Number of DNS queries processed")
+	/**
+	 * resolve method.
+	 */
 	public DnsMessage resolve(DnsMessage query) {
 		LOG.infof("Resolving DNS query: %s (type: %d)", query.getQname(), query.getQtype());
 		
@@ -435,6 +468,10 @@ public class DNSResolver {
 			this.failureType = failureType;
 		}
 		
+		/**
+	 * Gets the FailureType.
+		 * @return the FailureType
+		 */
 		public NegativeCacheService.FailureType getFailureType() {
 			return failureType;
 		}
@@ -453,7 +490,7 @@ public class DNSResolver {
 		}
 		
 		/**
-		 * RFC 1035 Section 3.2.1: Check if data is expired based on original TTL
+	 * RFC 1035 Section 3.2.1: Check if data is expired based on original TTL
 		 */
 		boolean isExpired() {
 			return java.time.Duration.between(cachedAt, Instant.now()).getSeconds() >
@@ -461,7 +498,7 @@ public class DNSResolver {
 		}
 		
 		/**
-		 * RFC 8767 Section 5: Check if data is stale but still usable Data is stale if expired but
+	 * RFC 8767 Section 5: Check if data is stale but still usable Data is stale if expired but
 		 * within MAX_STALE_SECONDS
 		 */
 		boolean isStale() {
@@ -470,7 +507,7 @@ public class DNSResolver {
 		}
 		
 		/**
-		 * RFC 8767 Section 5: Check if data exceeds maximum stale timer "The suggested value is
+	 * RFC 8767 Section 5: Check if data exceeds maximum stale timer "The suggested value is
 		 * between 1 and 3 days"
 		 */
 		boolean isTooStale() {
@@ -478,7 +515,7 @@ public class DNSResolver {
 		}
 		
 		/**
-		 * Get the age of this cache entry in seconds
+	 * Get the age of this cache entry in seconds
 		 */
 		long getAgeSeconds() {
 			return java.time.Duration.between(cachedAt, Instant.now()).getSeconds();
@@ -489,6 +526,9 @@ public class DNSResolver {
 	 * Exception thrown when client response timeout is exceeded (RFC 8767)
 	 */
 	private static class ClientTimeoutException extends Exception {
+		/**
+	 * ClientTimeoutException method.
+		 */
 		public ClientTimeoutException(String message) {
 			super(message);
 		}

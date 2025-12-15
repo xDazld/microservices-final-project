@@ -22,13 +22,19 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * REST API endpoint for managing DNS filtering rules
+	 * REST API endpoint for managing DNS filtering rules
  */
 @Path("/api/v1/filters")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+/**
+	 * FilterRuleResource class.
+ */
 public class FilterRuleResource {
 	
+	/**
+	 * The LOG.
+	 */
 	private static final Logger LOG = Logger.getLogger(FilterRuleResource.class);
 	
 	@Inject
@@ -75,6 +81,9 @@ public class FilterRuleResource {
 	 */
 	@POST
 	@RolesAllowed("admin")
+	/**
+	 * createRule method.
+	 */
 	public Response createRule(FilterRuleRequest request) {
 		LOG.infof("Creating new filter rule: %s", request.name);
 		
@@ -174,6 +183,10 @@ public class FilterRuleResource {
 	@GET
 	@Path("/stats")
 	@RolesAllowed({"admin", "user"})
+	/**
+	 * Gets the FilterStats.
+	 * @return the FilterStats
+	 */
 	public Response getFilterStats() {
 		LOG.debug("Fetching filter statistics");
 		
@@ -186,12 +199,33 @@ public class FilterRuleResource {
 	 * Request model for filter rule
 	 */
 	public static class FilterRuleRequest {
+		/**
+	 * The name.
+		 */
 		public String name;
+		/**
+	 * The pattern.
+		 */
 		public String pattern;
+		/**
+	 * The type.
+		 */
 		public String type;
+		/**
+	 * The category.
+		 */
 		public String category;
+		/**
+	 * The priority.
+		 */
 		public Integer priority;
+		/**
+	 * The enabled.
+		 */
 		public Boolean enabled;
+		/**
+	 * The redirectTo.
+		 */
 		public String redirectTo;
 	}
 }

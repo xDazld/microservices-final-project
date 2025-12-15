@@ -13,16 +13,28 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Security service for threat intelligence and malware detection
+	 * Security service for threat intelligence and malware detection
  */
 @ApplicationScoped
+/**
+	 * SecurityService class.
+ */
 public class SecurityService {
 	
+	/**
+	 * The LOG.
+	 */
 	private static final Logger LOG = Logger.getLogger(SecurityService.class);
 	
 	// In-memory threat database (in production, use external threat intelligence
 	// APIs)
+	/**
+	 * The maliciousDomains.
+	 */
 	private final Set<String> maliciousDomains = ConcurrentHashMap.newKeySet();
+	/**
+	 * The maliciousIPs.
+	 */
 	private final Set<String> maliciousIPs = ConcurrentHashMap.newKeySet();
 	
 	@Inject
@@ -202,9 +214,21 @@ public class SecurityService {
 	 * Threat analysis result
 	 */
 	public static class ThreatAnalysis {
+		/**
+	 * The domain.
+		 */
 		public String domain;
+		/**
+	 * The isMalicious.
+		 */
 		public boolean isMalicious;
+		/**
+	 * The suspiciousPatterns.
+		 */
 		public List<String> suspiciousPatterns;
+		/**
+	 * The riskScore.
+		 */
 		public int riskScore;
 	}
 }

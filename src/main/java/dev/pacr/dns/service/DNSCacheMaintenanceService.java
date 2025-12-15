@@ -7,7 +7,7 @@ import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
 
 /**
- * Scheduled maintenance tasks for DNS caching per RFC 9520.
+	 * Scheduled maintenance tasks for DNS caching per RFC 9520.
  * <p>
  * This service performs periodic cleanup of expired cache entries for both positive and negative
  * caches as recommended by RFC 9520.
@@ -16,6 +16,9 @@ import org.jboss.logging.Logger;
  */
 @Startup
 @ApplicationScoped
+/**
+	 * DNSCacheMaintenanceService class.
+ */
 public class DNSCacheMaintenanceService {
 	
 	/**

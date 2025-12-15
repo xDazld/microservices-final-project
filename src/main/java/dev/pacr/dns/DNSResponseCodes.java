@@ -1,7 +1,7 @@
 package dev.pacr.dns;
 
 /**
- * DNS Response Code Constants
+	 * DNS Response Code Constants
  * <p>
  * Defined in RFC 1035 Section 4.1.1 and RFC 6895
  *

@@ -14,7 +14,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * RFC 5358 Compliance Service - Prevents use of recursive nameservers in reflector attacks.
+	 * RFC 5358 Compliance Service - Prevents use of recursive nameservers in reflector attacks.
  * <p>
  * RFC 5358 (BCP 140) Best Current Practice recommendations: 1. Recursive nameservers SHOULD NOT
  * offer recursive service to external networks by default 2. Use IP address based authorization
@@ -28,13 +28,28 @@ import java.util.concurrent.ConcurrentHashMap;
  * Nameservers in Reflector Attacks</a>
  */
 @ApplicationScoped
+/**
+	 * RFC5358AccessControlService class.
+ */
 public class RFC5358AccessControlService {
 	
+	/**
+	 * The LOG.
+	 */
 	private static final Logger LOG = Logger.getLogger(RFC5358AccessControlService.class);
 	
 	// RFC 5358 Section 4: IP address based authorization through ACLs
+	/**
+	 * The allowedNetworks.
+	 */
 	private final Set<String> allowedNetworks = ConcurrentHashMap.newKeySet();
+	/**
+	 * The allowedHosts.
+	 */
 	private final Set<String> allowedHosts = ConcurrentHashMap.newKeySet();
+	/**
+	 * The deniedHosts.
+	 */
 	private final Set<String> deniedHosts = ConcurrentHashMap.newKeySet();
 	
 	@Inject
@@ -296,7 +311,7 @@ public class RFC5358AccessControlService {
 									int allowedHostCount, int deniedHostCount) {
 		
 		/**
-		 * Check if configuration follows RFC 5358 best practices.
+	 * Check if configuration follows RFC 5358 best practices.
 		 */
 			public boolean isCompliant() {
 				// RFC 5358: Recursion should be restricted (either disabled or with ACLs)
@@ -308,7 +323,9 @@ public class RFC5358AccessControlService {
 				return defaultDeny || allowedNetworkCount > 0;
 			}
 			
-			@Override
+			/**
+	 * toString method.
+			 */
 			public String toString() {
 				return String.format(
 						"RFC5358Status{recursion=%s, defaultDeny=%s, networks=%d, allowed=%d, " +
