@@ -423,6 +423,65 @@ public class StandalonePerformanceTool {
 		System.out.println('\n' + "=".repeat(80));
 		System.out.println("✓ CSV report generated: " + csvFilename);
 		System.out.println("=".repeat(80));
+		
+		// Generate charts using Python
+		generateChartsWithPython(csvFilename);
+	}
+	
+	/**
+	 * Invokes the Python script to generate entertaining charts from the CSV data
+	 */
+	private static void generateChartsWithPython(String csvFilename) {
+		System.out.println('\n' + "=".repeat(80));
+		System.out.println("GENERATING PERFORMANCE CHARTS");
+		System.out.println("=".repeat(80));
+		
+		try {
+			// Find the Python script (it's in the same directory as this class)
+			String pythonScript = "src/test/java/dev/pacr/dns/performance/generate_charts.py";
+			
+			// Check if Python is available
+			ProcessBuilder checkPython = new ProcessBuilder("python3", "--version");
+			Process checkProcess = checkPython.start();
+			int checkResult = checkProcess.waitFor();
+			
+			if (checkResult != 0) {
+				System.err.println("⚠️  Python 3 not found. Skipping chart generation.");
+				return;
+			}
+			
+			System.out.println("✓ Python 3 found");
+			System.out.println("📊 Launching chart generation...");
+			System.out.println("   (This may take a few seconds)");
+			
+			// Run the Python script
+			ProcessBuilder pb = new ProcessBuilder("python3", pythonScript, csvFilename);
+			pb.inheritIO(); // This allows us to see Python's output in real-time
+			Process process = pb.start();
+			
+			int exitCode = process.waitFor();
+			
+			if (exitCode == 0) {
+				System.out.println('\n' + "=".repeat(80));
+				System.out.println("✅ Charts generated successfully!");
+				System.out.println("=".repeat(80));
+			} else {
+				System.err.println('\n' + "=".repeat(80));
+				System.err.println(
+						"⚠️  Chart generation completed with warnings (exit code: " + exitCode +
+								')');
+				System.err.println("   This may be due to missing Python dependencies.");
+				System.err.println("   Install with: pip3 install pandas matplotlib");
+				System.err.println("=".repeat(80));
+			}
+			
+		} catch (IOException e) {
+			System.err.println("⚠️  Could not run Python chart generator: " + e.getMessage());
+			System.err.println("   Make sure Python 3 is installed and in your PATH");
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			System.err.println("⚠️  Chart generation was interrupted");
+		}
 	}
 	
 	/**

@@ -44,3 +44,8 @@ nb-configuration.xml
 # TLS Certificates
 .certs/
 *.pem
+
+# Performance test outputs
+performance-report-*.csv
+performance-dashboard-*.png
+
