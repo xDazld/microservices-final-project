@@ -16,6 +16,9 @@ services:
       QUARKUS_DATASOURCE_PASSWORD: ${DB_PASSWORD:-dns_password}
       QUARKUS_DATASOURCE_REACTIVE_URL: mysql://mariadb:3306/dns_shield
 
+      # MongoDB Configuration
+      QUARKUS_MONGODB_CONNECTION_STRING: mongodb://${MONGO_USER:-admin}:${MONGO_PASSWORD:-admin}@mongodb:27017/${MONGO_DB:-dns_shield}?authSource=admin
+      QUARKUS_MONGODB_DATABASE: ${MONGO_DB:-dns_shield}
 
       # RabbitMQ Configuration
       RABBITMQ_HOST: rabbitmq
@@ -62,6 +65,8 @@ services:
       - dns-shield-data:/opt/app
     depends_on:
       mariadb:
+        condition: service_healthy
+      mongodb:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
@@ -142,6 +147,28 @@ services:
       ollama pull qwen3:0.6b;
       wait"
 
+  # MongoDB Storage Service
+  mongodb:
+    image: docker.io/library/mongo:7.0
+    container_name: dns-shield-mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-admin}
+      MONGO_INITDB_DATABASE: ${MONGO_DB:-dns_shield}
+    volumes:
+      - mongodb-data:/data/db
+      - mongodb-config:/data/configdb
+    networks:
+      - dns-shield-network
+    healthcheck:
+      test: [ "CMD", "mongosh", "--eval", "db.adminCommand('ping')" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
   # Grafana LGTM Stack (Loki, Grafana, Tempo, Mimir)
   otel-lgtm:
     image: docker.io/grafana/otel-lgtm:0.11.0
@@ -167,6 +194,10 @@ volumes:
   rabbitmq-data:
     driver: local
   ollama-data:
+    driver: local
+  mongodb-data:
+    driver: local
+  mongodb-config:
     driver: local
   otel-lgtm-data:
     driver: local
