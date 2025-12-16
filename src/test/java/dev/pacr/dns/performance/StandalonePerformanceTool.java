@@ -140,7 +140,7 @@ public class StandalonePerformanceTool {
 		List<TestResult> results = new ArrayList<>();
 		String[] testDomains =
 				{"google.com", "github.com", "stackoverflow.com", "example.com", "mozilla.org",
-						"amazon.com", "ads.doubleclick.net"};
+						"amazon.com", "ads.doubleclick.net", "www.malware-example.com"};
 		
 		for (int concurrentUsers : CONCURRENT_USERS) {
 			System.out.println("\n--- Testing with " + concurrentUsers + " concurrent users ---");
