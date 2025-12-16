@@ -9,11 +9,6 @@ services:
       - "8080:8080"
     environment:
       # Database Configuration
-      QUARKUS_DATASOURCE_DB_KIND: mariadb
-      QUARKUS_DATASOURCE_JDBC_URL: jdbc:mariadb://mariadb:3306/dns_shield
-      QUARKUS_DATASOURCE_USERNAME: ${DB_USER:-dns_user}
-      QUARKUS_DATASOURCE_PASSWORD: ${DB_PASSWORD:-dns_password}
-      QUARKUS_DATASOURCE_REACTIVE_URL: mysql://mariadb:3306/dns_shield
 
       # MongoDB Configuration
       QUARKUS_MONGODB_CONNECTION_STRING: mongodb://${MONGO_USER:-admin}:${MONGO_PASSWORD:-admin}@mongodb:27017/${MONGO_DB:-dns_shield}?authSource=admin
@@ -71,8 +66,6 @@ services:
     volumes:
       - dns-shield-data:/opt/app
     depends_on:
-      mariadb:
-        condition: service_healthy
       mongodb:
         condition: service_healthy
       redis:
@@ -89,28 +82,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
-
-  # MariaDB Database Service
-  mariadb:
-    image: docker.io/library/mariadb:10.11
-    container_name: dns-shield-db
-    environment:
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootpassword}
-      MYSQL_DATABASE: ${DB_NAME:-dns_shield}
-      MYSQL_USER: ${DB_USER:-dns_user}
-      MYSQL_PASSWORD: ${DB_PASSWORD:-dns_password}
-      MARIADB_AUTO_UPGRADE: "1"
-    volumes:
-      - mariadb-data:/var/lib/mysql
-      - ./src/main/resources/db-init:/docker-entrypoint-initdb.d:ro
-    networks:
-      - dns-shield-network
-    healthcheck:
-      test: [ "CMD", "healthcheck.sh", "--su=mysql", "--connect", "--innodb_initialized" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
 
   # RabbitMQ Message Broker
   rabbitmq:
@@ -202,8 +173,6 @@ services:
       - dns-shield
 
 volumes:
-  mariadb-data:
-    driver: local
   rabbitmq-data:
     driver: local
   ollama-data:
