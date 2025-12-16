@@ -5,7 +5,7 @@ intelligent DNS query filtering, threat detection, and real-time monitoring capa
 Quarkus and powered by AI through LangChain4j, it offers a comprehensive solution for DNS security
 in modern cloud environments.
 
-## 📋 Table of Contents
+## Table of Contents
 
 - [Description](#-description)
 - [Features](#-features)
@@ -20,7 +20,7 @@ in modern cloud environments.
 
 ---
 
-## 📖 Description
+## Description
 
 DNS Shield is a microservices-based DNS security platform designed to protect networks from
 malicious domains, phishing attempts, and other DNS-based threats. The application intercepts DNS
@@ -38,7 +38,7 @@ comprehensive logging and monitoring.
 
 ---
 
-## ✨ Features
+## Features
 
 ### Minimum Requirements (85%)
 
@@ -61,9 +61,77 @@ comprehensive logging and monitoring.
 | **Monitoring Frameworks**     | Prometheus metrics, Grafana dashboards, OpenTelemetry tracing                |
 | **Novel Design**              | RFC-compliant implementation with 60+ IETF RFC references                    |
 
+### Requirements Compliance Map
+
+```mermaid
+mindmap
+  root((DNS Shield))
+    Minimum Requirements 85%
+      Multiple Services
+        DNS Query API
+        Authentication API
+        Admin API
+        Filter API
+        AI Agent API
+      REST APIs & Streaming
+        RESTful Endpoints
+        RabbitMQ Events
+        WebSocket Updates
+      Containerized
+        Docker Compose
+        Kubernetes Ready
+      Access Controls
+        JWT Authentication
+        Role-Based Access
+        RFC 5358 ACL
+      Usage Statistics
+        Endpoint Metrics
+        Admin Dashboard
+        Prometheus Export
+    Additional Requirements 15%+
+      Container Orchestration
+        Kubernetes Manifests
+        ServiceMonitor
+        RBAC Configuration
+      Storage Systems
+        MongoDB Documents
+        Redis Cache
+      Event Streaming
+        RabbitMQ Topics
+        Real-time WebSocket
+      AI/Agent Services
+        LangChain4j Agent
+        Ollama Integration
+        Threat Analysis
+      Monitoring
+        Grafana LGTM
+        OpenTelemetry
+        Custom Dashboards
+      Novel Design
+        60+ RFC References
+        DNS Security Focus
+```
+
 ---
 
-## 🏗 Architecture
+## Architecture
+
+### High-Level System Overview
+
+```mermaid
+flowchart LR
+    Client[Client] -->|HTTPS| LB[Load Balancer]
+    LB -->|DoH/JSON| API[DNS Shield API]
+    API --> Cache[(Redis Cache)]
+    API --> DB[(MongoDB)]
+    API --> MQ[RabbitMQ]
+    API --> AI[Ollama AI]
+    MQ --> Dashboard[Dashboard]
+    API --> Metrics[Prometheus]
+    Metrics --> Grafana[Grafana]
+```
+
+### Detailed Component Diagram
 
 ```mermaid
 flowchart TB
@@ -86,7 +154,7 @@ flowchart TB
         Redis[(Redis<br/>Cache)]
         MariaDB[(MariaDB<br/>Users & Rules)]
         RabbitMQ[/RabbitMQ<br/>Events/]
-        Ollama["🤖 Ollama<br/>AI Model"]
+        Ollama[" Ollama<br/>AI Model"]
     end
 
     subgraph Observability["Observability Stack"]
@@ -127,9 +195,91 @@ flowchart TB
 | ollama     | 11434      | AI model inference (Qwen3 0.6B)       |
 | otel-lgtm  | 3000       | Grafana observability stack           |
 
+### DNS Query Processing Flow
+
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant API as DNS Shield API
+    participant ACL as RFC 5358 ACL
+    participant Cache as Redis Cache
+    participant Filter as Filter Service
+    participant Resolver as DNS Resolver
+    participant Upstream as Upstream DNS
+    C ->> API: DNS Query (DoH/JSON)
+    API ->> ACL: Check Access Control
+
+    alt Unauthorized
+        ACL -->> API: REFUSED
+        API -->> C: DNS REFUSED Response
+    else Authorized
+        ACL -->> API: OK
+        API ->> Cache: Check Cache
+
+        alt Cache Hit
+            Cache -->> API: Cached Response
+            API -->> C: DNS Response
+        else Cache Miss
+            API ->> Filter: Apply Filters
+
+            alt Blocked
+                Filter -->> API: BLOCKED (NXDOMAIN)
+                API -->> C: DNS NXDOMAIN
+            else Allowed
+                Filter -->> API: OK
+                API ->> Resolver: Resolve Query
+                Resolver ->> Upstream: Forward Query
+                Upstream -->> Resolver: DNS Response
+                Resolver ->> Cache: Store in Cache
+                Resolver -->> API: DNS Response
+                API -->> C: DNS Response
+            end
+        end
+    end
+```
+
+### Event-Driven Architecture
+
+```mermaid
+flowchart TB
+    subgraph Publishers["Event Publishers"]
+        DNS[DNS Query Handler]
+        SEC[Security Service]
+        MET[Metrics Service]
+    end
+
+    subgraph RabbitMQ["RabbitMQ Message Broker"]
+        EX1[dns-query-logs<br/>Topic Exchange]
+        EX2[dns-security-alerts<br/>Topic Exchange]
+        EX3[dashboard-events<br/>Topic Exchange]
+        Q1[Query Logs Queue]
+        Q2[Security Alerts Queue]
+        Q3[Dashboard Events Queue]
+        EX1 --> Q1
+        EX2 --> Q2
+        EX3 --> Q3
+    end
+
+    subgraph Consumers["Event Consumers"]
+        LOG[Log Service]
+        ALERT[Alert Processor]
+        WS[WebSocket Handler]
+    end
+
+    DNS --> EX1
+    DNS --> EX3
+    SEC --> EX2
+    SEC --> EX3
+    MET --> EX3
+    Q1 --> LOG
+    Q2 --> ALERT
+    Q3 --> WS
+    WS -->|Real - time| Dashboard[Dashboard Clients]
+```
+
 ---
 
-## 🚀 Installation
+## Installation
 
 ### Prerequisites
 
@@ -139,6 +289,53 @@ flowchart TB
 - 8GB+ RAM recommended (for Ollama AI model)
 
 ### Quick Start (Docker Compose)
+
+#### Container Deployment Architecture
+
+```mermaid
+flowchart TB
+    subgraph Docker[" Docker Compose Environment"]
+        subgraph Network["dns-shield-network (bridge, IPv6 enabled)"]
+            App[dns-shield<br/>:8080]
+
+            subgraph Storage["Persistent Storage"]
+                Mongo[(MongoDB<br/>:27017)]
+                Redis[(Redis<br/>:6379)]
+            end
+
+            subgraph Messaging["Event Streaming"]
+                RMQ[RabbitMQ<br/>:5672/:15672]
+            end
+
+            subgraph AI["AI Services"]
+                Ollama[Ollama<br/>:11434]
+            end
+
+            subgraph Observability["Observability Stack"]
+                LGTM[Grafana LGTM<br/>:3000]
+            end
+        end
+    end
+
+    subgraph Volumes["Named Volumes"]
+        V1[mongodb-data]
+        V2[redis-data]
+        V3[rabbitmq-data]
+        V4[ollama-data]
+        V5[otel-lgtm-data]
+    end
+
+    App --> Mongo
+    App --> Redis
+    App --> RMQ
+    App --> Ollama
+    App --> LGTM
+    Mongo -.-> V1
+    Redis -.-> V2
+    RMQ -.-> V3
+    Ollama -.-> V4
+    LGTM -.-> V5
+```
 
 1. **Clone the repository:**
    ```bash
@@ -193,7 +390,7 @@ This automatically starts dev services for MongoDB, Redis, MariaDB, RabbitMQ, an
 
 ---
 
-## 📚 API Documentation
+## API Documentation
 
 ### Authentication
 
@@ -223,6 +420,42 @@ Content-Type: application/json
 Use the token in subsequent requests:
 ```http
 Authorization: Bearer <token>
+```
+
+### Security Architecture
+
+```mermaid
+flowchart TB
+    subgraph Client["Client Layer"]
+        U[User/Application]
+    end
+
+    subgraph Auth["Authentication"]
+        Login["/api/v1/auth/login"]
+        JWT[JWT Token Service]
+        Keys[RSA Key Pair]
+    end
+
+    subgraph Protected["Protected Endpoints"]
+        Admin["/api/v1/admin/*<br/> admin role"]
+        Filters["/api/v1/filters<br/> admin (write) / user (read)"]
+        Agent["/api/v1/agent/*<br/> user, admin"]
+        Stats["/api/v1/admin/endpoints/*<br/> user, admin"]
+    end
+
+    subgraph Public["Public Endpoints"]
+        Health["/api/v1/admin/health"]
+        DNS["/dns-query"]
+        DNSJSON["/api/v1/dns/*"]
+    end
+
+    U -->|1 . Credentials| Login
+    Login -->|2 . Validate| JWT
+    JWT -->|3 . Sign with| Keys
+    JWT -->|4 . Return Token| U
+    U -->|5 . Bearer Token| Protected
+    Protected -->|6 . Verify Signature| Keys
+    U --> Public
 ```
 
 ---
@@ -336,6 +569,52 @@ Content-Type: application/json
 
 ### AI Agent API
 
+The AI Agent uses LangChain4j with Ollama to provide intelligent threat analysis.
+
+```mermaid
+flowchart LR
+    subgraph Input["Input"]
+        D[Domain Name]
+        E[Security Events]
+        P[Domain Patterns]
+    end
+
+    subgraph Agent[" DNS Intelligence Agent"]
+        A1[Threat Analyzer]
+        A2[Filter Recommender]
+        A3[Event Correlator]
+    end
+
+    subgraph AI["Ollama LLM"]
+        M[Qwen3 0.6B Model]
+    end
+
+    subgraph Tools["Agent Tools"]
+        T1[Check Filter Match]
+        T2[Check Threat DB]
+        T3[Get Filter Stats]
+    end
+
+    subgraph Output["Output"]
+        O1[Threat Assessment]
+        O2[Filter Rules]
+        O3[Attack Patterns]
+    end
+
+    D --> A1
+    E --> A3
+    P --> A2
+    A1 <--> M
+    A2 <--> M
+    A3 <--> M
+    A1 <--> T1
+    A1 <--> T2
+    A2 <--> T3
+    A1 --> O1
+    A2 --> O2
+    A3 --> O3
+```
+
 #### Analyze Domain Threat
 ```http
 GET /api/v1/agent/analyze/{domain}
@@ -441,7 +720,7 @@ ws.send(JSON.stringify({
 
 ---
 
-## 💡 Use Cases
+## Use Cases
 
 ### Use Case 1: Block Advertising Domains
 
@@ -517,7 +796,7 @@ ws.onmessage = (event) => {
          console.log(`DNS Query: ${data.domain} -> ${data.status}`);
          break;
       case 'SECURITY_ALERT':
-         console.log(`⚠️ Security Alert: ${data.message}`);
+          console.log(` Security Alert: ${data.message}`);
          break;
       case 'METRICS':
          console.log(`Metrics update: ${data.totalQueries} queries`);
@@ -528,7 +807,7 @@ ws.onmessage = (event) => {
 
 ---
 
-## 📊 Performance Report
+## Performance Report
 
 Performance testing was conducted to measure response latency under varying levels of concurrent
 load. Tests were performed using a custom Java-based load testing tool that simulates concurrent
@@ -581,7 +860,7 @@ users making DNS queries.
 
 ---
 
-## 📝 Project Post Mortem
+## Project Post Mortem
 
 ### What Went Well
 
@@ -601,12 +880,7 @@ users making DNS queries.
 
 ### Challenges Encountered
 
-1. **DNS Wire Format Parsing:** Implementing RFC 1035 DNS message parsing from scratch was more
-   complex than anticipated. Edge cases around label compression and malformed packets required
-   significant debugging.
 
-2. **Docker Networking:** Configuring proper networking between containers, especially for IPv6
-   support, required multiple iterations.
 
 3. **AI Model Performance:** The Ollama container with the Qwen3 model added significant memory
    requirements. Optimizing for both quality analysis and resource usage was a balancing act.
@@ -625,9 +899,6 @@ users making DNS queries.
 3. **Observability First:** Adding Prometheus metrics and structured logging from the start was
    invaluable for debugging production-like issues.
 
-4. **Container Resource Limits:** Should have defined explicit memory/CPU limits earlier to
-   understand true resource requirements.
-
 ### Future Improvements
 
 1. **DNSSEC Validation:** Add support for DNSSEC signature validation per RFC 4035.
@@ -643,6 +914,36 @@ users making DNS queries.
 
 ---
 
+## Assignment Feedback
+
+### What Made This Assignment Valuable
+
+1. **Real-World Skills:** The assignment requirements closely mirror actual industry expectations
+   for microservices development. Containerization, access control, monitoring, and API design are
+   daily concerns in professional software engineering.
+
+2. **Flexibility in Scope:** The combination of mandatory minimums with optional enhancements
+   allowed students to demonstrate both baseline competency and advanced exploration. This structure
+   accommodates different skill levels while rewarding ambition.
+
+3. **Practical Deployment Focus:** Requiring containerized deployment on a cloud platform ensures
+   students understand the full development lifecycle, not just code writing. This is often missing
+   from academic projects.
+
+4. **Statistics Requirement:** The endpoint usage statistics requirement encouraged thinking about
+   production concerns like observability and capacity planning from the start.
+
+### Suggestions for Improvement
+
+1. **Earlier Deadlines for Proposals:** Moving the proposal deadline earlier in the semester would
+   give more time for ambitious projects and allow for iteration on ideas.
+
+2. **Intermediate Checkpoints:** Optional mid-project check-ins could help students course-correct
+   before the final deadline, especially for complex integrations.
+
+5. **Security Deep Dive:** A dedicated section on security testing (OWASP considerations, API
+   security) would complement the access control requirements.
+
 ### Overall Assessment
 
 This was an excellent assignment that provided hands-on experience with modern microservices
@@ -650,4 +951,15 @@ development patterns. The combination of mandatory requirements and optional ext
 good balance between baseline expectations and opportunities for advanced exploration. The emphasis
 on practical deployment concerns (containers, access control, monitoring) ensures the skills
 developed are directly applicable to industry work.
+
+The freedom to choose the application domain was particularly valuable—it allowed students to work
+on something they found interesting while still meeting the technical requirements. This project
+will serve as a strong portfolio piece demonstrating competency in:
+
+- Modern Java development (Quarkus, Reactive programming)
+- Container orchestration (Docker, Kubernetes)
+- Event-driven architecture (RabbitMQ, WebSockets)
+- AI/ML integration (LangChain4j, Ollama)
+- Observability (Prometheus, Grafana, OpenTelemetry)
+- Security (JWT, RBAC, RFC compliance)
 
