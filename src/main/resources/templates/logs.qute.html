@@ -14,10 +14,9 @@
                     <label for="filter-status">Filter by Status</label>
                     <select id="filter-status" class="form-control" onchange="filterLogs()">
                         <option value="">All Status</option>
-                        <option value="ALLOWED">Allowed</option>
-                        <option value="BLOCKED">Blocked</option>
-                        <option value="THREAT">Threat Detected</option>
-                        <option value="ERROR">Error</option>
+                        <option value="ALLOW">Allowed</option>
+                        <option value="BLOCK">Blocked</option>
+                        <option value="REDIRECT">Redirected</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -157,6 +156,11 @@
             .status-blocked {
                 background-color: #f8d7da;
                 color: #721c24;
+            }
+
+            .status-redirect {
+                background-color: #fff3cd;
+                color: #856404;
             }
 
             .status-threat {

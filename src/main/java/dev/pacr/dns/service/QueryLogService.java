@@ -139,8 +139,8 @@ public class QueryLogService {
         Map<String, Object> stats = new LinkedHashMap<>();
         try {
             long totalQueries = logRepository.count();
-            long blockedQueries = logRepository.count("status", "BLOCKED");
-            long allowedQueries = logRepository.count("status", "ALLOWED");
+            long blockedQueries = logRepository.count("status", "BLOCK");
+            long allowedQueries = logRepository.count("status", "ALLOW");
             long threatQueries = logRepository.count("status", "THREAT");
             
             stats.put("totalQueries", totalQueries);

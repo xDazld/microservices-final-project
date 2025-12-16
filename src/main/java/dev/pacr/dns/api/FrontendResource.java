@@ -198,7 +198,14 @@ public class FrontendResource {
 				String statusStr = log.get("status").toString();
 				String statusClass = "status-" + statusStr.toLowerCase();
 				html.append("<td><span class='status-badge ").append(statusClass).append("'>");
-				html.append(escapeHtml(statusStr)).append("</span></td>");
+				// Display friendly status names
+				String displayStatus = switch (statusStr) {
+					case "ALLOW" -> "ALLOWED";
+					case "BLOCK" -> "BLOCKED";
+					case "REDIRECT" -> "REDIRECTED";
+					default -> statusStr;
+				};
+				html.append(escapeHtml(displayStatus)).append("</span></td>");
 				
 				html.append("<td>").append(log.get("rcode")).append("</td>");
 				
